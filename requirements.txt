@@ -18,14 +18,14 @@ joblib==1.5.3
 MarkupSafe==3.0.3
 multidict==6.7.1
 mysqlclient==2.2.8
-numpy==2.4.4
+numpy==1.26.4
 pandas==3.0.2
 propcache==0.5.2
 PyJWT==2.13.0
 python-dateutil==2.9.0.post0
 requests==2.33.1
 scikit-learn==1.8.0
-scipy==1.17.1
+scipy==1.13.1
 six==1.17.0
 threadpoolctl==3.6.0
 twilio==9.10.9
