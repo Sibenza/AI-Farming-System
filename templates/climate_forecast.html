@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.svg') }}">
+  <meta name="theme-color" content="#198A00">
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Season Forecast & Scenario Simulator | ZamFarm Climate</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700;900&family=Outfit:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <style>
+    :root {
+      --zm-green:    #198A00; --zm-green-l: #23b800; --zm-green-dk: #0f5c00;
+      --zm-red:      #EF0000; --zm-orange:  #EF7D00; --zm-gold:     #F5C518;
+      --zm-black:    #141414; --zm-cream:   #F4F9F0; --sky:         #2E86AB;
+      --sidebar-w:   270px;   --card-r:     18px;    --trans:       0.35s cubic-bezier(.4,0,.2,1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Outfit', sans-serif; background: var(--zm-cream); min-height: 100vh; overflow-x: hidden; }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background: radial-gradient(ellipse 65% 50% at 5% 10%, rgba(25,138,0,.07) 0%, transparent 55%),
+                  radial-gradient(ellipse 50% 45% at 95% 90%, rgba(46,134,171,.06) 0%, transparent 55%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* Sidebar (identical to climate_data.html) */
+    .sidebar {
+      position: fixed; top: 0; left: 0; width: var(--sidebar-w); height: 100vh;
+      background: linear-gradient(175deg, var(--zm-black) 0%, #1a2e0a 55%, #0f1f06 100%);
+      display: flex; flex-direction: column; z-index: 100;
+      box-shadow: 6px 0 32px rgba(0,0,0,.45); overflow-y: auto; transition: transform var(--trans);
+    }
+    .sidebar-header { background: linear-gradient(135deg, var(--zm-green), var(--zm-green-dk)); padding: 26px 24px 20px; position: relative; overflow: hidden; }
+    .sidebar-header::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, var(--zm-black), var(--zm-red), var(--zm-orange), var(--zm-green)); }
+    .sidebar-header h2 { font-family: 'Cormorant Garamond', serif; font-size: 1.35rem; font-weight: 700; color: #fff; }
+    .sidebar-header .sub { font-family: 'DM Mono', monospace; font-size: .62rem; color: rgba(255,255,255,.45); letter-spacing: 2px; text-transform: uppercase; margin-top: 3px; }
+    .eagle { font-size: 1.8rem; display: block; margin-bottom: 6px; animation: float 3s ease-in-out infinite; }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+    .nav-label { font-family: 'DM Mono', monospace; font-size: .6rem; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(255,255,255,.3); padding: 16px 24px 5px; }
+    .sidebar a { display: flex; align-items: center; gap: 11px; color: rgba(255,255,255,.72); text-decoration: none; padding: 11px 24px; font-size: .88rem; font-weight: 600; border-left: 3px solid transparent; transition: all var(--trans); }
+    .sidebar a i { font-size: 1.05rem; min-width: 20px; }
+    .sidebar a:hover, .sidebar a.active { color: #fff; background: rgba(25,138,0,.18); border-left-color: var(--zm-orange); }
+    .sidebar a:hover i, .sidebar a.active i { color: var(--zm-orange); }
+    .sidebar a.logout-link { color: rgba(239,0,0,.75); }
+    .sidebar a.logout-link:hover { background: rgba(239,0,0,.12); border-left-color: var(--zm-red); color: var(--zm-red); }
+    .sidebar-divider { height: 1px; background: rgba(255,255,255,.07); margin: 5px 20px; }
+    .spacer-top { flex: 1; }
+
+    .topbar { position: fixed; top: 0; left: var(--sidebar-w); right: 0; height: 64px; background: rgba(255,255,255,.90); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(25,138,0,.12); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; z-index: 90; box-shadow: 0 2px 16px rgba(0,0,0,.06); }
+    .topbar-title { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 700; color: var(--zm-green-dk); display: flex; align-items: center; gap: 10px; }
+    .topbar-title i { color: var(--zm-orange); }
+    .topbar-badge { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--zm-cream); cursor: pointer; transition: background var(--trans); }
+    .topbar-badge:hover { background: rgba(25,138,0,.10); }
+    .topbar-badge i { color: var(--zm-green-dk); font-size: 1.05rem; }
+
+    .main-content { margin-left: var(--sidebar-w); padding: 82px 34px 52px; min-height: 100vh; position: relative; z-index: 1; }
+    .flag-banner { display: flex; height: 5px; border-radius: 4px; overflow: hidden; margin-bottom: 22px; }
+    .flag-banner span { flex: 1; }
+    .flag-banner .fg{background:var(--zm-green);} .flag-banner .fr{background:var(--zm-red);}
+    .flag-banner .fb{background:var(--zm-black);} .flag-banner .fo{background:var(--zm-orange);}
+
+    .page-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; margin-bottom: 26px; }
+    .page-heading h1 { font-family: 'Cormorant Garamond', serif; font-size: 1.85rem; font-weight: 700; color: var(--zm-green-dk); display: flex; align-items: center; gap: 12px; }
+    .page-heading h1 i { color: var(--zm-orange); font-size: 1.6rem; }
+    .fr-badge { display: inline-flex; align-items: center; gap: 7px; background: rgba(46,134,171,.12); border: 1px solid rgba(46,134,171,.3); border-radius: 8px; padding: 5px 12px; font-family: 'DM Mono', monospace; font-size: .68rem; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: var(--sky); }
+
+    /* Cards */
+    .zm-card { background: #fff; border-radius: var(--card-r); padding: 26px; box-shadow: 0 4px 20px rgba(0,0,0,.06); position: relative; overflow: hidden; transition: transform var(--trans), box-shadow var(--trans); }
+    .zm-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--zm-green), var(--zm-gold), var(--zm-orange)); border-radius: var(--card-r) var(--card-r) 0 0; }
+    .zm-card h2 { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-weight: 700; color: var(--zm-green-dk); margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+    .zm-card h2 i { color: var(--zm-orange); }
+    .two-col { display: grid; grid-template-columns: 380px 1fr; gap: 22px; align-items: start; }
+    .full-col { margin-top: 22px; }
+
+    /* Form */
+    .zm-form-group { margin-bottom: 15px; }
+    .zm-label { display: flex; align-items: center; gap: 6px; font-size: .7rem; font-weight: 700; letter-spacing: .9px; text-transform: uppercase; color: var(--zm-green-dk); margin-bottom: 6px; }
+    .zm-label i { font-size: .78rem; color: var(--zm-orange); }
+    .input-wrap { position: relative; }
+    .input-wrap .f-ico { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #ccc; font-size: .85rem; pointer-events: none; transition: color var(--trans); }
+    .input-wrap:focus-within .f-ico { color: var(--zm-green); }
+    .zm-input, .zm-select { width: 100%; padding: 10px 12px 10px 36px; border: 2px solid rgba(25,138,0,.18); border-radius: 10px; font-family: 'Outfit', sans-serif; font-size: .88rem; font-weight: 500; color: var(--zm-black); background: #fafffe; outline: none; appearance: none; transition: border-color var(--trans), box-shadow var(--trans); }
+    .zm-input:focus, .zm-select:focus { border-color: var(--zm-green); box-shadow: 0 0 0 3px rgba(25,138,0,.10); }
+    .zm-select-wrap { position: relative; }
+    .zm-select-wrap::after { content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--zm-green); pointer-events: none; font-size: .68rem; }
+
+    /* Scenario range sliders */
+    .slider-group { margin-bottom: 18px; }
+    .slider-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .slider-lbl { font-size: .75rem; font-weight: 800; letter-spacing: .8px; text-transform: uppercase; color: var(--zm-green-dk); display: flex; align-items: center; gap: 6px; }
+    .slider-lbl i { color: var(--zm-orange); }
+    .slider-val { font-family: 'DM Mono', monospace; font-size: .85rem; font-weight: 500; color: var(--zm-green-dk); background: rgba(25,138,0,.08); padding: 3px 10px; border-radius: 20px; border: 1px solid rgba(25,138,0,.2); min-width: 70px; text-align: center; }
+    input[type="range"] { width: 100%; appearance: none; height: 6px; border-radius: 6px; background: #e0e0e0; outline: none; cursor: pointer; }
+    input[type="range"]::-webkit-slider-thumb { appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--zm-green); border: 3px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,.2); cursor: pointer; transition: transform var(--trans); }
+    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+    .slider-track-labels { display: flex; justify-content: space-between; font-size: .65rem; color: #bbb; font-weight: 700; margin-top: 4px; }
+
+    /* Buttons */
+    .btn-zm { display: inline-flex; align-items: center; gap: 8px; padding: 11px 22px; border: none; border-radius: 10px; font-family: 'Outfit', sans-serif; font-size: .88rem; font-weight: 700; cursor: pointer; text-decoration: none; transition: all var(--trans); }
+    .btn-green { background: linear-gradient(135deg, var(--zm-green), var(--zm-green-dk)); color: #fff; box-shadow: 0 4px 16px rgba(25,138,0,.35); }
+    .btn-green:hover { color: #fff; transform: translateY(-2px); box-shadow: 0 8px 26px rgba(25,138,0,.50); }
+    .btn-orange { background: linear-gradient(135deg, var(--zm-orange), #c46000); color: #fff; box-shadow: 0 4px 16px rgba(239,125,0,.35); }
+    .btn-orange:hover { color: #fff; transform: translateY(-2px); }
+    .btn-outline { background: transparent; color: var(--zm-green-dk); border: 2px solid rgba(25,138,0,.28); }
+    .btn-outline:hover { background: rgba(25,138,0,.06); border-color: var(--zm-green); }
+    .btn-zm .b-txt { transition: opacity .2s; }
+    .btn-zm .b-spin { display: none; align-items: center; gap: 7px; }
+    .btn-zm.loading .b-txt { opacity: 0; position: absolute; }
+    .btn-zm.loading .b-spin { display: flex; }
+
+    /* Result panel */
+    .result-panel { display: none; }
+    .result-hero {
+      background: linear-gradient(135deg, var(--zm-green), var(--zm-green-dk));
+      border-radius: 16px; padding: 28px 24px; text-align: center; margin-bottom: 18px;
+      position: relative; overflow: hidden;
+      box-shadow: 0 8px 28px rgba(25,138,0,.35);
+    }
+    .result-hero::before { content: ''; position: absolute; inset: -30%; border-radius: 50%; background: radial-gradient(ellipse, rgba(255,255,255,.06) 0%, transparent 65%); }
+    .rh-label { font-family: 'DM Mono', monospace; font-size: .68rem; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,.55); margin-bottom: 8px; }
+    .rh-val { font-family: 'Cormorant Garamond', serif; font-size: 3.2rem; font-weight: 900; color: #fff; line-height: 1; position: relative; z-index: 1; }
+    .rh-unit { font-size: .95rem; font-weight: 700; color: var(--zm-gold); margin-top: 5px; position: relative; z-index: 1; }
+    .rh-conf { display: inline-flex; align-items: center; gap: 6px; background: rgba(245,197,24,.18); border: 1px solid rgba(245,197,24,.4); border-radius: 30px; padding: 5px 14px; font-size: .75rem; font-weight: 800; color: var(--zm-gold); margin-top: 12px; position: relative; z-index: 1; }
+
+    /* Scenario comparison chips */
+    .scenario-chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+    .sc-chip {
+      border-radius: 14px; padding: 16px 14px; text-align: center; cursor: pointer;
+      border: 2px solid transparent; transition: all var(--trans);
+      background: var(--zm-cream);
+    }
+    .sc-chip:hover { border-color: rgba(25,138,0,.3); background: rgba(25,138,0,.04); transform: translateY(-2px); }
+    .sc-chip.selected { border-color: var(--zm-green); background: rgba(25,138,0,.08); }
+    .sc-chip .sc-emoji { font-size: 1.8rem; display: block; margin-bottom: 6px; }
+    .sc-chip .sc-name { font-size: .8rem; font-weight: 800; color: var(--zm-green-dk); }
+    .sc-chip .sc-desc { font-size: .68rem; color: #aaa; font-weight: 600; margin-top: 3px; }
+
+    /* Progress bar */
+    .zm-progress { height: 10px; background: #e8e8e8; border-radius: 10px; overflow: hidden; margin-bottom: 18px; }
+    .zm-prog-fill { height: 100%; background: linear-gradient(90deg, var(--zm-green), var(--zm-gold), var(--zm-orange)); border-radius: 10px; width: 0%; transition: width 1.4s cubic-bezier(.4,0,.2,1) .3s; }
+
+    /* Forecast table */
+    .forecast-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+    .forecast-table thead th { background: linear-gradient(135deg, var(--zm-green-dk), #1a4010); color: #fff; padding: 12px 14px; font-size: .72rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+    .forecast-table thead th:first-child { border-radius: 10px 0 0 0; }
+    .forecast-table thead th:last-child { border-radius: 0 10px 0 0; }
+    .forecast-table tbody tr { transition: background var(--trans); }
+    .forecast-table tbody tr:nth-child(even) { background: rgba(25,138,0,.03); }
+    .forecast-table tbody tr:hover { background: rgba(25,138,0,.07); }
+    .forecast-table tbody td { padding: 11px 14px; border-bottom: 1px solid rgba(0,0,0,.05); font-size: .85rem; font-weight: 600; }
+    .yield-high { color: var(--zm-green-dk); font-weight: 800; }
+    .yield-mid  { color: var(--zm-orange);    font-weight: 800; }
+    .yield-low  { color: var(--zm-red);       font-weight: 800; }
+
+    /* Toast */
+    .zm-toast { position: fixed; bottom: 28px; right: 28px; background: var(--zm-green-dk); color: #fff; padding: 12px 18px; border-radius: 12px; font-size: .85rem; font-weight: 700; display: flex; align-items: center; gap: 9px; box-shadow: 0 6px 28px rgba(0,0,0,.28); z-index: 999; transform: translateY(80px); opacity: 0; transition: all .4s cubic-bezier(.4,0,.2,1); border-left: 5px solid var(--zm-orange); max-width: 320px; }
+    .zm-toast.show { transform: translateY(0); opacity: 1; }
+    .zm-toast.error { background: #5c0000; border-left-color: var(--zm-red); }
+
+    @media (max-width: 992px) {
+      :root { --sidebar-w: 0px; }
+      .sidebar { transform: translateX(-270px); }
+      .sidebar.open { transform: translateX(0); --sidebar-w: 270px; }
+      .main-content { margin-left: 0; padding: 78px 16px 44px; }
+      .topbar { left: 0; padding: 0 16px; }
+      .two-col { grid-template-columns: 1fr; }
+      .scenario-chips { grid-template-columns: repeat(3, 1fr); }
+    }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: rgba(25,138,0,.35); border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <!-- Data bridge for JS -->
+  <div id="cfData"
+    data-has-result="{{ 'true' if forecast_result is defined and forecast_result else 'false' }}"
+    data-is-scenario="{{ 'true' if is_scenario is defined and is_scenario else 'false' }}"
+    data-crop-compare="{{ forecast_result.crop_comparison | tojson if forecast_result is defined and forecast_result else '[]' }}"
+    data-level-up="{{ 'true' if reward is defined and reward and reward.level_up else 'false' }}"
+    data-level-info="{{ reward.level_info | tojson if reward is defined and reward and reward.level_info is defined else '{}' }}"
+    style="display:none;"></div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span class="eagle">🦅</span>
+      <h2>ZamFarm Climate</h2>
+      <div class="sub">Predictive Analysis Engine</div>
+    </div>
+    <p class="nav-label">Navigation</p>
+    <a href="/dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+    <a href="/history"><i class="fa-solid fa-clock-rotate-left"></i> Prediction History</a>
+    <a href="/crop"><i class="fa-solid fa-seedling"></i> Crop Recommendation</a>
+    <div class="sidebar-divider"></div>
+    <p class="nav-label">Climate Module</p>
+    <a href="/climate_data"><i class="fa-solid fa-database"></i> Data Ingestion</a>
+    <a href="/climate_forecast" class="active"><i class="fa-solid fa-chart-line"></i> Season Forecast</a>
+    <a href="/climate_scenarios"><i class="fa-solid fa-sliders"></i> Scenario Simulator</a>
+    <div class="sidebar-divider"></div>
+    <p class="nav-label">Coming Soon</p>
+    <a href="#" style="opacity:.45;pointer-events:none;"><i class="fa-solid fa-trophy"></i> Gamification</a>
+    <div class="spacer-top"></div>
+    <div class="sidebar-divider"></div>
+    <a href="/logout" class="logout-link"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+  </div>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <button id="hamburger" class="btn btn-sm d-lg-none" style="background:none;border:none;font-size:1.2rem;color:var(--zm-green-dk);">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+    <div class="topbar-title"><i class="fa-solid fa-chart-line"></i> Season Forecast &amp; Scenario Simulator</div>
+    <div class="d-flex gap-2">
+      <div class="topbar-badge"><i class="fa-solid fa-bell"></i></div>
+      <div class="topbar-badge" onclick="location.href='/dashboard'"><i class="fa-solid fa-gauge-high"></i></div>
+    </div>
+  </div>
+
+  <!-- DATA BRIDGE -->
+  <div id="appData"
+    data-district="{{ farmer[7] if farmer is defined else '' }}"
+    data-farm-size="{{ farmer[5] if farmer is defined else 1 }}"
+    style="display:none;"></div>
+
+  <div class="main-content">
+
+    <div class="flag-banner animate__animated animate__fadeIn">
+      <span class="fg"></span><span class="fr"></span><span class="fb"></span><span class="fo"></span>
+    </div>
+
+    <div class="page-heading animate__animated animate__fadeInDown">
+      <div>
+        <h1><i class="fa-solid fa-chart-line"></i> Season Forecast</h1>
+        <div style="margin-top:6px;">
+          <span class="fr-badge"><i class="fa-solid fa-circle-info"></i>  Predictive Analysis Engine (Scikit-learn)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOP ROW: two columns -->
+    <div class="two-col">
+
+      <!-- LEFT: Forecast Form + Scenario Simulator -->
+      <div>
+
+        <!-- ── SEASON FORECAST CARD ── -->
+        <div class="zm-card" data-aos="fade-right" style="margin-bottom:22px;">
+          <h2><i class="fa-solid fa-sun-plant-wilt"></i> Season Yield Forecast</h2>
+          <p style="font-size:.83rem;color:#777;font-weight:600;margin-bottom:18px;line-height:1.6;">
+            Uses historical climate data from your district and a
+            <strong>Decision Tree regression model</strong> to forecast
+            expected yield for the upcoming season.
+          </p>
+
+          <form id="forecastForm" action="/climate_forecast" method="POST">
+
+            <div class="zm-form-group">
+              <label class="zm-label"><i class="fa-solid fa-map-marker-alt"></i> District</label>
+              <div class="zm-select-wrap input-wrap">
+                <i class="fa-solid fa-location-dot f-ico"></i>
+                <select name="district" class="zm-select" id="districtSelect">
+                  {% for d in zambia_districts %}
+                  <option value="{{ d }}" {% if farmer is defined and farmer[7] == d %}selected{% endif %}>{{ d }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            <div class="zm-form-group">
+              <label class="zm-label"><i class="fa-solid fa-seedling"></i> Crop</label>
+              <div class="zm-select-wrap input-wrap">
+                <i class="fa-solid fa-leaf f-ico"></i>
+                <select name="crop" class="zm-select">
+                  <option value="Maize">🌽 Maize</option>
+                  <option value="Soyabeans">🌱 Soyabeans</option>
+                  <option value="Groundnuts">🥜 Groundnuts</option>
+                  <option value="Cassava">🍠 Cassava</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="zm-form-group">
+              <label class="zm-label"><i class="fa-solid fa-ruler-combined"></i> Farm Size (ha)</label>
+              <div class="input-wrap">
+                <i class="fa-solid fa-expand f-ico"></i>
+                <input type="number" name="hectares" step="0.1" min="0.1" class="zm-input"
+                       id="hectaresInput" placeholder="e.g. 3.0">
+              </div>
+            </div>
+
+            <div class="zm-form-group">
+              <label class="zm-label"><i class="fa-solid fa-calendar-days"></i> Season</label>
+              <div class="zm-select-wrap input-wrap">
+                <i class="fa-solid fa-sun f-ico"></i>
+                <select name="season" class="zm-select">
+                  <option value="2024_25">2024–2025 (Historical)</option>
+                  <option value="2025_26">2025–2026 (Current)</option>
+                  <option value="2026_27">2026–2027 (Upcoming)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="zm-form-group">
+              <label class="zm-label"><i class="fa-solid fa-mountain"></i> Soil Type</label>
+              <div class="zm-select-wrap input-wrap">
+                <i class="fa-solid fa-layer-group f-ico"></i>
+                <select name="soil_type" class="zm-select">
+                  <option value="1">🟤 Loamy</option>
+                  <option value="2">🟡 Sandy</option>
+                  <option value="3">🔵 Clay</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-zm btn-green" id="forecastBtn" style="width:100%;">
+              <span class="b-txt"><i class="fa-solid fa-wand-magic-sparkles"></i> Run Season Forecast</span>
+              <span class="b-spin"><span class="spinner-border spinner-border-sm"></span> Forecasting…</span>
+            </button>
+
+          </form>
+        </div>
+
+        <!-- ── SCENARIO SIMULATOR CARD ── -->
+        <div class="zm-card" data-aos="fade-right" data-aos-delay="80">
+          <h2><i class="fa-solid fa-sliders"></i> Climate Scenario Simulator</h2>
+          <p style="font-size:.83rem;color:#777;font-weight:600;margin-bottom:16px;line-height:1.6;">
+            Ask <em>"what if"</em> questions about climate change.
+            Adjust temperature and rainfall to see how yield responds.
+          </p>
+
+          <!-- Scenario preset chips -->
+          <div class="scenario-chips" id="scenarioChips">
+            <div class="sc-chip selected" data-temp="0" data-rain="0">
+              <span class="sc-emoji">📋</span>
+              <div class="sc-name">Baseline</div>
+              <div class="sc-desc">Normal season</div>
+            </div>
+            <div class="sc-chip" data-temp="+2" data-rain="-20">
+              <span class="sc-emoji">🌡️</span>
+              <div class="sc-name">Warming</div>
+              <div class="sc-desc">+2°C, -20% rain</div>
+            </div>
+            <div class="sc-chip" data-temp="+1" data-rain="+15">
+              <span class="sc-emoji">🌧️</span>
+              <div class="sc-name">Wet Season</div>
+              <div class="sc-desc">+1°C, +15% rain</div>
+            </div>
+            <div class="sc-chip" data-temp="+3" data-rain="-40">
+              <span class="sc-emoji">🏜️</span>
+              <div class="sc-name">Drought</div>
+              <div class="sc-desc">+3°C, -40% rain</div>
+            </div>
+            <div class="sc-chip" data-temp="-1" data-rain="+30">
+              <span class="sc-emoji">⛈️</span>
+              <div class="sc-name">Flood Risk</div>
+              <div class="sc-desc">-1°C, +30% rain</div>
+            </div>
+            <div class="sc-chip" data-temp="custom" data-rain="custom">
+              <span class="sc-emoji">⚙️</span>
+              <div class="sc-name">Custom</div>
+              <div class="sc-desc">Set manually</div>
+            </div>
+          </div>
+
+          <!-- Sliders -->
+          <form id="scenarioForm" action="/climate_scenario" method="POST">
+            <input type="hidden" name="scenario_name" id="scenarioName" value="Baseline">
+
+            <div class="slider-group">
+              <div class="slider-header">
+                <span class="slider-lbl"><i class="fa-solid fa-thermometer-half"></i> Temperature Change</span>
+                <span class="slider-val" id="tempSliderVal">+0.0°C</span>
+              </div>
+              <input type="range" id="tempSlider" name="temp_delta" min="-3" max="5" step="0.5" value="0">
+              <div class="slider-track-labels"><span>-3°C (Cool)</span><span>0 (Base)</span><span>+5°C (Hot)</span></div>
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-header">
+                <span class="slider-lbl"><i class="fa-solid fa-cloud-rain"></i> Rainfall Change</span>
+                <span class="slider-val" id="rainSliderVal">+0%</span>
+              </div>
+              <input type="range" id="rainSlider" name="rain_delta" min="-60" max="60" step="5" value="0">
+              <div class="slider-track-labels"><span>-60% (Drought)</span><span>0 (Base)</span><span>+60% (Flood)</span></div>
+            </div>
+
+            <button type="submit" class="btn-zm btn-orange" id="scenarioBtn" style="width:100%;">
+              <span class="b-txt"><i class="fa-solid fa-flask"></i> Run Scenario</span>
+              <span class="b-spin"><span class="spinner-border spinner-border-sm"></span> Simulating…</span>
+            </button>
+          </form>
+        </div>
+
+      </div><!-- /left col -->
+
+      <!-- RIGHT: Results Panel -->
+      <div>
+
+        <!-- Placeholder -->
+        <div class="zm-card" id="resultPlaceholder" data-aos="fade-left">
+          <div style="text-align:center;padding:52px 24px;">
+            <div style="font-size:4rem;margin-bottom:18px;animation:float 3.5s ease-in-out infinite;">🌾</div>
+            <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;color:#bbb;margin-bottom:8px;">Awaiting Analysis</h3>
+            <p style="font-size:.85rem;color:#ccc;font-weight:600;line-height:1.7;">
+              Configure parameters on the left and click<br>
+              <strong>Run Season Forecast</strong> or <strong>Run Scenario</strong><br>
+              to see your predictive results here.
+            </p>
+          </div>
+        </div>
+
+        <!-- Results (shown after Flask returns data) -->
+        {% if forecast_result is defined and forecast_result %}
+        <div class="zm-card result-panel" id="resultPanel" style="display:block;" data-aos="fade-left">
+          <h2><i class="fa-solid fa-robot"></i>
+            {% if is_scenario is defined and is_scenario %}Scenario Result{% else %}Season Forecast{% endif %}
+          </h2>
+
+          <!-- Hero yield number -->
+          <div class="result-hero">
+            <div class="rh-label">
+              {% if is_scenario is defined and is_scenario %}
+                <i class="fa-solid fa-flask"></i> Simulated Yield — {{ scenario_name if scenario_name is defined else 'Custom Scenario' }}
+              {% else %}
+                <i class="fa-solid fa-sun-plant-wilt"></i> Predicted Season Yield
+              {% endif %}
+            </div>
+            <div class="rh-val" id="resultYieldVal">{{ forecast_result.predicted_yield }}</div>
+            <div class="rh-unit"><i class="fa-solid fa-weight-scale"></i> Metric Tons / {{ forecast_result.hectares }}ha</div>
+            {% if forecast_result.confidence is defined %}
+            <div class="rh-conf">
+              <i class="fa-solid fa-circle-check"></i>
+              Model Confidence: {{ forecast_result.confidence }}%
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Suitability bar -->
+          <div style="margin-bottom:18px;">
+            <div style="display:flex;justify-content:space-between;font-size:.72rem;font-weight:800;color:#aaa;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">
+              <span><i class="fa-solid fa-gauge-high" style="color:var(--zm-green);"></i> Yield Rating</span>
+              <span id="yieldRatingPct">—</span>
+            </div>
+            <div class="zm-progress">
+              <div class="zm-prog-fill" id="yieldRatingBar"
+                   data-pct="{{ [[forecast_result.predicted_yield / 10 * 100, 100] | min | int, 5] | max }}">
+              </div>
+            </div>
+          </div>
+
+          <!-- Key climate inputs used -->
+          <div style="margin-bottom:18px;">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:.95rem;font-weight:700;color:var(--zm-green-dk);display:flex;align-items:center;gap:7px;margin-bottom:10px;">
+              <i class="fa-solid fa-circle-info" style="color:var(--zm-orange);"></i> Climate Inputs Used
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+              <div style="background:var(--zm-cream);border-radius:10px;padding:10px 12px;border-bottom:3px solid var(--zm-green);">
+                <div style="font-size:.65rem;font-weight:800;color:#aaa;text-transform:uppercase;letter-spacing:.8px;">Avg Temperature</div>
+                <div style="font-size:1.1rem;font-weight:800;color:var(--zm-green-dk);">{{ forecast_result.avg_temp }}°C</div>
+              </div>
+              <div style="background:var(--zm-cream);border-radius:10px;padding:10px 12px;border-bottom:3px solid var(--sky);">
+                <div style="font-size:.65rem;font-weight:800;color:#aaa;text-transform:uppercase;letter-spacing:.8px;">Total Rainfall</div>
+                <div style="font-size:1.1rem;font-weight:800;color:var(--sky);">{{ forecast_result.total_rainfall }} mm</div>
+              </div>
+              <div style="background:var(--zm-cream);border-radius:10px;padding:10px 12px;border-bottom:3px solid var(--zm-orange);">
+                <div style="font-size:.65rem;font-weight:800;color:#aaa;text-transform:uppercase;letter-spacing:.8px;">District</div>
+                <div style="font-size:1.1rem;font-weight:800;color:var(--zm-orange);">{{ forecast_result.district }}</div>
+              </div>
+              <div style="background:var(--zm-cream);border-radius:10px;padding:10px 12px;border-bottom:3px solid var(--zm-gold);">
+                <div style="font-size:.65rem;font-weight:800;color:#aaa;text-transform:uppercase;letter-spacing:.8px;">Season</div>
+                <div style="font-size:1.1rem;font-weight:800;color:#7a5c00;">{{ forecast_result.season }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chart: crop comparison -->
+          <div style="margin-bottom:16px;">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:.95rem;font-weight:700;color:var(--zm-green-dk);margin-bottom:10px;display:flex;align-items:center;gap:7px;">
+              <i class="fa-solid fa-chart-bar" style="color:var(--zm-orange);"></i> Crop Yield Comparison
+            </div>
+            <canvas id="cropCompareChart" height="120"></canvas>
+          </div>
+
+          <a href="/dashboard" class="btn-zm btn-green" style="width:100%;justify-content:center;">
+            <i class="fa-solid fa-gauge-high"></i> Back to Dashboard
+          </a>
+        </div>
+        {% endif %}
+
+      </div><!-- /right col -->
+    </div><!-- /two-col -->
+
+    <!-- SEASONAL RAINFALL OUTLOOK + CROP ADVICE -->
+    <div class="zm-card full-col" data-aos="fade-up">
+      <h2><i class="fa-solid fa-cloud-showers-heavy"></i> Upcoming Season Rainfall Outlook</h2>
+      <p style="font-size:.83rem;color:#777;font-weight:600;margin-bottom:14px;">
+        Estimated total rainfall for the coming season and the crops best suited to it.
+        Pick a district and tap <strong>Get Outlook</strong>.
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
+        <div style="flex:1;min-width:200px;">
+          <label class="zm-label" style="font-size:.78rem;font-weight:700;color:#555;">District</label>
+          <select id="outlookDistrict" class="browser-default zm-select">
+            {% for d in zambia_districts %}
+            <option value="{{ d }}">{{ d }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="button" class="btn-zm btn-green" id="outlookBtn" style="height:46px;">
+          <i class="fa-solid fa-magnifying-glass-chart"></i> Get Outlook
+        </button>
+      </div>
+
+      <div id="outlookResult" style="display:none;">
+        <!-- Rainfall gauge -->
+        <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:stretch;margin-bottom:16px;">
+          <div id="outlookCard" style="flex:1;min-width:240px;border-radius:14px;padding:18px 20px;color:#fff;">
+            <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:.85;">Estimated Seasonal Rainfall</div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:2.4rem;font-weight:900;line-height:1.1;margin:4px 0;">
+              <span id="outlookMm">0</span> mm
+            </div>
+            <div style="font-size:.85rem;font-weight:700;">
+              <span id="outlookIcon"></span> <span id="outlookCategory"></span>
+              · <span id="outlookPct"></span>% of normal
+            </div>
+            <div style="font-size:.7rem;opacity:.8;margin-top:6px;" id="outlookBasis"></div>
+          </div>
+          <div style="flex:2;min-width:260px;background:var(--zm-cream,#f4f9f0);border-radius:14px;padding:16px 18px;">
+            <div style="font-size:.78rem;font-weight:800;color:var(--zm-green,#198A00);margin-bottom:6px;">
+              <i class="fa-solid fa-lightbulb"></i> Seasonal Advice
+            </div>
+            <div id="outlookAdvice" style="font-size:.86rem;color:#444;line-height:1.5;font-weight:500;"></div>
+          </div>
+        </div>
+
+        <!-- Recommended crops -->
+        <div style="font-size:.8rem;font-weight:800;color:#555;margin-bottom:10px;">
+          <i class="fa-solid fa-seedling" style="color:var(--zm-green,#198A00);"></i>
+          Recommended Crops for this Rainfall
+        </div>
+        <div id="outlookCrops" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
+      </div>
+
+      <div id="outlookLoading" style="display:none;text-align:center;padding:24px;color:#aaa;font-size:.85rem;">
+        <i class="fa-solid fa-spinner fa-spin" style="color:var(--zm-green,#198A00);margin-right:8px;"></i>
+        Estimating seasonal rainfall…
+      </div>
+    </div>
+
+    <!-- FORECAST TABLE: Multi-crop multi-scenario table (always visible) -->
+    <div class="zm-card full-col" data-aos="fade-up">
+      <h2><i class="fa-solid fa-table-cells"></i> Multi-Scenario Yield Comparison Table</h2>
+      <p style="font-size:.83rem;color:#777;font-weight:600;margin-bottom:16px;">
+        Estimated yield (tons/ha) across crops and climate scenarios for
+        <strong id="tableDistrict">your district</strong> —
+        calculated using the Predictive Analysis Engine.
+      </p>
+      <div style="overflow-x:auto;">
+        <table class="forecast-table">
+          <thead>
+            <tr>
+              <th>Crop</th>
+              <th>📋 Baseline</th>
+              <th>🌡️ +2°C Warming</th>
+              <th>🌧️ Wet Season</th>
+              <th>🏜️ Drought</th>
+              <th>⛈️ Flood Risk</th>
+              <th>Recommendation</th>
+            </tr>
+          </thead>
+          <tbody id="comparisonTableBody">
+            <!-- Populated by JS using the scenario engine -->
+            <tr>
+              <td colspan="7" style="text-align:center;color:#aaa;padding:24px;font-size:.85rem;">
+                <i class="fa-solid fa-spinner fa-spin" style="color:var(--zm-green);margin-right:8px;"></i>
+                Loading scenario comparison…
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /main-content -->
+
+  <!-- TOAST -->
+  <div class="zm-toast" id="zmToast">
+    <i class="fa-solid fa-circle-info" id="toastIcon"></i>
+    <span id="toastMsg">Ready</span>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+
+  <script>
+    AOS.init({ duration: 560, easing: 'ease-out-cubic', once: true });
+    M.AutoInit();
+
+    /* ── Read data bridge ── */
+    const appData  = document.getElementById('appData');
+    const district = appData.dataset.district || 'Lusaka';
+    const farmSize = parseFloat(appData.dataset.farmSize) || 1.0;
+
+    /* ── Toast ── */
+    function showToast(msg, type = 'default', dur = 4000) {
+      const $t = $('#zmToast');
+      $t.removeClass('error info show');
+      if (type === 'error') $t.addClass('error');
+      $('#toastMsg').text(msg);
+      $('#toastIcon').attr('class', type === 'error' ? 'fa-solid fa-triangle-exclamation' : 'fa-solid fa-circle-check');
+      setTimeout(() => $t.addClass('show'), 50);
+      setTimeout(() => $t.removeClass('show'), dur);
+    }
+
+    /* ── Sidebar mobile ── */
+    $('#hamburger').on('click', () => $('#sidebar').toggleClass('open'));
+    $(document).on('click', e => { if (!$(e.target).closest('#sidebar,#hamburger').length) $('#sidebar').removeClass('open'); });
+
+    /* ── Pre-fill farm size from session ── */
+    $('#hectaresInput').val(farmSize);
+    $('#tableDistrict').text(district || 'your district');
+
+    /* ── Slider updates ── */
+    $('#tempSlider').on('input', function() {
+      const v = parseFloat(this.value);
+      $('#tempSliderVal').text((v >= 0 ? '+' : '') + v.toFixed(1) + '°C');
+    });
+    $('#rainSlider').on('input', function() {
+      const v = parseInt(this.value);
+      $('#rainSliderVal').text((v >= 0 ? '+' : '') + v + '%');
+    });
+
+    /* ── Scenario chip selection ── */
+    $('#scenarioChips .sc-chip').on('click', function() {
+      $('#scenarioChips .sc-chip').removeClass('selected');
+      $(this).addClass('selected');
+      const t = $(this).data('temp');
+      const r = $(this).data('rain');
+      $('#scenarioName').val($(this).find('.sc-name').text());
+      if (t !== 'custom') {
+        $('#tempSlider').val(parseFloat(t) || 0).trigger('input');
+        $('#rainSlider').val(parseFloat(r) || 0).trigger('input');
+      }
+    });
+
+    /* ── Form loading states ── */
+    $('#forecastForm').on('submit', () => $('#forecastBtn').addClass('loading'));
+    $('#scenarioForm').on('submit', () => $('#scenarioBtn').addClass('loading'));
+
+    /* ── Animate yield rating bar on load ── */
+    function animateBar() {
+      const $fill = $('#yieldRatingBar');
+      if (!$fill.length) return;
+      const pct = parseInt($fill.data('pct')) || 0;
+      setTimeout(() => {
+        $fill.css('width', pct + '%');
+        $('#yieldRatingPct').text(pct + '%');
+      }, 600);
+    }
+    animateBar();
+
+    /* ── Crop comparison chart (if result exists) ── */
+    /* Crop comparison chart */
+    const cfData      = document.getElementById('cfData');
+    const hasResult   = cfData && cfData.dataset.hasResult === 'true';
+    const cropCompare = cfData ? JSON.parse(cfData.dataset.cropCompare || '[]') : [];
+
+    if (hasResult && cropCompare.length) {
+      const ctxCrop = document.getElementById('cropCompareChart');
+      if (ctxCrop) {
+        new Chart(ctxCrop.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: ['Maize','Soyabeans','Groundnuts','Cassava'],
+            datasets: [{
+              label: 'Forecast Yield (T)',
+              data: cropCompare,
+              backgroundColor: ['rgba(25,138,0,.75)','rgba(239,125,0,.75)','rgba(245,197,24,.80)','rgba(239,0,0,.70)'],
+              borderRadius: 8, borderSkipped: false,
+            }]
+          },
+          options: {
+            plugins: { legend: { display: false },
+              tooltip: { backgroundColor: '#141414', titleColor: '#EF7D00', bodyColor: '#fff', cornerRadius: 8 }
+            },
+            scales: {
+              x: { grid: { display: false }, ticks: { font: { family: 'Outfit', weight: '700' }, color: '#999' } },
+              y: { grid: { color: 'rgba(0,0,0,.05)' }, ticks: { font: { family: 'Outfit', weight: '700' }, color: '#999' }, beginAtZero: true }
+            },
+            animation: { duration: 1200, easing: 'easeOutBounce' }
+          }
+        });
+      }
+    }
+
+    /* ── Multi-scenario comparison table (client-side model approximation) ──
+       Uses simplified, crop-specific coefficients so drought-tolerant crops
+       (cassava, sorghum, millet) react less to rainfall loss than sensitive
+       crops (maize, potatoes). The authoritative model runs server-side.
+    ── */
+    // base = typical T/ha; dSens = sensitivity to rainfall change (lower = hardier)
+    const CROP_MODEL = {
+      Maize:      { base: 2.8,  emoji:'🌽', dSens: 1.00, tSens: 0.06, tol:'low'    },
+      Soyabeans:  { base: 1.6,  emoji:'🌱', dSens: 0.95, tSens: 0.05, tol:'low'    },
+      Groundnuts: { base: 1.2,  emoji:'🥜', dSens: 0.70, tSens: 0.04, tol:'medium' },
+      Cassava:    { base: 8.5,  emoji:'🍠', dSens: 0.35, tSens: 0.03, tol:'high'   },
+      Sorghum:    { base: 1.9,  emoji:'🌾', dSens: 0.30, tSens: 0.03, tol:'high'   },
+      Millet:     { base: 1.3,  emoji:'🌿', dSens: 0.28, tSens: 0.03, tol:'high'   },
+      Sunflower:  { base: 1.6,  emoji:'🌻', dSens: 0.60, tSens: 0.04, tol:'medium' },
+      Potatoes:   { base: 12.0, emoji:'🥔', dSens: 1.10, tSens: 0.07, tol:'low'    },
+    };
+    const SCENARIOS = [
+      { name: '📋 Baseline',    temp: 0,    rain: 0   },
+      { name: '🌡️ +2°C',       temp: +2,   rain: -20 },
+      { name: '🌧️ Wet',        temp: +1,   rain: +15 },
+      { name: '🏜️ Drought',    temp: +3,   rain: -40 },
+      { name: '⛈️ Flood',      temp: -1,   rain: +30 },
+    ];
+
+    /* Crop-specific yield estimate under a climate scenario */
+    function estimateYield(m, tempDelta, rainPct) {
+      const tempEffect = tempDelta * -m.tSens;            // heat penalty
+      // rain effect scaled by the crop's drought sensitivity
+      const rainEffect = (rainPct / 100) * 0.25 * m.dSens;
+      const factor = 1 + tempEffect + rainEffect;
+      return Math.max(m.base * factor, 0);
+    }
+
+    function getYieldClass(val, base) {
+      if (val >= base * 0.9) return 'yield-high';
+      if (val >= base * 0.7) return 'yield-mid';
+      return 'yield-low';
+    }
+
+    /* Accurate, crop-specific recommendation based on how its yield behaves
+       across the scenarios and its drought tolerance. */
+    function cropRecommendation(m, yields) {
+      const base    = yields[0];                 // baseline yield
+      const drought = yields[3];                 // drought scenario
+      const wet     = yields[2];                 // wet scenario
+      const minY    = Math.min(...yields);
+      const maxY    = Math.max(...yields);
+      const swing   = base > 0 ? (maxY - minY) / base : 0;   // volatility
+      const droughtRetention = base > 0 ? drought / base : 1;
+
+      if (m.tol === 'high' && droughtRetention >= 0.8) {
+        return '🛡️ Drought-resilient — safe in dry years';
+      }
+      if (wet === maxY && (wet - base) / base > 0.08) {
+        return '🌧️ Best in a wet season';
+      }
+      if (droughtRetention < 0.6) {
+        return '🏜️ Sensitive to drought — risky if dry';
+      }
+      if (swing < 0.18) {
+        return '📋 Stable all-round choice';
+      }
+      return '🌦️ Rainfall-dependent — match to forecast';
+    }
+
+    function buildComparisonTable() {
+      let html = '';
+      Object.entries(CROP_MODEL).forEach(([crop, m]) => {
+        const yieldsNum = SCENARIOS.map(s => estimateYield(m, s.temp, s.rain));
+        const yields    = yieldsNum.map(y => y.toFixed(2));
+        const rec = cropRecommendation(m, yieldsNum);
+        html += `<tr>
+          <td><strong>${m.emoji} ${crop}</strong></td>
+          ${yields.map((y) => `<td class="${getYieldClass(parseFloat(y), m.base)}">${y} T</td>`).join('')}
+          <td style="font-size:.78rem;font-weight:700;color:#555;">${rec}</td>
+        </tr>`;
+      });
+      $('#comparisonTableBody').html(html);
+    }
+
+    /* ── Seasonal Rainfall Outlook ── */
+    function loadSeasonalOutlook() {
+      var dist = $('#outlookDistrict').val();
+      $('#outlookResult').hide();
+      $('#outlookLoading').show();
+      fetch('/api/seasonal_outlook?district=' + encodeURIComponent(dist), { credentials:'same-origin' })
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          $('#outlookLoading').hide();
+          if (d.error) { showToast('Please log in to view the outlook.'); return; }
+          $('#outlookMm').text(Math.round(d.estimate_mm));
+          $('#outlookIcon').text(d.icon);
+          $('#outlookCategory').text(d.category);
+          $('#outlookPct').text(d.pct_of_normal);
+          $('#outlookCard').css('background', 'linear-gradient(135deg,' + d.color + ',#0a3d2a)');
+          $('#outlookBasis').text(d.have_data
+            ? 'Based on this district\u2019s historical wet-season records.'
+            : 'Estimated from regional seasonal averages (no local records yet).');
+          $('#outlookAdvice').text(d.advice);
+          var crops = '';
+          d.recommended.forEach(function(c, i){
+            var col = c.score >= 80 ? '#198A00' : c.score >= 55 ? '#EF7D00' : '#EF0000';
+            var badge = i === 0 ? '<span style="font-size:.6rem;background:#F5C518;color:#141414;font-weight:800;padding:2px 6px;border-radius:8px;margin-left:6px;">TOP PICK</span>' : '';
+            crops += '<div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid rgba(25,138,0,.15);border-radius:11px;padding:10px 14px;min-width:170px;">' +
+                       '<span style="font-size:1.4rem;">' + c.emoji + '</span>' +
+                       '<div style="flex:1;">' +
+                         '<div style="font-size:.85rem;font-weight:800;color:#141414;">' + c.crop + badge + '</div>' +
+                         '<div style="height:6px;background:rgba(0,0,0,.06);border-radius:3px;margin-top:4px;overflow:hidden;">' +
+                           '<div style="height:100%;width:' + c.score + '%;background:' + col + ';border-radius:3px;"></div>' +
+                         '</div>' +
+                       '</div>' +
+                       '<span style="font-size:.78rem;font-weight:800;color:' + col + ';">' + c.score + '%</span>' +
+                     '</div>';
+          });
+          $('#outlookCrops').html(crops);
+          $('#outlookResult').show();
+        })
+        .catch(function(){
+          $('#outlookLoading').hide();
+          showToast('Could not load the seasonal outlook. Please try again.');
+        });
+    }
+
+    /* ── Page load ── */
+    $(document).ready(function() {
+      setTimeout(buildComparisonTable, 400);
+      if (district) {
+        $('#districtSelect').val(district);
+        $('#outlookDistrict').val(district);
+      }
+      $('#outlookBtn').on('click', loadSeasonalOutlook);
+      setTimeout(loadSeasonalOutlook, 700);   // auto-load for the farmer's district
+      setTimeout(() => showToast('🌱 Predictive Analysis Engine ready.'), 900);
+    });
+
+  </script>
+</body>
+</html>

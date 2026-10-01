@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
+  <meta name="theme-color" content="#2E86AB">
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Extension Officer Dashboard | ZamFarm Climate</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,700;0,900&family=Outfit:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    :root{--g:#198A00;--gl:#23b800;--gd:#0f5c00;--r:#EF0000;--o:#EF7D00;--gold:#F5C518;--sky:#2E86AB;--blk:#141414;--cream:#F4F9F0;--tr:0.35s cubic-bezier(.4,0,.2,1);}
+    [data-theme="dark"]{--cream:#0d1a0a;--blk:#e8f5e3;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Outfit',sans-serif;background:var(--cream);min-height:100vh;}
+
+    /* ── Topbar ── */
+    .topbar{position:fixed;top:0;left:0;right:0;height:64px;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-bottom:1px solid rgba(46,134,171,.18);display:flex;align-items:center;justify-content:space-between;padding:0 28px;z-index:90;box-shadow:0 2px 16px rgba(0,0,0,.07);}
+    [data-theme="dark"] .topbar{background:rgba(13,26,10,.94);border-color:rgba(46,134,171,.2);}
+    .tb-brand{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:700;color:var(--sky);display:flex;align-items:center;gap:10px;}
+    .tb-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(46,134,171,.10);border:1px solid rgba(46,134,171,.25);border-radius:20px;padding:4px 12px;font-size:.72rem;font-weight:700;color:var(--sky);}
+    .tb-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+    .tb-btn{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--cream);cursor:pointer;border:none;transition:background var(--tr);}
+    .tb-btn:hover{background:rgba(46,134,171,.12);}
+    .tb-btn i{color:var(--sky);font-size:.95rem;}
+    .flag-bar{display:flex;height:4px;position:fixed;top:64px;left:0;right:0;z-index:89;}
+    .flag-bar span{flex:1;}
+    .fg{background:var(--g);}.fr{background:var(--r);}.fb{background:var(--blk);}.fo{background:var(--o);}
+
+    /* ── Layout ── */
+    .main{padding:82px 28px 60px;min-height:100vh;}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+    @media(max-width:860px){.two-col{grid-template-columns:1fr;}}
+
+    /* ── Cards ── */
+    .zm-card{background:#fff;border-radius:18px;padding:22px 24px;box-shadow:0 4px 20px rgba(0,0,0,.07);position:relative;overflow:hidden;margin-bottom:20px;}
+    [data-theme="dark"] .zm-card{background:#132010;}
+    .zm-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--sky),var(--g),var(--gold));border-radius:18px 18px 0 0;}
+    .zm-card h2{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:700;color:var(--sky);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+    .zm-card h2 i{color:var(--o);}
+
+    /* ── Zone Hero ── */
+    .zone-hero{background:linear-gradient(145deg,#0a1a2e,#0a2200);border-radius:20px;padding:28px;color:#fff;position:relative;overflow:hidden;margin-bottom:20px;}
+    .zone-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--sky),var(--g),var(--gold),var(--o));}
+    .zone-hero::after{content:'';position:absolute;inset:-30%;border-radius:50%;background:radial-gradient(ellipse,rgba(46,134,171,.08) 0%,transparent 65%);pointer-events:none;}
+    .zh-name{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:700;margin-bottom:4px;}
+    .zh-role{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:20px;}
+    .zh-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;position:relative;z-index:1;}
+    @media(max-width:600px){.zh-stats{grid-template-columns:repeat(2,1fr);}}
+    .zh-stat{background:rgba(255,255,255,.06);border-radius:12px;padding:14px 10px;text-align:center;border:1px solid rgba(255,255,255,.08);}
+    .zh-stat .sv{font-family:'Cormorant Garamond',serif;font-size:1.7rem;font-weight:700;color:var(--gold);}
+    .zh-stat .sl{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.4);margin-top:2px;}
+
+    /* ── At-Risk Panel ── */
+    .at-risk-banner{background:linear-gradient(135deg,rgba(239,0,0,.07),rgba(239,125,0,.05));border:1.5px solid rgba(239,0,0,.18);border-radius:14px;padding:16px 18px;margin-bottom:20px;}
+    .at-risk-title{font-size:.82rem;font-weight:800;color:var(--r);display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+    .at-risk-grid{display:flex;flex-wrap:wrap;gap:8px;}
+    .at-risk-chip{display:inline-flex;align-items:center;gap:8px;background:#fff;border-radius:10px;padding:7px 12px;font-size:.78rem;font-weight:700;box-shadow:0 2px 8px rgba(239,0,0,.08);border:1px solid rgba(239,0,0,.1);}
+    [data-theme="dark"] .at-risk-chip{background:#1a0505;}
+    .at-risk-chip img{width:28px;height:28px;border-radius:50%;object-fit:cover;}
+    .at-risk-days{font-size:.68rem;color:var(--r);font-weight:800;background:rgba(239,0,0,.08);padding:2px 7px;border-radius:10px;}
+
+    /* ── Yield Analytics ── */
+    .yield-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid rgba(0,0,0,.05);}
+    .yield-row:last-child{border-bottom:none;}
+    .yc-emoji{font-size:1.3rem;width:32px;text-align:center;flex-shrink:0;}
+    .yc-name{font-size:.85rem;font-weight:800;color:var(--blk);flex:1;}
+    [data-theme="dark"] .yc-name{color:#e8f5e3;}
+    .yc-bar-wrap{flex:2;}
+    .yc-bar-track{height:8px;background:rgba(0,0,0,.06);border-radius:4px;overflow:hidden;}
+    .yc-bar-fill{height:100%;background:linear-gradient(90deg,var(--sky),var(--g));border-radius:4px;transition:width 1.2s ease .3s;}
+    .yc-stats{display:flex;gap:14px;font-size:.72rem;font-weight:700;color:#888;margin-top:3px;}
+    .yc-stat-val{color:var(--blk);font-weight:800;}
+    [data-theme="dark"] .yc-stat-val{color:#e8f5e3;}
+
+    /* ── Farmer Table ── */
+    #farmersTable thead th{background:linear-gradient(135deg,#0a1a2e,#0a3344);color:#fff!important;font-family:'Outfit',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:12px 12px;border:none!important;}
+    #farmersTable thead th:first-child{border-radius:10px 0 0 0;}
+    #farmersTable thead th:last-child{border-radius:0 10px 0 0;}
+    #farmersTable tbody tr:nth-child(even){background:rgba(46,134,171,.03);}
+    #farmersTable tbody tr:hover{background:rgba(46,134,171,.07)!important;}
+    #farmersTable tbody td{padding:11px 12px;border-bottom:1px solid rgba(0,0,0,.05)!important;font-size:.83rem;font-weight:600;vertical-align:middle;}
+    div.dataTables_filter input{border:2px solid rgba(46,134,171,.2)!important;border-radius:9px!important;padding:6px 12px!important;font-family:'Outfit',sans-serif!important;}
+    div.dataTables_filter input:focus{border-color:var(--sky)!important;}
+    .dataTables_paginate .paginate_button{border-radius:7px!important;font-family:'Outfit',sans-serif!important;font-weight:700!important;font-size:.8rem!important;padding:4px 10px!important;margin:0 2px!important;border:1.5px solid rgba(46,134,171,.2)!important;color:var(--sky)!important;}
+    .dataTables_paginate .paginate_button.current{background:var(--sky)!important;border-color:var(--sky)!important;color:#fff!important;}
+
+    /* Level badges */
+    .lv-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:.7rem;font-weight:800;}
+    .lv-1{background:rgba(136,136,136,.12);color:#666;}
+    .lv-2{background:rgba(25,138,0,.12);color:var(--gd);}
+    .lv-3{background:rgba(239,125,0,.12);color:#7a3e00;}
+    .lv-4{background:rgba(245,197,24,.15);color:#7a5c00;}
+    .lv-5{background:rgba(139,47,201,.12);color:#5c0080;}
+
+    /* At-risk indicator in table */
+    .risk-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;}
+    .rd-ok{background:var(--g);}
+    .rd-warn{background:var(--o);}
+    .rd-risk{background:var(--r);}
+
+    /* Buttons */
+    .btn-sky{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border:none;border-radius:10px;font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,var(--sky),#0a3d55);color:#fff;box-shadow:0 4px 14px rgba(46,134,171,.3);transition:all var(--tr);text-decoration:none;}
+    .btn-sky:hover{transform:translateY(-2px);box-shadow:0 7px 22px rgba(46,134,171,.45);color:#fff;}
+    .btn-outline-sk{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1.5px solid rgba(46,134,171,.25);border-radius:8px;font-family:'Outfit',sans-serif;font-size:.76rem;font-weight:700;cursor:pointer;background:transparent;color:var(--sky);transition:all var(--tr);text-decoration:none;}
+    .btn-outline-sk:hover{background:rgba(46,134,171,.06);color:var(--sky);}
+    .btn-pdf{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border:none;border-radius:10px;font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#EF0000,#a00000);color:#fff;box-shadow:0 4px 14px rgba(239,0,0,.25);transition:all var(--tr);}
+    .btn-pdf:hover{transform:translateY(-2px);box-shadow:0 7px 22px rgba(239,0,0,.35);}
+
+    /* Activity feed */
+    .act-row{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:10px;transition:background var(--tr);margin-bottom:4px;}
+    .act-row:hover{background:rgba(46,134,171,.04);}
+    .act-icon{width:34px;height:34px;border-radius:50%;background:rgba(25,138,0,.10);display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0;}
+    .act-name{font-size:.83rem;font-weight:800;color:var(--blk);}
+    [data-theme="dark"] .act-name{color:#e8f5e3;}
+    .act-detail{font-size:.73rem;color:#aaa;font-weight:600;}
+    .act-date{font-size:.7rem;color:#bbb;font-weight:700;margin-left:auto;white-space:nowrap;}
+
+    /* Modal */
+    .modal-overlay{display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);align-items:center;justify-content:center;}
+    .modal-overlay.show{display:flex;}
+    .msg-modal{background:#fff;border-radius:20px;padding:30px;max-width:500px;width:92%;box-shadow:0 24px 72px rgba(0,0,0,.3);animation:popIn .35s cubic-bezier(.22,1,.36,1) both;}
+    [data-theme="dark"] .msg-modal{background:#132010;}
+    @keyframes popIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+    .msg-modal h3{font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:700;color:var(--sky);margin-bottom:16px;}
+    .modal-input{width:100%;padding:10px 13px;border:2px solid rgba(46,134,171,.2);border-radius:10px;font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:600;outline:none;margin-bottom:10px;transition:border-color var(--tr);background:var(--cream);color:var(--blk);}
+    .modal-input:focus{border-color:var(--sky);}
+    textarea.modal-input{min-height:100px;resize:vertical;}
+
+    /* Toast */
+    .zm-toast{position:fixed;bottom:28px;right:28px;background:#0a1a2e;color:#fff;padding:12px 18px;border-radius:12px;font-size:.83rem;font-weight:700;display:flex;align-items:center;gap:9px;box-shadow:0 6px 28px rgba(0,0,0,.28);z-index:1000;transform:translateY(80px);opacity:0;transition:all .4s cubic-bezier(.4,0,.2,1);border-left:5px solid var(--sky);}
+    .zm-toast.show{transform:translateY(0);opacity:1;}
+
+    /* PDF print styles */
+    @media print{
+      .topbar,.flag-bar,.btn-sky,.btn-pdf,.btn-outline-sk,#msgOverlay,.zm-toast{display:none!important;}
+      .main{padding:0!important;}
+      .zm-card{box-shadow:none!important;border:1px solid #ddd!important;break-inside:avoid;}
+      body{background:#fff!important;}
+    }
+    ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-thumb{background:rgba(46,134,171,.35);border-radius:3px;}
+  </style>
+</head>
+<body>
+
+  <div class="flag-bar"><span class="fg"></span><span class="fr"></span><span class="fb"></span><span class="fo"></span></div>
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="tb-brand">
+      <span>🧑‍💼</span> Extension Officer Portal
+      <span class="tb-badge"><i class="fa-solid fa-map-location-dot"></i> {{ zone }}</span>
+    </div>
+    <div class="tb-right">
+      <button class="btn-sky" onclick="document.getElementById('msgOverlay').classList.add('show')" style="padding:8px 14px;font-size:.78rem;">
+        <i class="fa-solid fa-paper-plane"></i> Send Group Message
+      </button>
+      <button class="btn-pdf" onclick="printZoneReport()" style="padding:8px 14px;font-size:.78rem;">
+        <i class="fa-solid fa-file-pdf"></i> Export PDF
+      </button>
+      <button class="tb-btn" title="Logout" onclick="location.href='/logout'"><i class="fa-solid fa-right-from-bracket"></i></button>
+    </div>
+  </div>
+
+  <div class="main" id="printArea">
+
+    <!-- Zone Hero -->
+    <div class="zone-hero">
+      <div style="position:relative;z-index:1;">
+        <div class="zh-name">{{ officer_name }}'s Zone: {{ zone }}</div>
+        <div class="zh-role">Agricultural Extension Officer · ZamFarm Climate</div>
+        <div class="zh-stats">
+          <div class="zh-stat">
+            <div class="sv">{{ zone_stats[0] if zone_stats else 0 }}</div>
+            <div class="sl">Farmers</div>
+          </div>
+          <div class="zh-stat">
+            <div class="sv">{{ zone_stats[1] if zone_stats else 0 }}</div>
+            <div class="sl">Simulations</div>
+          </div>
+          <div class="zh-stat">
+            <div class="sv">{{ "%.0f"|format(zone_stats[2]) if zone_stats else 0 }}</div>
+            <div class="sl">Avg Points</div>
+          </div>
+          <div class="zh-stat">
+            <div class="sv">{{ "%.1f"|format(zone_stats[3]) if zone_stats else 0 }} ha</div>
+            <div class="sl">Total Land</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── AT-RISK FARMERS PANEL ── -->
+    {% if at_risk is defined and at_risk %}
+    <div class="at-risk-banner" data-aos="fade-up">
+      <div class="at-risk-title">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        {{ at_risk|length }} Farmer{{ 's' if at_risk|length != 1 }} Haven't Logged In for 14+ Days
+        <span style="font-size:.7rem;font-weight:600;color:#888;margin-left:4px;">— consider reaching out</span>
+      </div>
+      <div class="at-risk-grid">
+        {% for f in at_risk %}
+        <div class="at-risk-chip">
+          <img src="{{ url_for('static', filename='uploads/' + (f[6] or 'default.png')) }}" alt="">
+          <div>
+            <div style="font-size:.78rem;font-weight:800;color:var(--blk);">{{ f[1] }}</div>
+            <div style="font-size:.68rem;color:#999;font-weight:600;">{{ f[4] or f[3] }}</div>
+          </div>
+          <span class="at-risk-days">
+            {% if f[11] %}
+              {{ f[11] }}
+            {% else %}
+              Never logged in
+            {% endif %}
+          </span>
+          <a href="/officer/farmer/{{ f[0] }}" class="btn-outline-sk" style="padding:4px 9px;font-size:.68rem;">View</a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ── ZONE ANALYTICS + ACTIVITY ROW ── -->
+    <div class="two-col">
+
+      <!-- Zone Yield Analytics -->
+      <div class="zm-card" data-aos="fade-up">
+        <h2><i class="fa-solid fa-chart-bar"></i> Zone Yield Analytics</h2>
+        {% if yield_by_crop is defined and yield_by_crop %}
+          {% set max_count = yield_by_crop[0][1] %}
+          {% for row in yield_by_crop %}
+          {# row: 0=crop 1=pred_count 2=avg_yield 3=max_yield 4=total_ha #}
+          {% set pct = ((row[1] / max_count) * 100)|round|int %}
+          <div class="yield-row">
+            <div class="yc-emoji">
+              {% if row[0]=='Maize' %}🌽{% elif row[0]=='Soyabeans' %}🌱
+              {% elif row[0]=='Groundnuts' %}🥜{% elif row[0]=='Cassava' %}🍠
+              {% elif row[0]=='Sorghum' %}🌾{% elif row[0]=='Millet' %}🌿
+              {% elif row[0]=='Sunflower' %}🌻{% elif row[0]=='Potatoes' %}🥔
+              {% else %}🌾{% endif %}
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div class="yc-name">{{ row[0] }}</div>
+              <div class="yc-bar-wrap">
+                <div class="yc-bar-track">
+                  <div class="yc-bar-fill" data-pct="{{ pct }}" style="width:0%;"></div>
+                </div>
+                <div class="yc-stats">
+                  <span>Avg: <span class="yc-stat-val">{{ row[2] }} T</span></span>
+                  <span>Max: <span class="yc-stat-val">{{ row[3] }} T</span></span>
+                  <span>Ha: <span class="yc-stat-val">{{ row[4] }}</span></span>
+                </div>
+              </div>
+            </div>
+            <div style="font-family:'DM Mono',monospace;font-size:.78rem;font-weight:700;color:var(--sky);width:30px;text-align:right;">{{ row[1] }}</div>
+          </div>
+          {% endfor %}
+        {% else %}
+        <div style="text-align:center;padding:28px;color:#bbb;font-size:.85rem;font-weight:600;">
+          <span style="font-size:2rem;display:block;margin-bottom:8px;">📊</span>
+          No predictions recorded in this zone yet.
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="zm-card" data-aos="fade-up" data-aos-delay="60">
+        <h2><i class="fa-solid fa-bolt"></i> Recent Zone Activity</h2>
+        {% if recent_activity %}
+        {% for act in recent_activity %}
+        <div class="act-row">
+          <div class="act-icon">
+            {% if act[1]=='Maize' %}🌽{% elif act[1]=='Soyabeans' %}🌱
+            {% elif act[1]=='Groundnuts' %}🥜{% elif act[1]=='Cassava' %}🍠
+            {% elif act[1]=='Sorghum' %}🌾{% elif act[1]=='Millet' %}🌿
+            {% elif act[1]=='Sunflower' %}🌻{% elif act[1]=='Potatoes' %}🥔
+            {% else %}🌾{% endif %}
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div class="act-name">{{ act[0] }}</div>
+            <div class="act-detail">
+              <strong>{{ act[1] }}</strong> · {{ act[2] }} ha · {{ act[3] }} T yield
+            </div>
+          </div>
+          <div class="act-date">{{ (act[4]|string)[:10] }}</div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div style="text-align:center;padding:32px;color:#bbb;font-size:.85rem;font-weight:600;">
+          <span style="font-size:2rem;display:block;margin-bottom:8px;">📋</span>
+          No recent activity in this zone yet.
+        </div>
+        {% endif %}
+      </div>
+
+    </div><!-- /two-col -->
+
+    <!-- ── FARMERS TABLE ── -->
+    <div class="zm-card" data-aos="fade-up">
+      <h2><i class="fa-solid fa-users"></i> Farmers in {{ zone }} Zone</h2>
+      <p style="font-size:.78rem;color:#888;font-weight:600;margin-bottom:14px;">
+        All farmers in your zone. 
+        <span style="color:var(--r);font-weight:800;"><span class="risk-dot rd-risk"></span>Red dot</span> = inactive 14+ days &nbsp;·&nbsp;
+        <span style="color:var(--o);font-weight:800;"><span class="risk-dot rd-warn"></span>Orange</span> = inactive 7–13 days.
+      </p>
+
+      <table id="farmersTable" class="table table-hover" style="width:100%">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Farmer</th>
+            <th>Village</th>
+            <th>Points</th>
+            <th>Level</th>
+            <th>Last Simulation</th>
+            <th>Last Login</th>
+            <th>Farm</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in farmers %}
+          {# f: 0=id 1=fullname 2=phone 3=district 4=village 5=farm_size
+                6=profile_pic 7=points 8=level 9=badges 10=last_simulation
+                11=last_login 12=streak #}
+          <tr>
+            <td style="color:#aaa;font-size:.75rem;font-weight:800;">{{ loop.index }}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:9px;">
+                <img src="{{ url_for('static', filename='uploads/'+(f[6] or 'default.png')) }}"
+                     style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid rgba(46,134,171,.3);flex-shrink:0;" alt="">
+                <div>
+                  <a href="/officer/farmer/{{ f[0] }}" style="font-size:.85rem;font-weight:800;color:var(--blk);text-decoration:none;">{{ f[1] }}</a>
+                  <div style="font-size:.68rem;color:#aaa;font-weight:600;">{{ f[2] or '—' }}</div>
+                </div>
+              </div>
+            </td>
+            <td style="font-size:.83rem;font-weight:700;">{{ f[4] or '—' }}</td>
+            <td>
+              <span style="font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:900;color:var(--g);">{{ f[7] }}</span>
+              <span style="font-size:.65rem;color:#aaa;font-weight:600;"> pts</span>
+            </td>
+            <td>
+              <span class="lv-badge lv-{{ f[8] }}">
+                {{ ['','🌱','🌿','🌳','🏆','👑'][f[8]] if f[8] and f[8] <= 5 else '🌱' }}
+                Level {{ f[8] }}
+              </span>
+            </td>
+            <td style="font-size:.78rem;color:#888;font-weight:700;">
+              {% if f[10] %}
+                <i class="fa-regular fa-clock" style="color:var(--o);margin-right:3px;"></i>{{ (f[10]|string)[:10] }}
+              {% else %}
+                <span style="color:#ccc;font-size:.75rem;">None yet</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if f[11] %}
+                {% set login_str = (f[11]|string)[:10] %}
+                <span class="risk-dot
+                  {% if f[12] and f[12] >= 3 %}rd-ok
+                  {% else %}rd-warn{% endif %}">
+                </span>
+                <span style="font-size:.78rem;font-weight:700;">{{ login_str }}</span>
+                {% if f[12] and f[12] > 0 %}
+                <span style="font-size:.65rem;color:var(--g);font-weight:700;"> 🔥{{ f[12] }}d</span>
+                {% endif %}
+              {% else %}
+                <span class="risk-dot rd-risk"></span>
+                <span style="font-size:.75rem;color:var(--r);font-weight:700;">Never</span>
+              {% endif %}
+            </td>
+            <td style="font-size:.83rem;font-weight:700;">{{ f[5] }} ha</td>
+            <td>
+              <a href="/officer/farmer/{{ f[0] }}" class="btn-outline-sk">
+                <i class="fa-solid fa-eye"></i> View
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /main -->
+
+  <!-- Group Message Modal -->
+  <div class="modal-overlay" id="msgOverlay">
+    <div class="msg-modal">
+      <h3><i class="fa-solid fa-paper-plane" style="color:var(--sky);margin-right:8px;"></i> Send Group Message</h3>
+      <p style="font-size:.8rem;color:#888;font-weight:600;margin-bottom:14px;">
+        Message will be visible to all <strong>{{ farmers|length }}</strong> farmers in <strong>{{ zone }}</strong> zone via their dashboard notifications.
+      </p>
+      <form action="/officer/send_message" method="POST">
+        <input type="hidden" name="zone" value="{{ zone }}">
+        <input class="modal-input" type="text" name="subject"
+               placeholder="Subject — e.g. Drought Advisory for {{ zone }}" required>
+        <textarea class="modal-input" name="message_body"
+                  placeholder="Type your advisory message to all farmers in {{ zone }} zone…" required></textarea>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px;">
+          <button type="button" class="btn-outline-sk"
+                  onclick="document.getElementById('msgOverlay').classList.remove('show')">
+            Cancel
+          </button>
+          <button type="submit" class="btn-sky">
+            <i class="fa-solid fa-paper-plane"></i> Send to {{ farmers|length }} Farmers
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Flash data bridge -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}{% for cat, msg in messages %}
+  <div id="flashData" data-cat="{{ cat }}" data-msg="{{ msg }}" style="display:none;"></div>
+  {% endfor %}{% endif %}
+  {% endwith %}
+
+  <!-- Data bridge for zone info (used in print report) -->
+  <div id="zoneData"
+       data-zone="{{ zone }}"
+       data-officer="{{ officer_name }}"
+       data-farmers="{{ farmers|length }}"
+       style="display:none;"></div>
+
+  <div class="zm-toast" id="zmToast"><i class="fa-solid fa-circle-check"></i><span id="toastMsg">Ready</span></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+  <script>
+    AOS.init({ duration: 560, easing: 'ease-out-cubic', once: true });
+
+    // DataTable
+    $('#farmersTable').DataTable({
+      pageLength: 15,
+      order: [[3, 'desc']],
+      columnDefs: [{ orderable: false, targets: [0, 8] }],
+      language: {
+        search: '<i class="fa-solid fa-magnifying-glass"></i>&nbsp;',
+        searchPlaceholder: 'Search farmers…',
+        emptyTable: 'No farmers assigned to this zone yet.',
+        paginate: {
+          previous: '<i class="fa-solid fa-chevron-left"></i>',
+          next:     '<i class="fa-solid fa-chevron-right"></i>'
+        }
+      }
+    });
+
+    // Animate yield analytics bars
+    setTimeout(function() {
+      document.querySelectorAll('.yc-bar-fill').forEach(function(el) {
+        var pct = parseInt(el.getAttribute('data-pct') || 0);
+        el.style.width = pct + '%';
+      });
+    }, 400);
+
+    // Close modal on outside click
+    document.getElementById('msgOverlay').addEventListener('click', function(e) {
+      if (e.target === this) this.classList.remove('show');
+    });
+
+    // Toast on flash
+    var flashEl = document.getElementById('flashData');
+    if (flashEl && flashEl.dataset.msg) {
+      setTimeout(function() {
+        document.getElementById('toastMsg').textContent = flashEl.dataset.msg;
+        document.getElementById('zmToast').classList.add('show');
+        setTimeout(function() {
+          document.getElementById('zmToast').classList.remove('show');
+        }, 4500);
+      }, 500);
+    }
+
+    // PDF export — adds a title header then triggers browser print dialog
+    function printZoneReport() {
+      var zd = document.getElementById('zoneData');
+      var zone    = zd ? zd.dataset.zone    : 'Zone';
+      var officer = zd ? zd.dataset.officer : 'Officer';
+      var n       = zd ? zd.dataset.farmers : '—';
+      var today   = new Date().toLocaleDateString('en-ZM', {
+        day:'numeric', month:'long', year:'numeric'
+      });
+
+      // Inject a print-only header that appears at top of page
+      var hdr = document.getElementById('printHeader');
+      if (!hdr) {
+        hdr = document.createElement('div');
+        hdr.id = 'printHeader';
+        hdr.style.cssText = 'display:none;';
+        hdr.innerHTML =
+          '<div style="font-family:serif;border-bottom:2px solid #198A00;padding-bottom:12px;margin-bottom:20px;">' +
+          '<h1 style="font-size:1.5rem;margin:0;">ZamFarm Climate Connect</h1>' +
+          '<h2 style="font-size:1.1rem;margin:4px 0 0;color:#2E86AB;">Zone Report — ' + zone + '</h2>' +
+          '<p style="font-size:.82rem;color:#888;margin:6px 0 0;">' +
+          'Officer: ' + officer + ' &nbsp;·&nbsp; Farmers: ' + n +
+          ' &nbsp;·&nbsp; Generated: ' + today + '</p>' +
+          '</div>';
+        document.getElementById('printArea').prepend(hdr);
+      }
+
+      // Show header for print only
+      var style = document.createElement('style');
+      style.id  = 'printStyle';
+      style.textContent = '@media print { #printHeader { display:block !important; } }';
+      document.head.appendChild(style);
+
+      window.print();
+
+      // Clean up after dialog closes
+      setTimeout(function() {
+        var s = document.getElementById('printStyle');
+        if (s) s.remove();
+      }, 2000);
+    }
+  </script>
+</body>
+</html>

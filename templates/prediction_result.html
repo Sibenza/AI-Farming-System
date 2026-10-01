@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <!-- ============================================================
+       PAGE META
+  ============================================================ -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prediction Result | Smart Farming Zambia</title>
+
+  <!-- ============================================================
+       GOOGLE FONTS
+       Playfair Display — headings (elegant serif)
+       Nunito          — body text (friendly, readable)
+  ============================================================ -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- ============================================================
+       MATERIALIZE CSS — Material Design components & ripple
+  ============================================================ -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+  <!-- ============================================================
+       BOOTSTRAP 5 — grid, utilities, badge, spinner
+  ============================================================ -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+
+  <!-- ============================================================
+       FONT AWESOME 6 — icons throughout the page
+  ============================================================ -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- ============================================================
+       ANIMATE.CSS — entrance animations (bounceIn, fadeIn, etc.)
+  ============================================================ -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
+  <!-- ============================================================
+       AOS — Animate On Scroll (staggered reveals)
+  ============================================================ -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+
+  <!-- ============================================================
+       ORIGINAL STYLESHEET (preserved for Flask integration)
+  ============================================================ -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+
+  <!-- ============================================================
+       INBUILT CSS STYLES
+       Zambian Flag Palette:
+         Green  → #198A00   Red    → #EF0000
+         Black  → #141414   Orange → #EF7D00
+         Gold   → #F5C518
+  ============================================================ -->
+  <style>
+
+    /* ── CSS Design Tokens ────────────────────────────────────── */
+    :root {
+      --zm-green:        #198A00;
+      --zm-green-light:  #23b800;
+      --zm-green-dark:   #0f5c00;
+      --zm-red:          #EF0000;
+      --zm-black:        #141414;
+      --zm-orange:       #EF7D00;
+      --zm-gold:         #F5C518;
+      --zm-cream:        #F4F9F0;
+      --zm-white:        #ffffff;
+      --card-radius:     24px;
+      --transition:      0.38s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* ── Reset & Base ─────────────────────────────────────────── */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0; padding: 0;
+    }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 16px;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* ── Page background — dark Zambian gradient ──────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(145deg,
+        #0a3300 0%, #141414 45%, #1a0600 75%, #2a1000 100%);
+      z-index: -2;
+    }
+
+    /* ── Layered glow orbs for depth ─────────────────────────── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 65% 55% at 20%  15%, rgba(25,138,0,.22)  0%, transparent 55%),
+        radial-gradient(ellipse 55% 45% at 82%  80%, rgba(239,125,0,.18) 0%, transparent 55%),
+        radial-gradient(ellipse 40% 35% at 75%  12%, rgba(239,0,0,.12)   0%, transparent 50%),
+        radial-gradient(ellipse 45% 38% at 10%  88%, rgba(245,197,24,.09) 0%, transparent 50%);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* ── Zambian flag stripe pinned to top ───────────────────── */
+    .page-flag-stripe {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 5px;
+      display: flex;
+      z-index: 100;
+    }
+    .page-flag-stripe span { flex: 1; }
+    .page-flag-stripe .f-green  { background: var(--zm-green); }
+    .page-flag-stripe .f-red    { background: var(--zm-red); }
+    .page-flag-stripe .f-black  { background: var(--zm-black); }
+    .page-flag-stripe .f-orange { background: var(--zm-orange); }
+
+    /* ── Floating grain particles ─────────────────────────────── */
+    /* Decorative corn/leaf emoji particles drifting upward */
+    .grain-particle {
+      position: fixed;
+      font-size: 1.3rem;
+      opacity: .14;
+      pointer-events: none;
+      z-index: 0;
+      user-select: none;
+      animation: driftUp linear infinite;
+    }
+    @keyframes driftUp {
+      0%   { transform: translateY(110vh) rotate(0deg);   opacity: .14; }
+      100% { transform: translateY(-10vh) rotate(270deg); opacity: 0; }
+    }
+
+    /* ── Main Result Card ─────────────────────────────────────── */
+    .result-card {
+      background: rgba(255,255,255,.97);
+      border-radius: var(--card-radius);
+      padding: 50px 44px 44px;
+      width: 100%;
+      max-width: 560px;
+      position: relative;
+      z-index: 10;
+      box-shadow:
+        0 4px 6px   rgba(0,0,0,.06),
+        0 24px 70px rgba(0,0,0,.40),
+        0 0 0 1px   rgba(25,138,0,.10);
+      text-align: center;
+      /* Card drop-in entrance */
+      animation: cardEntry .7s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes cardEntry {
+      from { opacity: 0; transform: translateY(36px) scale(.96); }
+      to   { opacity: 1; transform: translateY(0)    scale(1);   }
+    }
+
+    /* Gradient accent bar at top of card */
+    .result-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 5px;
+      background: linear-gradient(90deg,
+        var(--zm-green), var(--zm-gold), var(--zm-orange), var(--zm-red));
+      border-radius: var(--card-radius) var(--card-radius) 0 0;
+    }
+
+    /* ── AI Brain Badge ───────────────────────────────────────── */
+    /* Pulsing animated icon above the card title */
+    .ai-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 82px;
+      height: 82px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--zm-green) 0%, var(--zm-green-dark) 100%);
+      font-size: 2.2rem;
+      margin-bottom: 18px;
+      box-shadow:
+        0 0 0 6px  rgba(25,138,0,.15),
+        0 10px 28px rgba(0,0,0,.30);
+      animation: pulseBadge 2.8s ease-in-out infinite;
+    }
+    @keyframes pulseBadge {
+      0%,100% { box-shadow: 0 0 0 6px rgba(25,138,0,.15), 0 10px 28px rgba(0,0,0,.3); }
+      50%      { box-shadow: 0 0 0 14px rgba(25,138,0,.06), 0 10px 32px rgba(0,0,0,.35); }
+    }
+
+    /* ── Page Heading ─────────────────────────────────────────── */
+    .result-card h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: var(--zm-green-dark);
+      margin-bottom: 6px;
+      line-height: 1.25;
+    }
+
+    /* ── Zambian flag divider ─────────────────────────────────── */
+    .flag-divider {
+      display: flex;
+      height: 4px;
+      border-radius: 3px;
+      overflow: hidden;
+      margin: 18px auto 28px;
+      max-width: 200px;
+    }
+    .flag-divider span { flex: 1; }
+    .flag-divider .f-green  { background: var(--zm-green); }
+    .flag-divider .f-red    { background: var(--zm-red); }
+    .flag-divider .f-black  { background: var(--zm-black); }
+    .flag-divider .f-orange { background: var(--zm-orange); }
+
+    /* ── Crop Name Badge ──────────────────────────────────────── */
+    .crop-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, rgba(25,138,0,.10), rgba(245,197,24,.10));
+      border: 1.5px solid rgba(25,138,0,.25);
+      border-radius: 50px;
+      padding: 8px 22px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--zm-green-dark);
+      margin-bottom: 28px;
+      letter-spacing: .4px;
+    }
+    .crop-badge i { color: var(--zm-orange); }
+
+    /* ── Yield Result Panel ───────────────────────────────────── */
+    /* The large highlighted result box */
+    .yield-panel {
+      background: linear-gradient(135deg, var(--zm-green) 0%, var(--zm-green-dark) 100%);
+      border-radius: 18px;
+      padding: 30px 24px;
+      margin-bottom: 28px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(25,138,0,.40);
+    }
+
+    /* Decorative inner glow ring */
+    .yield-panel::before {
+      content: '';
+      position: absolute;
+      inset: -30%;
+      border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(255,255,255,.08) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    /* "Estimated Yield" label */
+    .yield-label {
+      font-size: .72rem;
+      font-weight: 800;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.65);
+      margin-bottom: 10px;
+    }
+
+    /* The large tonnes number */
+    .yield-number {
+      font-family: 'Playfair Display', serif;
+      font-size: 3.8rem;
+      font-weight: 900;
+      color: var(--zm-white);
+      line-height: 1;
+      text-shadow: 0 4px 16px rgba(0,0,0,.25);
+      /* Count-up animation target */
+      display: inline-block;
+    }
+
+    /* "Tons" unit label */
+    .yield-unit {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--zm-gold);
+      letter-spacing: 1px;
+      margin-top: 6px;
+    }
+
+    /* Orange confidence/accuracy pill */
+    .yield-accuracy {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(245,197,24,.18);
+      border: 1px solid rgba(245,197,24,.4);
+      border-radius: 30px;
+      padding: 5px 14px;
+      font-size: .75rem;
+      font-weight: 800;
+      color: var(--zm-gold);
+      margin-top: 14px;
+      letter-spacing: .5px;
+    }
+
+    /* ── Insight Stats Row ────────────────────────────────────── */
+    /* Three small info chips below the result panel */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .stat-chip {
+      background: var(--zm-cream);
+      border-radius: 14px;
+      padding: 14px 10px;
+      border-bottom: 3px solid var(--zm-green);
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+    .stat-chip:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0,0,0,.08);
+    }
+    .stat-chip:nth-child(2) { border-bottom-color: var(--zm-orange); }
+    .stat-chip:nth-child(3) { border-bottom-color: var(--zm-red); }
+    .stat-chip .sc-icon {
+      font-size: 1.25rem;
+      margin-bottom: 6px;
+    }
+    .stat-chip .sc-val {
+      font-size: .95rem;
+      font-weight: 800;
+      color: var(--zm-black);
+      line-height: 1.1;
+    }
+    .stat-chip .sc-lbl {
+      font-size: .65rem;
+      font-weight: 700;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: .7px;
+      margin-top: 2px;
+    }
+
+    /* ── Progress Bar — Yield Rating ─────────────────────────── */
+    .rating-row {
+      margin-bottom: 28px;
+      text-align: left;
+    }
+    .rating-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 7px;
+    }
+    .rating-lbl {
+      font-size: .73rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #999;
+    }
+    .rating-pct {
+      font-size: .8rem;
+      font-weight: 800;
+      color: var(--zm-green-dark);
+    }
+    .zm-progress {
+      height: 10px;
+      background: #e8e8e8;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .zm-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--zm-green), var(--zm-gold), var(--zm-orange));
+      border-radius: 10px;
+      width: 0%;  /* animated via JS */
+      transition: width 1.4s cubic-bezier(.4,0,.2,1) .5s;
+    }
+
+    /* ── Action Buttons ───────────────────────────────────────── */
+    .actions-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* Primary — Back to Dashboard */
+    .btn-primary-zm {
+      flex: 1;
+      padding: 13px 10px;
+      background: linear-gradient(135deg, var(--zm-green) 0%, var(--zm-green-dark) 100%);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Nunito', sans-serif;
+      font-size: .92rem;
+      font-weight: 800;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all var(--transition);
+      box-shadow: 0 4px 18px rgba(25,138,0,.35);
+      letter-spacing: .3px;
+    }
+    .btn-primary-zm:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(25,138,0,.50);
+      color: #fff;
+    }
+
+    /* Secondary — Predict Again */
+    .btn-secondary-zm {
+      flex: 1;
+      padding: 13px 10px;
+      background: transparent;
+      color: var(--zm-green-dark);
+      border: 2px solid rgba(25,138,0,.3);
+      border-radius: 12px;
+      font-family: 'Nunito', sans-serif;
+      font-size: .92rem;
+      font-weight: 800;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all var(--transition);
+      letter-spacing: .3px;
+    }
+    .btn-secondary-zm:hover {
+      background: rgba(25,138,0,.07);
+      border-color: var(--zm-green);
+      color: var(--zm-green-dark);
+      transform: translateY(-2px);
+    }
+
+    /* Tertiary — Save to History (orange accent) */
+    .btn-save-zm {
+      width: 100%;
+      padding: 13px;
+      margin-top: 10px;
+      background: linear-gradient(135deg, var(--zm-orange) 0%, #c46000 100%);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Nunito', sans-serif;
+      font-size: .92rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all var(--transition);
+      box-shadow: 0 4px 18px rgba(239,125,0,.35);
+      text-decoration: none;
+      letter-spacing: .3px;
+    }
+    .btn-save-zm:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(239,125,0,.50);
+      color: #fff;
+    }
+
+    /* ── Toast Notification ───────────────────────────────────── */
+    .zm-toast {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      background: var(--zm-green-dark);
+      color: #fff;
+      padding: 13px 20px;
+      border-radius: 12px;
+      font-size: .88rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 6px 28px rgba(0,0,0,.3);
+      z-index: 999;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all .4s cubic-bezier(.4,0,.2,1);
+      border-left: 5px solid var(--zm-orange);
+      max-width: 300px;
+    }
+    .zm-toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ── Confetti canvas overlay ──────────────────────────────── */
+    /* Canvas sits above everything for the celebration effect */
+    #confettiCanvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 50;
+    }
+
+    /* ── Responsive ───────────────────────────────────────────── */
+    @media (max-width: 500px) {
+      .result-card { padding: 38px 20px 32px; }
+      .yield-number { font-size: 2.8rem; }
+      .stats-row { grid-template-columns: 1fr 1fr 1fr; }
+      .stat-chip { padding: 12px 6px; }
+      .actions-row { flex-direction: column; }
+      .result-card h1 { font-size: 1.3rem; }
+    }
+
+    /* ── Scrollbar ────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(25,138,0,.4);
+      border-radius: 3px;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- ============================================================
+       ZAMBIAN FLAG STRIPE — fixed at very top of page
+  ============================================================ -->
+  <div class="page-flag-stripe">
+    <span class="f-green"></span>
+    <span class="f-red"></span>
+    <span class="f-black"></span>
+    <span class="f-orange"></span>
+  </div>
+
+  <!-- ============================================================
+       CONFETTI CANVAS — drawn via JS on page load
+  ============================================================ -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <!-- ============================================================
+       FLOATING GRAIN / LEAF PARTICLES — decorative background
+  ============================================================ -->
+  <div class="grain-particle" style="left:5%;  animation-duration:13s; animation-delay:0s;">🌽</div>
+  <div class="grain-particle" style="left:20%; animation-duration:17s; animation-delay:2s;">🌿</div>
+  <div class="grain-particle" style="left:45%; animation-duration:11s; animation-delay:1s;">🌾</div>
+  <div class="grain-particle" style="left:68%; animation-duration:19s; animation-delay:4s;">🍃</div>
+  <div class="grain-particle" style="left:85%; animation-duration:15s; animation-delay:1.5s;">🌽</div>
+  <div class="grain-particle" style="left:92%; animation-duration:12s; animation-delay:3s;">🌱</div>
+
+
+  <!-- ============================================================
+       MAIN RESULT CARD
+  ============================================================ -->
+  <div class="result-card">
+
+    <!-- ── AI Brain Badge + Title ───────────────────────────── -->
+    <div class="animate__animated animate__bounceIn">
+      <div class="ai-badge">🤖</div>
+    </div>
+
+    <h1 class="animate__animated animate__fadeInDown" style="animation-delay:.15s;">
+      AI Yield Prediction Result
+    </h1>
+
+    <!-- ── Zambian flag divider ─────────────────────────────── -->
+    <div class="flag-divider animate__animated animate__fadeIn" style="animation-delay:.2s;">
+      <span class="f-green"></span>
+      <span class="f-red"></span>
+      <span class="f-black"></span>
+      <span class="f-orange"></span>
+    </div>
+
+    <!-- ── Crop Name Badge ──────────────────────────────────── -->
+    <!-- Displays the crop returned from Flask: {{ crop }} -->
+    <div class="crop-badge animate__animated animate__fadeInUp" style="animation-delay:.25s;">
+      <i class="fa-solid fa-seedling"></i>
+      {{ crop }}
+    </div>
+
+    <!-- ── Yield Result Panel ───────────────────────────────── -->
+    <!-- The big green panel showing the estimated yield -->
+    <div class="yield-panel animate__animated animate__zoomIn" style="animation-delay:.35s;"
+         data-aos="zoom-in">
+
+      <div class="yield-label">
+        <i class="fa-solid fa-chart-line"></i>&nbsp; Estimated Yield
+      </div>
+
+      <!-- Count-up target — JS animates from 0 to {{ result }} -->
+      <div class="yield-number" id="yieldNumber">0</div>
+
+      <div class="yield-unit">
+        <i class="fa-solid fa-weight-scale"></i> Metric Tons
+      </div>
+
+      <!-- Confidence badge -->
+      <div class="yield-accuracy">
+        <i class="fa-solid fa-circle-check"></i>
+        AI Confidence: 92% &nbsp;|&nbsp; Model: v3.1
+      </div>
+
+    </div><!-- /yield-panel -->
+
+    <!-- ── Insight Stats Chips ──────────────────────────────── -->
+    <!-- Quick summary figures below the main result -->
+    <div class="stats-row">
+
+      <div class="stat-chip" data-aos="fade-up" data-aos-delay="0">
+        <div class="sc-icon">🌦️</div>
+        <div class="sc-val">Good</div>
+        <div class="sc-lbl">Season</div>
+      </div>
+
+      <div class="stat-chip" data-aos="fade-up" data-aos-delay="80">
+        <div class="sc-icon">🧪</div>
+        <div class="sc-val">Medium</div>
+        <div class="sc-lbl">Soil</div>
+      </div>
+
+      <div class="stat-chip" data-aos="fade-up" data-aos-delay="160">
+        <div class="sc-icon">📅</div>
+        <div class="sc-val">Oct–Mar</div>
+        <div class="sc-lbl">Harvest</div>
+      </div>
+
+    </div>
+
+    <!-- ── Yield Rating Progress Bar ────────────────────────── -->
+    <div class="rating-row" data-aos="fade-up" data-aos-delay="100">
+      <div class="rating-label-row">
+        <span class="rating-lbl">
+          <i class="fa-solid fa-gauge-high" style="color:var(--zm-green)"></i>
+          &nbsp;Yield Rating
+        </span>
+        <span class="rating-pct" id="ratingPct">—</span>
+      </div>
+      <div class="zm-progress">
+        <div class="zm-progress-bar" id="progressBar"></div>
+      </div>
+    </div>
+
+    <!-- ── Action Buttons ───────────────────────────────────── -->
+    <div class="actions-row" data-aos="fade-up" data-aos-delay="150">
+
+      <!-- Back to Dashboard -->
+      <a href="/dashboard" class="btn-primary-zm">
+        <i class="fa-solid fa-gauge-high"></i> Dashboard
+      </a>
+
+      <!-- Predict Again -->
+      <a href="/dashboard#predict" class="btn-secondary-zm">
+        <i class="fa-solid fa-rotate-right"></i> Predict Again
+      </a>
+
+    </div>
+
+    <!-- Save to History button (full width) -->
+    <a href="/history" class="btn-save-zm" data-aos="fade-up" data-aos-delay="200">
+      <i class="fa-solid fa-floppy-disk"></i> View Prediction History
+    </a>
+
+  </div><!-- /result-card -->
+
+
+  <!-- ============================================================
+       TOAST NOTIFICATION — congratulatory message on load
+  ============================================================ -->
+  <div class="zm-toast" id="zmToast">
+    <i class="fa-solid fa-trophy"></i>
+    <span id="toastMsg">Prediction complete!</span>
+  </div>
+
+
+  <!-- ============================================================
+       SCRIPTS
+  ============================================================ -->
+
+  <!-- jQuery — DOM manipulation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+  <!-- Bootstrap 5 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Materialize JS — ripple & auto-init -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+  <!-- AOS — scroll animation init -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+
+
+  <script>
+    /* ============================================================
+       INIT LIBRARIES
+    ============================================================ */
+    AOS.init({ duration: 600, easing: 'ease-out-cubic', once: true });
+    M.AutoInit();
+
+    /* ============================================================
+       FLASK VALUE
+       Pull the yield result from the template variable.
+       parseFloat ensures it's a usable number.
+    ============================================================ */
+    const YIELD_VALUE = parseFloat("{{ result }}") || 0;
+
+    /* ============================================================
+       TOAST HELPER
+       showToast(message, durationMs)
+    ============================================================ */
+    function showToast(msg, duration = 4000) {
+      $('#toastMsg').text(msg);
+      $('#zmToast').addClass('show');
+      setTimeout(() => $('#zmToast').removeClass('show'), duration);
+    }
+
+    /* ============================================================
+       COUNT-UP ANIMATION
+       Smoothly increments the displayed number from 0 → YIELD_VALUE
+       Duration: 1800ms, starts after 500ms delay
+    ============================================================ */
+    function animateCountUp(target, duration = 1800, delay = 500) {
+      const $el     = $('#yieldNumber');
+      const step    = 16;           // ~60fps
+      const total   = Math.ceil(duration / step);
+      let   current = 0;
+
+      setTimeout(() => {
+        const interval = setInterval(() => {
+          current++;
+          // Ease-out: slows down near the end
+          const progress = current / total;
+          const eased    = 1 - Math.pow(1 - progress, 3);
+          const value    = (eased * target).toFixed(2);
+          $el.text(value);
+
+          if (current >= total) {
+            clearInterval(interval);
+            $el.text(target.toFixed(2)); // final exact value
+          }
+        }, step);
+      }, delay);
+    }
+
+    /* ============================================================
+       YIELD RATING PROGRESS BAR
+       Maps the yield value to a 0–100% rating for the bar.
+       Scale: 0–10 tons = 0–100% (capped)
+    ============================================================ */
+    function animateProgressBar(yieldVal) {
+      // Cap rating at 100%
+      const pct = Math.min(Math.round((yieldVal / 10) * 100), 100);
+
+      // Delay to let card animate in first
+      setTimeout(() => {
+        $('#progressBar').css('width', pct + '%');
+        $('#ratingPct').text(pct + '%');
+      }, 800);
+    }
+
+    /* ============================================================
+       CONFETTI CELEBRATION
+       Draws coloured falling rectangles on the canvas using
+       Zambian flag colours. Runs for ~3 seconds on page load.
+    ============================================================ */
+    function launchConfetti() {
+      const canvas  = document.getElementById('confettiCanvas');
+      const ctx     = canvas.getContext('2d');
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      // Zambian palette for confetti pieces
+      const colors  = ['#198A00','#EF0000','#141414','#EF7D00','#F5C518','#23b800'];
+      const pieces  = [];
+      const COUNT   = 120;
+
+      // Initialise confetti pieces
+      for (let i = 0; i < COUNT; i++) {
+        pieces.push({
+          x:   Math.random() * canvas.width,
+          y:   Math.random() * canvas.height - canvas.height,
+          w:   Math.random() * 10 + 5,
+          h:   Math.random() * 6  + 3,
+          col: colors[Math.floor(Math.random() * colors.length)],
+          spd: Math.random() * 3 + 2,
+          rot: Math.random() * 360,
+          rSpd: Math.random() * 4 - 2,
+          alpha: 1,
+        });
+      }
+
+      let frame = 0;
+      const MAX_FRAMES = 180; // ~3s at 60fps
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+          ctx.save();
+          ctx.globalAlpha = p.alpha;
+          ctx.translate(p.x + p.w / 2, p.y + p.h / 2);
+          ctx.rotate((p.rot * Math.PI) / 180);
+          ctx.fillStyle = p.col;
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+          // Physics
+          p.y   += p.spd;
+          p.rot += p.rSpd;
+          // Fade out in last 60 frames
+          if (frame > MAX_FRAMES - 60) p.alpha -= 1 / 60;
+        });
+        frame++;
+        if (frame < MAX_FRAMES) requestAnimationFrame(draw);
+        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      draw();
+    }
+
+    /* ============================================================
+       PAGE LOAD — trigger all animations in sequence
+    ============================================================ */
+    $(document).ready(function () {
+
+      // 1. Count-up the yield number
+      animateCountUp(YIELD_VALUE);
+
+      // 2. Animate the progress bar rating
+      animateProgressBar(YIELD_VALUE);
+
+      // 3. Launch confetti celebration
+      setTimeout(launchConfetti, 400);
+
+      // 4. Show congratulatory toast
+      setTimeout(() => {
+        showToast('🏆 Prediction complete! Great yield expected for {{ crop }}.');
+      }, 800);
+
+    });
+
+    /* ============================================================
+       RESIZE — keep confetti canvas full window size
+    ============================================================ */
+    $(window).on('resize', function () {
+      const c = document.getElementById('confettiCanvas');
+      c.width  = window.innerWidth;
+      c.height = window.innerHeight;
+    });
+
+  </script>
+
+</body>
+</html>

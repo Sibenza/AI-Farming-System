@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gamification Management | ZamFarm Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700;900&family=Outfit:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    :root{--g:#198A00;--gl:#23b800;--gd:#0f5c00;--r:#EF0000;--o:#EF7D00;--gold:#F5C518;--sky:#2E86AB;--blk:#141414;--bg:#F4F9F0;--surface:#fff;--surface2:#f0f5ec;--border:rgba(25,138,0,.14);--text:#141414;--text2:#555;--text3:#999;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);}
+    .topbar{background:linear-gradient(135deg,#0a0a0a,#1a1a2e);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,0,0,.4);}
+    .back-btn{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;padding:8px 16px;border-radius:10px;font-size:.82rem;font-weight:700;text-decoration:none;transition:background .2s;}
+    .back-btn:hover{background:rgba(255,255,255,.15);color:#fff;}
+    .topbar-title{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:700;color:#fff;}
+    .topbar-title span{color:var(--gold);}
+    .admin-badge{background:rgba(245,197,24,.15);border:1px solid rgba(245,197,24,.3);border-radius:20px;padding:4px 12px;font-size:.72rem;font-weight:800;color:var(--gold);}
+
+    .main{max-width:1200px;margin:0 auto;padding:28px 20px;}
+    .flag-bar{display:flex;height:4px;border-radius:3px;overflow:hidden;margin-bottom:22px;}
+    .flag-bar span{flex:1;}
+    .fb-g{background:var(--g);}.fb-r{background:var(--r);}.fb-b{background:#141414;}.fb-o{background:var(--o);}
+
+    .stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+    .s-chip{background:var(--surface);border-radius:14px;padding:16px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 12px rgba(0,0,0,.06);border-left:4px solid var(--g);}
+    .s-chip:nth-child(2){border-left-color:var(--o);}
+    .s-chip:nth-child(3){border-left-color:var(--gold);}
+    .s-chip:nth-child(4){border-left-color:var(--sky);}
+    .s-ico{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0;background:rgba(25,138,0,.09);color:var(--g);}
+    .s-chip:nth-child(2) .s-ico{background:rgba(239,125,0,.09);color:var(--o);}
+    .s-chip:nth-child(3) .s-ico{background:rgba(245,197,24,.12);color:#7a5c00;}
+    .s-chip:nth-child(4) .s-ico{background:rgba(46,134,171,.09);color:var(--sky);}
+    .s-val{font-size:1.5rem;font-weight:800;line-height:1;color:var(--text);}
+    .s-lbl{font-size:.65rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+
+    .zm-card{background:var(--surface);border-radius:14px;padding:22px;box-shadow:0 4px 18px rgba(0,0,0,.07);position:relative;overflow:hidden;margin-bottom:18px;}
+    .zm-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--g),var(--gold),var(--o));}
+    .zm-card h2{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:700;color:var(--gd);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+    .zm-card h2 i{color:var(--o);}
+
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+
+    /* Level cards */
+    .levels-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:16px;}
+    .level-card{border-radius:12px;padding:16px;border:2px solid var(--border);position:relative;overflow:hidden;}
+    .level-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:4px;}
+    .lv1-card::before{background:#888;}
+    .lv2-card::before{background:var(--g);}
+    .lv3-card::before{background:var(--o);}
+    .lv4-card::before{background:var(--gold);}
+    .lv5-card::before{background:#8B2FC9;}
+    .lv-icon{font-size:2rem;display:block;margin-bottom:6px;}
+    .lv-name{font-size:.98rem;font-weight:800;color:var(--text);margin-bottom:2px;}
+    .lv-pts{font-family:'DM Mono',monospace;font-size:.78rem;color:var(--text3);margin-bottom:10px;}
+    .lv-actions{display:flex;gap:6px;}
+    .btn-sm{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border:none;border-radius:7px;font-family:'Outfit',sans-serif;font-size:.72rem;font-weight:800;cursor:pointer;transition:all .2s;white-space:nowrap;}
+    .btn-edit{background:rgba(46,134,171,.1);color:var(--sky);border:1px solid rgba(46,134,171,.2);}
+    .btn-edit:hover{background:rgba(46,134,171,.2);}
+    .btn-del{background:rgba(239,0,0,.08);color:var(--r);border:1px solid rgba(239,0,0,.15);}
+    .btn-del:hover{background:rgba(239,0,0,.16);}
+    .btn-reset{background:rgba(239,125,0,.1);color:var(--o);border:1px solid rgba(239,125,0,.2);}
+    .btn-reset:hover{background:rgba(239,125,0,.2);}
+
+    /* Form */
+    .zm-label{display:block;font-size:.7rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--gd);margin-bottom:5px;}
+    .zm-input,.zm-select{width:100%;padding:9px 12px;border:2px solid var(--border);border-radius:9px;font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:600;color:var(--text);background:var(--surface2);outline:none;appearance:none;transition:border-color .2s;}
+    .zm-input:focus,.zm-select:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(25,138,0,.1);}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+    .btn-submit{padding:10px 22px;background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;border:none;border-radius:10px;font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:800;cursor:pointer;transition:all .2s;box-shadow:0 4px 14px rgba(25,138,0,.3);}
+    .btn-submit:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(25,138,0,.45);}
+
+    /* Leaderboard table */
+    .lb-table{width:100%;border-collapse:separate;border-spacing:0;font-size:.85rem;}
+    .lb-table thead th{background:linear-gradient(135deg,#1a1a2e,#2d2d4e);color:#fff;padding:10px 14px;font-size:.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;}
+    .lb-table tbody tr:nth-child(even){background:rgba(25,138,0,.02);}
+    .lb-table tbody tr:hover{background:rgba(25,138,0,.06);}
+    .lb-table tbody td{padding:9px 14px;border-bottom:1px solid var(--border);font-weight:600;color:var(--text);vertical-align:middle;}
+    .rank-num{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:800;background:var(--surface2);color:var(--text3);}
+    .rank-1{background:linear-gradient(135deg,var(--gold),#c8960a);color:#fff;}
+    .rank-2{background:linear-gradient(135deg,#c0c0c0,#888);color:#fff;}
+    .rank-3{background:linear-gradient(135deg,#cd7f32,#8b4513);color:#fff;}
+    .pts-pill{display:inline-flex;align-items:center;gap:4px;background:rgba(245,197,24,.12);border:1px solid rgba(245,197,24,.25);border-radius:20px;padding:2px 9px;font-family:'DM Mono',monospace;font-size:.75rem;font-weight:700;color:#7a5c00;}
+    .level-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:.72rem;font-weight:800;}
+    .lv1{background:rgba(136,136,136,.1);color:#555;}
+    .lv2{background:rgba(25,138,0,.1);color:var(--gd);}
+    .lv3{background:rgba(239,125,0,.1);color:#7a3e00;}
+    .lv4{background:rgba(245,197,24,.15);color:#7a5c00;}
+    .lv5{background:rgba(139,47,201,.1);color:#5c0080;}
+
+    /* Badges grid */
+    .badges-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;}
+    .badge-card{background:var(--surface2);border-radius:10px;padding:12px;border:1px solid var(--border);text-align:center;}
+    .badge-icon{font-size:1.8rem;display:block;margin-bottom:6px;}
+    .badge-name{font-size:.82rem;font-weight:800;color:var(--text);margin-bottom:2px;}
+    .badge-desc{font-size:.7rem;color:var(--text3);font-weight:600;line-height:1.4;}
+
+    .flash-msg{display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:10px;margin-bottom:16px;font-weight:700;font-size:.88rem;}
+    .flash-success{background:rgba(25,138,0,.1);color:var(--gd);border:1px solid rgba(25,138,0,.2);}
+    .flash-error{background:rgba(239,0,0,.08);color:var(--r);border:1px solid rgba(239,0,0,.15);}
+
+    @media(max-width:900px){.stat-strip{grid-template-columns:repeat(2,1fr);}.two-col{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <a href="/admin" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Admin Dashboard</a>
+      <div class="topbar-title">Gamification — <span>Levels &amp; Points</span></div>
+    </div>
+    <span class="admin-badge"><i class="fa-solid fa-trophy"></i> Gamification Config</span>
+  </div>
+
+  <div class="main">
+    <div class="flag-bar">
+      <span class="fb-g"></span><span class="fb-r"></span><span class="fb-b"></span><span class="fb-o"></span>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+      <div class="flash-msg flash-{{ 'success' if category == 'success' else 'error' }}">
+        <i class="fa-solid fa-{{ 'circle-check' if category == 'success' else 'circle-exclamation' }}"></i>
+        {{ message }}
+      </div>
+      {% endfor %}
+    {% endwith %}
+
+    <!-- Stats -->
+    <div class="stat-strip">
+      <div class="s-chip">
+        <div class="s-ico"><i class="fa-solid fa-chart-bar"></i></div>
+        <div><div class="s-val">{{ avg_pts }}</div><div class="s-lbl">Avg Points</div></div>
+      </div>
+      <div class="s-chip">
+        <div class="s-ico"><i class="fa-solid fa-crown"></i></div>
+        <div><div class="s-val">{{ max_pts }}</div><div class="s-lbl">Highest Points</div></div>
+      </div>
+      <div class="s-chip">
+        <div class="s-ico"><i class="fa-solid fa-star"></i></div>
+        <div><div class="s-val">{{ high_level }}</div><div class="s-lbl">Level 3+ Farmers</div></div>
+      </div>
+      <div class="s-chip">
+        <div class="s-ico"><i class="fa-solid fa-layer-group"></i></div>
+        <div><div class="s-val">{{ levels | length }}</div><div class="s-lbl">Total Levels</div></div>
+      </div>
+    </div>
+
+    <!-- Levels management + Add level form -->
+    <div class="two-col">
+
+      <!-- Current levels -->
+      <div class="zm-card" style="margin:0;">
+        <h2><i class="fa-solid fa-layer-group"></i> Current Levels</h2>
+        <div class="levels-grid">
+          {% for lv in levels %}
+          <div class="level-card lv{{ lv[1] }}-card">
+            <span class="lv-icon">{{ lv[4] }}</span>
+            <div class="lv-name">{{ lv[2] }}</div>
+            <div class="lv-pts">Min {{ lv[3] }} pts · Level {{ lv[1] }}</div>
+            <div class="lv-actions">
+              <button class="btn-sm btn-edit edit-level-btn"
+                      data-id="{{ lv[0] }}"
+                      data-name="{{ lv[2] | replace('"','&quot;') }}"
+                      data-pts="{{ lv[3] }}"
+                      data-icon="{{ lv[4] }}"
+                      data-color="{{ lv[5] }}">
+                <i class="fa-solid fa-pen"></i> Edit
+              </button>
+              {% if lv[1] > 3 %}
+              <form method="POST" style="display:inline;" class="del-level-form" data-name="{{ lv[2] }}">
+                <input type="hidden" name="action" value="delete_level">
+                <input type="hidden" name="level_id" value="{{ lv[0] }}">
+                <button type="submit" class="btn-sm btn-del"><i class="fa-solid fa-trash"></i></button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Add / Edit level -->
+      <div class="zm-card" style="margin:0;">
+        <h2 id="levelFormTitle"><i class="fa-solid fa-plus-circle"></i> Add New Level</h2>
+        <form method="POST" id="levelForm">
+          <input type="hidden" name="action" id="levelAction" value="add_level">
+          <input type="hidden" name="level_id" id="levelIdInput" value="">
+
+          <div class="form-row">
+            <div>
+              <label class="zm-label">Level Number</label>
+              <input class="zm-input" type="number" name="level_number" id="lvNumber" min="1" max="20" value="6" required>
+            </div>
+            <div>
+              <label class="zm-label">Min Points Required</label>
+              <input class="zm-input" type="number" name="min_points" id="lvPoints" min="0" value="1500" required>
+            </div>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label class="zm-label">Level Name</label>
+            <input class="zm-input" type="text" name="level_name" id="lvName" placeholder="e.g. Climate Expert" required>
+          </div>
+          <div class="form-row">
+            <div>
+              <label class="zm-label">Icon / Emoji</label>
+              <input class="zm-input" type="text" name="icon" id="lvIcon" placeholder="🌟" value="🌟" maxlength="4">
+            </div>
+            <div>
+              <label class="zm-label">Colour (hex)</label>
+              <input class="zm-input" type="color" name="color_hex" id="lvColor" value="#198A00"
+                     style="padding:4px;height:44px;cursor:pointer;">
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <button type="submit" class="btn-submit">
+              <i class="fa-solid fa-save"></i> Save Level
+            </button>
+            <button type="button" class="btn-sm btn-del" style="padding:10px 16px;" onclick="resetLevelForm()">
+              <i class="fa-solid fa-xmark"></i> Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Farmer Leaderboard + Reset Points -->
+    <div class="zm-card" style="margin-top:18px;">
+      <h2><i class="fa-solid fa-ranking-star"></i> Farmer Points Leaderboard</h2>
+      <div style="overflow-x:auto;">
+        <table class="lb-table" id="lbTable">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Farmer</th>
+              <th>District</th>
+              <th>Points</th>
+              <th>Level</th>
+              <th>Streak</th>
+              <th>Sims</th>
+              <th>Logins</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for f in farmer_gamif %}
+            <tr>
+              <td>
+                <span class="rank-num {% if loop.index == 1 %}rank-1{% elif loop.index == 2 %}rank-2{% elif loop.index == 3 %}rank-3{% endif %}">
+                  {{ loop.index }}
+                </span>
+              </td>
+              <td style="font-weight:800;">{{ f[1] }}</td>
+              <td style="font-size:.8rem;color:var(--text3);">{{ f[2] or '—' }}</td>
+              <td><span class="pts-pill">{{ f[3] }} pts</span></td>
+              <td>
+                <span class="level-tag lv{{ f[4] }}">
+                  {% if f[4]==1 %}🌱 Novice{% elif f[4]==2 %}🌿 Learner{% elif f[4]==3 %}🌳 Practitioner
+                  {% elif f[4]==4 %}🏆 Champion{% else %}👑 Master{% endif %}
+                </span>
+              </td>
+              <td style="font-weight:800;">{{ f[5] }}🔥</td>
+              <td style="font-weight:800;color:var(--sky);">{{ f[6] }}</td>
+              <td style="font-weight:800;color:var(--g);">{{ f[7] }}</td>
+              <td>
+                <form method="POST" style="display:inline;" class="reset-pts-form"
+                      data-name="{{ f[1] | replace('"','&quot;') }}">
+                  <input type="hidden" name="action" value="reset_points">
+                  <input type="hidden" name="farmer_id" value="{{ f[0] }}">
+                  <button type="submit" class="btn-sm btn-reset">
+                    <i class="fa-solid fa-rotate-left"></i> Reset
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Badges -->
+    <div class="zm-card">
+      <h2><i class="fa-solid fa-medal"></i> Achievement Badges ({{ badges | length }})</h2>
+      <div class="badges-grid">
+        {% for b in badges %}
+        <div class="badge-card">
+          <span class="badge-icon">{{ b[3] }}</span>
+          <div class="badge-name">{{ b[2] }}</div>
+          <div class="badge-desc">{{ b[4] }}</div>
+          <div style="margin-top:6px;font-size:.65rem;font-weight:800;color:var(--text3);font-family:'DM Mono',monospace;">{{ b[5] }}: {{ b[6] }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div><!-- /main -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+  <script>
+    $(function() {
+      $('#lbTable').DataTable({
+        pageLength: 20,
+        order: [[3, 'desc']],
+        columnDefs: [{ orderable: false, targets: [8] }],
+        language: {
+          search: '<i class="fa-solid fa-search"></i> ',
+          searchPlaceholder: 'Search farmers…',
+          paginate: {
+            previous: '<i class="fa-solid fa-chevron-left"></i>',
+            next: '<i class="fa-solid fa-chevron-right"></i>'
+          }
+        }
+      });
+    });
+
+    // Edit level — reads from data-* attributes (no Jinja in JS)
+    document.querySelectorAll('.edit-level-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var id    = this.dataset.id;
+        var name  = this.dataset.name;
+        var pts   = this.dataset.pts;
+        var icon  = this.dataset.icon;
+        var color = this.dataset.color;
+        document.getElementById('levelFormTitle').innerHTML =
+          '<i class="fa-solid fa-pen"></i> Edit Level';
+        document.getElementById('levelAction').value       = 'update_level';
+        document.getElementById('levelIdInput').value      = id;
+        document.getElementById('lvName').value            = name;
+        document.getElementById('lvPoints').value          = pts;
+        document.getElementById('lvIcon').value            = icon;
+        document.getElementById('lvColor').value           = color || '#198A00';
+        document.getElementById('lvNumber').disabled       = true;
+        document.getElementById('levelForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    // Delete level — reads name from data-* for confirm dialog
+    document.querySelectorAll('.del-level-form').forEach(function(form) {
+      form.addEventListener('submit', function(e) {
+        var name = this.dataset.name || 'this level';
+        if (!confirm('Delete level "' + name + '"? This cannot be undone.')) {
+          e.preventDefault();
+        }
+      });
+    });
+
+    // Reset points — reads name from data-* for confirm dialog
+    document.querySelectorAll('.reset-pts-form').forEach(function(form) {
+      form.addEventListener('submit', function(e) {
+        var name = this.dataset.name || 'this farmer';
+        if (!confirm('Reset ALL points for ' + name + ' to 0?')) {
+          e.preventDefault();
+        }
+      });
+    });
+
+    function resetLevelForm() {
+      document.getElementById('levelFormTitle').innerHTML =
+        '<i class="fa-solid fa-plus-circle"></i> Add New Level';
+      document.getElementById('levelAction').value = 'add_level';
+      document.getElementById('levelIdInput').value = '';
+      document.getElementById('lvNumber').disabled = false;
+      document.getElementById('levelForm').reset();
+    }
+  </script>
+
+</body>
+</html>

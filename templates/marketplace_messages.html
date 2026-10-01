@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.svg') }}">
+  <meta name="theme-color" content="#198A00">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ 'Buyer Messages' if mode == 'seller' else 'My Inquiries' }} | ZamFarm Marketplace</title>
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700;900&family=Outfit:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    :root{--g:#198A00;--gl:#23b800;--gd:#0f5c00;--r:#EF0000;--o:#EF7D00;--gold:#F5C518;--sky:#2E86AB;--blk:#141414;--bg:#F4F9F0;--surface:#fff;--surface2:#f0f5ec;--border:rgba(25,138,0,.14);--text:#141414;--text2:#555;--text3:#999;}
+    [data-theme="dark"]{--bg:#0d1a0a;--surface:#132010;--surface2:#1a2e14;--border:rgba(35,184,0,.15);--text:#e8f5e3;--text2:#9ab890;--text3:#5a7a55;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+    .topbar{background:linear-gradient(135deg,var(--blk),#1a2e0a);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,0,0,.35);}
+    .tb-left{display:flex;align-items:center;gap:12px;}
+    .tb-brand{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:700;color:#fff;}
+    .tb-brand span{color:var(--gold);}
+    .back-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);color:#fff;padding:7px 14px;border-radius:9px;font-size:.8rem;font-weight:700;text-decoration:none;}
+    .back-btn:hover{background:rgba(255,255,255,.16);color:#fff;}
+    .tab-switch{display:flex;gap:6px;}
+    .tab{padding:8px 16px;border-radius:9px;font-size:.8rem;font-weight:800;text-decoration:none;transition:all .2s;border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.7);}
+    .tab.active{background:var(--gold);color:#141414;border-color:var(--gold);}
+    .tab:not(.active):hover{background:rgba(255,255,255,.12);color:#fff;}
+
+    .main{max-width:840px;margin:0 auto;padding:24px 18px 48px;}
+    .flag-bar{display:flex;height:4px;border-radius:3px;overflow:hidden;margin-bottom:22px;}
+    .flag-bar span{flex:1;}
+    .fb-g{background:var(--g);}.fb-r{background:var(--r);}.fb-b{background:var(--blk);}.fb-o{background:var(--o);}
+
+    .page-title{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:700;color:var(--gd);display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+    [data-theme="dark"] .page-title{color:var(--gl);}
+    .page-title i{color:var(--o);}
+    .page-sub{font-size:.85rem;color:var(--text3);font-weight:600;margin-bottom:22px;}
+
+    .thread{background:var(--surface);border-radius:14px;padding:18px 20px;margin-bottom:14px;box-shadow:0 3px 14px rgba(0,0,0,.07);border-left:4px solid var(--sky);}
+    .thread.unread{border-left-color:var(--o);background:linear-gradient(90deg,rgba(239,125,0,.04),var(--surface) 12%);}
+    .thread.replied{border-left-color:var(--g);}
+    .th-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+    .th-listing{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--g);background:rgba(25,138,0,.08);padding:3px 10px;border-radius:20px;}
+    .th-time{font-size:.68rem;color:var(--text3);font-weight:600;font-family:'DM Mono',monospace;}
+    .th-person{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+    .th-person i{color:var(--o);}
+    .th-person-name{font-size:.92rem;font-weight:800;color:var(--text);}
+    .th-person-meta{font-size:.72rem;color:var(--text3);font-weight:600;}
+
+    .bubble{padding:11px 14px;border-radius:12px;font-size:.86rem;line-height:1.55;margin-bottom:8px;max-width:85%;}
+    .bubble-in{background:var(--surface2);color:var(--text);border-bottom-left-radius:3px;}
+    .bubble-out{background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;margin-left:auto;border-bottom-right-radius:3px;}
+    .bubble-label{font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.6px;opacity:.7;margin-bottom:3px;}
+
+    .contact-row{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap;}
+    .cbtn{display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border-radius:8px;font-size:.74rem;font-weight:800;text-decoration:none;border:none;cursor:pointer;font-family:'Outfit',sans-serif;}
+    .cbtn-call{background:rgba(25,138,0,.1);color:var(--gd);border:1px solid rgba(25,138,0,.2);}
+    .cbtn-wa{background:rgba(37,211,102,.12);color:#128C7E;border:1px solid rgba(37,211,102,.22);}
+    .cbtn-sms{background:rgba(46,134,171,.1);color:var(--sky);border:1px solid rgba(46,134,171,.2);}
+    .cbtn-view{background:rgba(245,197,24,.12);color:#7a5c00;border:1px solid rgba(245,197,24,.3);}
+    .cbtn:hover{filter:brightness(.95);}
+
+    .reply-form{margin-top:12px;display:flex;gap:8px;align-items:flex-end;}
+    .reply-form textarea{flex:1;padding:9px 12px;border:2px solid var(--border);border-radius:9px;font-family:'Outfit',sans-serif;font-size:.84rem;font-weight:600;color:var(--text);background:var(--surface2);resize:vertical;min-height:42px;outline:none;}
+    .reply-form textarea:focus{border-color:var(--g);}
+    .reply-btn{padding:10px 16px;background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;border:none;border-radius:9px;font-family:'Outfit',sans-serif;font-weight:800;cursor:pointer;font-size:.82rem;white-space:nowrap;}
+    .reply-btn:hover{transform:translateY(-1px);}
+    .replied-tag{font-size:.7rem;font-weight:800;color:var(--g);margin-top:6px;display:inline-flex;align-items:center;gap:4px;}
+    .await-tag{font-size:.7rem;font-weight:800;color:var(--o);margin-top:6px;display:inline-flex;align-items:center;gap:4px;}
+
+    .empty{text-align:center;padding:60px 24px;color:var(--text3);}
+    .empty i{font-size:3rem;display:block;margin-bottom:14px;color:var(--border);}
+    .empty a{color:var(--g);font-weight:800;text-decoration:none;}
+
+    .flash{padding:12px 16px;border-radius:10px;margin-bottom:16px;font-size:.85rem;font-weight:700;display:flex;align-items:center;gap:10px;}
+    .flash-success{background:rgba(25,138,0,.1);color:var(--gd);border:1px solid rgba(25,138,0,.2);}
+    .flash-error{background:rgba(239,0,0,.08);color:var(--r);border:1px solid rgba(239,0,0,.15);}
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="tb-left">
+      <a href="/marketplace" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Marketplace</a>
+      <div class="tb-brand">💬 ZamFarm <span>Messages</span></div>
+    </div>
+    <div class="tab-switch">
+      <a href="/marketplace/messages" class="tab {% if mode == 'seller' %}active{% endif %}">
+        <i class="fa-solid fa-inbox"></i> Buyer Messages
+      </a>
+      <a href="/marketplace/my-inquiries" class="tab {% if mode == 'buyer' %}active{% endif %}">
+        <i class="fa-solid fa-paper-plane"></i> My Inquiries
+      </a>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="flag-bar"><span class="fb-g"></span><span class="fb-r"></span><span class="fb-b"></span><span class="fb-o"></span></div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+      <div class="flash flash-{{ cat }}"><i class="fa-solid fa-circle-check"></i> {{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    {% if mode == 'seller' %}
+    <div class="page-title"><i class="fa-solid fa-inbox"></i> Buyer Messages</div>
+    <div class="page-sub">Messages from buyers interested in your listings. Reply here, or reach them by Call, WhatsApp or SMS.</div>
+    {% else %}
+    <div class="page-title"><i class="fa-solid fa-paper-plane"></i> My Inquiries</div>
+    <div class="page-sub">Messages you've sent to sellers and their replies.</div>
+    {% endif %}
+
+    {% if threads %}
+      {% for t in threads %}
+      {# t: 0=id 1=listing_id 2=title 3=message 4=person_name 5=person_phone
+         6=district 7=created_at 8=is_read 9=reply 10=replied_at 11=person_id #}
+      {% set wa_num = (t[5] or '').replace('+','').replace(' ','') %}
+      <div class="thread {% if t[9] %}replied{% elif mode=='seller' and not t[8] %}unread{% endif %}">
+        <div class="th-head">
+          <span class="th-listing">
+            <i class="fa-solid fa-tag"></i> {{ t[2] }}
+          </span>
+          <span class="th-time"><i class="fa-regular fa-clock"></i> {{ (t[7] | string)[:16] }}</span>
+        </div>
+
+        <div class="th-person">
+          <i class="fa-solid fa-user-circle" style="font-size:1.3rem;"></i>
+          <div>
+            <div class="th-person-name">
+              {% if mode == 'seller' %}{{ t[4] }}{% else %}{{ t[4] }} <span style="font-size:.7rem;color:var(--text3);">(seller)</span>{% endif %}
+            </div>
+            <div class="th-person-meta">
+              <i class="fa-solid fa-location-dot" style="color:var(--o);"></i> {{ t[6] or '—' }}
+              {% if t[5] %} · <i class="fa-solid fa-phone" style="color:var(--g);"></i> {{ t[5] }}{% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- The buyer's original message -->
+        <div class="bubble bubble-in">
+          <div class="bubble-label">{% if mode == 'seller' %}Buyer asked{% else %}You asked{% endif %}</div>
+          {{ t[3] }}
+        </div>
+
+        <!-- The seller's reply, if any -->
+        {% if t[9] %}
+        <div class="bubble bubble-out">
+          <div class="bubble-label">{% if mode == 'seller' %}You replied{% else %}Seller replied{% endif %}</div>
+          {{ t[9] }}
+        </div>
+        {% endif %}
+
+        <!-- Open the interactive chat (text + voice notes) -->
+        <a href="/marketplace/chat/{{ t[0] }}" class="reply-btn" style="display:inline-flex;align-items:center;gap:7px;text-decoration:none;margin-top:10px;">
+          <i class="fa-solid fa-comments"></i> Open Chat
+        </a>
+
+        <!-- Contact shortcuts -->
+        <div class="contact-row">
+          {% if t[5] %}<a href="tel:{{ t[5] }}" class="cbtn cbtn-call"><i class="fa-solid fa-phone"></i> Call</a>{% endif %}
+          {% if wa_num %}<a href="https://wa.me/{{ wa_num }}" target="_blank" class="cbtn cbtn-wa"><i class="fa-brands fa-whatsapp"></i> WhatsApp</a>{% endif %}
+          {% if t[5] %}<a href="sms:{{ t[5] }}" class="cbtn cbtn-sms"><i class="fa-solid fa-comment-sms"></i> SMS</a>{% endif %}
+          <a href="/marketplace/listing/{{ t[1] }}" class="cbtn cbtn-view"><i class="fa-solid fa-eye"></i> View Listing</a>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+    <div class="empty">
+      <i class="fa-regular fa-comment-dots"></i>
+      {% if mode == 'seller' %}
+      <p>No buyer messages yet.<br>When buyers message you about your listings, they'll appear here.</p>
+      {% else %}
+      <p>You haven't sent any inquiries yet.<br><a href="/marketplace">Browse the marketplace →</a></p>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+</body>
+</html>

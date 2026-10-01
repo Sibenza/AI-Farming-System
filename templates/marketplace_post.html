@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.svg') }}">
+  <meta name="theme-color" content="#198A00">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ 'Edit Listing' if edit else 'Post a Listing' }} | ZamFarm Marketplace</title>
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700;900&family=Outfit:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    :root{--g:#198A00;--gl:#23b800;--gd:#0f5c00;--r:#EF0000;--o:#EF7D00;--gold:#F5C518;--sky:#2E86AB;--blk:#141414;--bg:#F4F9F0;--surface:#fff;--surface2:#f0f5ec;--border:rgba(25,138,0,.14);--text:#141414;--text2:#555;--text3:#999;}
+    [data-theme="dark"]{--bg:#0d1a0a;--surface:#132010;--surface2:#1a2e14;--border:rgba(35,184,0,.15);--text:#e8f5e3;--text2:#9ab890;--text3:#5a7a55;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+    .topbar{background:linear-gradient(135deg,var(--blk),#1a2e0a);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,0,0,.35);}
+    .tb-title{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:700;color:#fff;}
+    .tb-title span{color:var(--gold);}
+    .back-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);color:#fff;padding:7px 14px;border-radius:9px;font-size:.8rem;font-weight:700;text-decoration:none;}
+    .back-btn:hover{background:rgba(255,255,255,.16);color:#fff;}
+
+    .main{max-width:760px;margin:0 auto;padding:28px 18px 48px;}
+    .flag-bar{display:flex;height:4px;border-radius:3px;overflow:hidden;margin-bottom:22px;}
+    .flag-bar span{flex:1;}
+    .fb-g{background:var(--g);}.fb-r{background:var(--r);}.fb-b{background:var(--blk);}.fb-o{background:var(--o);}
+
+    .page-title{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:700;color:var(--gd);display:flex;align-items:center;gap:10px;margin-bottom:22px;}
+    [data-theme="dark"] .page-title{color:var(--gl);}
+    .page-title i{color:var(--o);}
+
+    .card{background:var(--surface);border-radius:16px;padding:24px;box-shadow:0 4px 18px rgba(0,0,0,.07);margin-bottom:20px;position:relative;overflow:hidden;}
+    .card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--g),var(--gold),var(--o));}
+    .card-title{font-size:1rem;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px;margin-bottom:18px;}
+    .card-title i{color:var(--o);}
+
+    .zm-label{display:block;font-size:.7rem;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--gd);margin-bottom:6px;}
+    [data-theme="dark"] .zm-label{color:var(--gl);}
+    .zm-input,.zm-select,.zm-textarea{width:100%;padding:11px 12px;border:2px solid var(--border);border-radius:10px;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:600;color:var(--text);background:var(--surface2);outline:none;transition:border-color .2s,box-shadow .2s;}
+    .zm-input:focus,.zm-select:focus,.zm-textarea:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(25,138,0,.1);}
+    .zm-textarea{resize:vertical;min-height:90px;}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+    .form-row.three{grid-template-columns:1fr 1fr 1fr;}
+    .form-group{margin-bottom:16px;}
+    .hint{font-size:.72rem;color:var(--text3);font-weight:600;margin-top:4px;}
+
+    /* Image upload zone */
+    .upload-zone{border:2px dashed var(--border);border-radius:12px;padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface2);position:relative;}
+    .upload-zone:hover,.upload-zone.drag-over{border-color:var(--g);background:rgba(25,138,0,.05);}
+    .upload-zone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+    .uz-icon{font-size:2rem;margin-bottom:8px;display:block;}
+    .uz-title{font-size:.92rem;font-weight:800;color:var(--text);margin-bottom:4px;}
+    .uz-sub{font-size:.75rem;color:var(--text3);font-weight:600;}
+    .uz-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(25,138,0,.1);border:1px solid rgba(25,138,0,.2);border-radius:20px;padding:3px 10px;font-size:.7rem;font-weight:800;color:var(--gd);margin-top:8px;}
+
+    /* Camera button */
+    .camera-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(46,134,171,.1);border:1.5px solid rgba(46,134,171,.2);border-radius:9px;font-size:.78rem;font-weight:800;color:var(--sky);cursor:pointer;margin-top:10px;font-family:'Outfit',sans-serif;}
+    .camera-btn:hover{background:rgba(46,134,171,.2);}
+
+    /* Image previews */
+    .preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;margin-top:14px;}
+    .preview-item{position:relative;border-radius:10px;overflow:hidden;aspect-ratio:1;background:var(--surface2);}
+    .preview-item img{width:100%;height:100%;object-fit:cover;display:block;}
+    .preview-remove{position:absolute;top:4px;right:4px;background:rgba(239,0,0,.85);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+    .preview-order{position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,.65);color:#fff;border-radius:6px;padding:1px 6px;font-size:.62rem;font-weight:800;}
+    .preview-existing{position:relative;border-radius:10px;overflow:hidden;aspect-ratio:1;}
+    .preview-existing img{width:100%;height:100%;object-fit:cover;}
+    .pe-del{position:absolute;top:4px;right:4px;background:rgba(239,0,0,.8);color:#fff;border:none;border-radius:50%;width:22px;height:22px;font-size:.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+    .primary-badge{position:absolute;bottom:4px;left:4px;background:rgba(245,197,24,.9);color:#141414;border-radius:6px;padding:1px 6px;font-size:.6rem;font-weight:800;}
+
+    /* Location card */
+    .loc-detect{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface2);border-radius:10px;border:1.5px solid var(--border);cursor:pointer;transition:all .2s;margin-bottom:10px;}
+    .loc-detect:hover{border-color:var(--g);background:rgba(25,138,0,.05);}
+    .loc-status{font-size:.82rem;font-weight:700;color:var(--text2);}
+    .loc-coords{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--text3);margin-top:2px;}
+    #mapPreview{width:100%;height:200px;border-radius:10px;border:none;margin-top:10px;display:none;}
+
+    /* Status options */
+    .status-opts{display:flex;gap:10px;flex-wrap:wrap;}
+    .status-opt{position:relative;}
+    .status-opt input[type="radio"]{position:absolute;opacity:0;width:0;height:0;}
+    .status-opt label{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:10px;border:2px solid var(--border);cursor:pointer;font-size:.82rem;font-weight:800;transition:all .2s;color:var(--text2);}
+    .status-opt input:checked + label.s-available{border-color:var(--g);background:rgba(25,138,0,.1);color:var(--gd);}
+    .status-opt input:checked + label.s-low_stock{border-color:var(--o);background:rgba(239,125,0,.1);color:#7a3e00;}
+    .status-opt input:checked + label.s-sold_out{border-color:var(--r);background:rgba(239,0,0,.08);color:#7a0000;}
+
+    .btn-submit{width:100%;padding:14px;background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;border:none;border-radius:12px;font-family:'Outfit',sans-serif;font-size:1rem;font-weight:800;cursor:pointer;transition:all .2s;box-shadow:0 6px 20px rgba(25,138,0,.35);display:flex;align-items:center;justify-content:center;gap:8px;}
+    .btn-submit:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(25,138,0,.5);}
+
+    .flash{padding:12px 16px;border-radius:10px;margin-bottom:16px;font-size:.85rem;font-weight:700;display:flex;align-items:center;gap:10px;}
+    .flash-success{background:rgba(25,138,0,.1);color:var(--gd);border:1px solid rgba(25,138,0,.2);}
+    .flash-error{background:rgba(239,0,0,.08);color:var(--r);border:1px solid rgba(239,0,0,.15);}
+
+    @media(max-width:600px){.form-row,.form-row.three{grid-template-columns:1fr;}.status-opts{flex-direction:column;}}
+  </style>
+</head>
+<body>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <a href="/marketplace" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Marketplace</a>
+      <div class="tb-title">{{ '✏️ Edit' if edit else '🌾 New' }} <span>Listing</span></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="flag-bar"><span class="fb-g"></span><span class="fb-r"></span><span class="fb-b"></span><span class="fb-o"></span></div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+      <div class="flash flash-{{ cat }}"><i class="fa-solid fa-circle-check"></i> {{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <div class="page-title">
+      <i class="fa-solid fa-store"></i>
+      {{ 'Edit Your Listing' if edit else 'Post a New Listing' }}
+    </div>
+
+    <form method="POST" enctype="multipart/form-data"
+          action="{{ '/marketplace/edit/' ~ listing[0] if edit else '/marketplace/post' }}">
+
+      <!-- PRODUCT DETAILS -->
+      <div class="card">
+        <div class="card-title"><i class="fa-solid fa-seedling"></i> Product Details</div>
+
+        <div class="form-group">
+          <label class="zm-label">Listing Title *</label>
+          <input type="text" name="title" class="zm-input" required
+                 value="{{ listing[1] if edit and listing else '' }}"
+                 placeholder="e.g. Premium Maize — Lusaka Zone, Well Dried">
+        </div>
+
+        <div class="form-row">
+          <div>
+            <label class="zm-label">Crop / Product *</label>
+            <input type="text" name="crop_name" class="zm-input" required
+                   list="cropList" autocomplete="off"
+                   placeholder="Type or choose a crop…"
+                   value="{{ listing[3] if edit and listing else '' }}">
+            <datalist id="cropList">
+              {% for c in ['Maize','Soyabeans','Groundnuts','Cassava','Sorghum','Millet','Sunflower','Potatoes','Beans','Sweet Potatoes','Tobacco','Cotton','Sorghum','Rice','Wheat','Cabbage','Tomatoes','Onions','Pumpkins','Watermelon','Mangoes','Bananas','Avocados','Oranges','Vegetables','Fruit','Dairy','Eggs','Honey','Other'] %}
+              <option value="{{ c }}">
+              {% endfor %}
+            </datalist>
+            <div class="hint">Select from the list or type any product name.</div>
+          </div>
+          <div>
+            <label class="zm-label">Listing Status</label>
+            <div class="status-opts">
+              {% for val, lbl in [('available','✅ Available'),('low_stock','⚠️ Low Stock'),('sold_out','⛔ Sold Out')] %}
+              <div class="status-opt">
+                <input type="radio" name="status" id="s{{ val }}" value="{{ val }}"
+                       {% if (edit and listing and listing[12]==val) or (not edit and val=='available') %}checked{% endif %}>
+                <label for="s{{ val }}" class="s-{{ val }}">{{ lbl }}</label>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row three">
+          <div>
+            <label class="zm-label">Quantity *</label>
+            <input type="number" name="quantity_kg" class="zm-input" required min="0.1" step="0.1"
+                   value="{{ listing[4] if edit and listing else '' }}" placeholder="e.g. 500">
+          </div>
+          <div>
+            <label class="zm-label">Unit</label>
+            <select name="unit_label" class="zm-select">
+              {% for u in ['kg','bags','tonnes','crates','bunches','litres','pieces'] %}
+              <option value="{{ u }}" {% if edit and listing and listing[13]==u %}selected{% endif %}>{{ u }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="zm-label">Price per Unit (ZMW) *</label>
+            <input type="number" name="price_per_kg" class="zm-input" required min="0.01" step="0.01"
+                   value="{{ listing[5] if edit and listing else '' }}" placeholder="e.g. 2.50">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="zm-label">Description</label>
+          <textarea name="description" class="zm-textarea"
+                    placeholder="Describe your produce — variety, quality, how it was grown, harvested, dried, etc.">{{ listing[2] if edit and listing else '' }}</textarea>
+        </div>
+      </div>
+
+      <!-- PHOTOS -->
+      <div class="card">
+        <div class="card-title"><i class="fa-solid fa-images"></i> Product Photos (up to 8)</div>
+
+        <!-- Existing photos (edit mode) -->
+        {% if edit and images %}
+        <div style="margin-bottom:14px;">
+          <div style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);margin-bottom:8px;">Current Photos</div>
+          <div class="preview-grid" id="existingGrid">
+            {% for img in images %}
+            <div class="preview-existing" id="exist-{{ img[0] }}">
+              <img src="{{ url_for('static', filename='uploads/market/' ~ img[1]) }}" alt="">
+              {% if loop.first %}<span class="primary-badge">Cover</span>{% endif %}
+              <button type="button" class="pe-del del-existing-btn" data-imgid="{{ img[0] }}">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+            {% endfor %}
+          </div>
+          <input type="hidden" name="delete_images" id="deleteImagesInput" value="">
+        </div>
+        {% endif %}
+
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" name="photos" id="photoInput" accept="image/*" multiple capture="environment">
+          <span class="uz-icon">📸</span>
+          <div class="uz-title">Tap to upload or take photos</div>
+          <div class="uz-sub">JPG, PNG, WebP up to 5MB each</div>
+          <div class="uz-badge"><i class="fa-solid fa-camera"></i> Camera or Gallery</div>
+        </div>
+
+        <div class="preview-grid" id="previewGrid"></div>
+        <div class="hint" id="photoCount" style="margin-top:8px;"></div>
+      </div>
+
+      <!-- CONTACT & LOCATION -->
+      <div class="card">
+        <div class="card-title"><i class="fa-solid fa-address-card"></i> Contact & Location</div>
+
+        <div class="form-row">
+          <div>
+            <label class="zm-label">Contact Phone *</label>
+            <input type="tel" name="contact_phone" class="zm-input" required
+                   value="{{ listing[7] if edit and listing else (farmer[3] if farmer else '') }}"
+                   placeholder="+260971000000">
+          </div>
+          <div>
+            <label class="zm-label">WhatsApp Number</label>
+            <input type="tel" name="contact_whatsapp" class="zm-input"
+                   value="{{ listing[8] if edit and listing else (farmer[3] if farmer else '') }}"
+                   placeholder="+260971000000 (leave blank if same)">
+            <div class="hint">Leave blank to use the same as contact phone.</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="zm-label">📍 Location (GPS)</label>
+          <div class="loc-detect" id="locDetect" onclick="detectLocation()">
+            <i class="fa-solid fa-location-crosshairs" style="color:var(--g);font-size:1.1rem;"></i>
+            <div>
+              <div class="loc-status" id="locStatus">Click to detect your location automatically</div>
+              <div class="loc-coords" id="locCoords"></div>
+            </div>
+          </div>
+          <input type="hidden" name="latitude"  id="latInput"  value="{{ listing[15] if edit and listing else '' }}">
+          <input type="hidden" name="longitude" id="lngInput"  value="{{ listing[16] if edit and listing else '' }}">
+          {% if edit and listing and listing[15] and listing[16] %}
+          <iframe id="mapPreview" style="display:block;"
+            src="https://maps.google.com/maps?q={{ listing[15] }},{{ listing[16] }}&z=14&output=embed">
+          </iframe>
+          {% else %}
+          <iframe id="mapPreview"></iframe>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- SUBMIT -->
+      <button type="submit" class="btn-submit">
+        <i class="fa-solid fa-{{ 'save' if edit else 'store' }}"></i>
+        {{ 'Save Changes' if edit else 'Post Listing — Go Live!' }}
+      </button>
+    </form>
+  </div>
+
+  <script>
+    // ── Image previews ────────────────────────────────────────────────────────
+    var selectedFiles = [];
+    var photoInput    = document.getElementById('photoInput');
+    var previewGrid   = document.getElementById('previewGrid');
+    var photoCount    = document.getElementById('photoCount');
+    var uploadZone    = document.getElementById('uploadZone');
+
+    photoInput.addEventListener('change', function() {
+      var newFiles = Array.from(this.files);
+      newFiles.forEach(function(f) {
+        if (selectedFiles.length >= 8) return;
+        if (!f.type.startsWith('image/')) return;
+        if (f.size > 5 * 1024 * 1024) {
+          alert(f.name + ' is too large (max 5MB)'); return;
+        }
+        selectedFiles.push(f);
+      });
+      renderPreviews();
+    });
+
+    // Drag and drop
+    uploadZone.addEventListener('dragover', function(e) {
+      e.preventDefault(); this.classList.add('drag-over');
+    });
+    uploadZone.addEventListener('dragleave', function() {
+      this.classList.remove('drag-over');
+    });
+    uploadZone.addEventListener('drop', function(e) {
+      e.preventDefault(); this.classList.remove('drag-over');
+      var files = Array.from(e.dataTransfer.files).filter(function(f){ return f.type.startsWith('image/'); });
+      files.forEach(function(f) {
+        if (selectedFiles.length < 8) selectedFiles.push(f);
+      });
+      renderPreviews();
+    });
+
+    function renderPreviews() {
+      previewGrid.innerHTML = '';
+      selectedFiles.forEach(function(f, i) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          var item = document.createElement('div');
+          item.className = 'preview-item';
+          item.innerHTML =
+            '<img src="' + e.target.result + '" alt="">' +
+            '<span class="preview-order">' + (i === 0 ? '⭐ Cover' : (i+1)) + '</span>' +
+            '<button type="button" class="preview-remove" onclick="removeFile(' + i + ')"><i class="fa-solid fa-xmark"></i></button>';
+          previewGrid.appendChild(item);
+        };
+        reader.readAsDataURL(f);
+      });
+      photoCount.textContent = selectedFiles.length > 0
+        ? selectedFiles.length + ' photo' + (selectedFiles.length > 1 ? 's' : '') + ' selected (first = cover image)'
+        : '';
+
+      // Sync file input
+      var dt = new DataTransfer();
+      selectedFiles.forEach(function(f){ dt.items.add(f); });
+      photoInput.files = dt.files;
+    }
+
+    function removeFile(idx) {
+      selectedFiles.splice(idx, 1);
+      renderPreviews();
+    }
+
+    // Existing image deletion via data attributes
+    document.addEventListener('click', function(e) {
+      var btn = e.target.closest('.del-existing-btn');
+      if (!btn) return;
+      var imgId = parseInt(btn.dataset.imgid);
+      var el    = btn.closest('.preview-existing');
+      if (el) deleteExistingImg(imgId, el);
+    });
+
+    // Existing image deletion (edit mode)
+    var deleteIds = [];
+    function deleteExistingImg(imgId, el) {
+      deleteIds.push(imgId);
+      el.remove();
+      var inp = document.getElementById('deleteImagesInput');
+      if (inp) inp.value = deleteIds.join(',');
+    }
+
+    // ── GPS Location ─────────────────────────────────────────────────────────
+    function detectLocation() {
+      var status = document.getElementById('locStatus');
+      var coords = document.getElementById('locCoords');
+      status.textContent = '⏳ Detecting location…';
+      if (!navigator.geolocation) {
+        status.textContent = '❌ Geolocation not supported by this browser.'; return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        function(pos) {
+          var lat = pos.coords.latitude.toFixed(6);
+          var lng = pos.coords.longitude.toFixed(6);
+          document.getElementById('latInput').value = lat;
+          document.getElementById('lngInput').value = lng;
+          status.textContent = '✅ Location captured';
+          coords.textContent = lat + ', ' + lng;
+          var map = document.getElementById('mapPreview');
+          map.src = 'https://maps.google.com/maps?q=' + lat + ',' + lng + '&z=14&output=embed';
+          map.style.display = 'block';
+        },
+        function(err) {
+          status.textContent = '⚠️ Could not get location: ' + err.message;
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+
+    // Auto-detect on load if no existing coords
+    var existingLat = document.getElementById('latInput').value;
+    if (!existingLat) {
+      setTimeout(detectLocation, 800);
+    } else {
+      document.getElementById('locStatus').textContent = '✅ Location saved';
+      document.getElementById('locCoords').textContent = existingLat + ', ' + document.getElementById('lngInput').value;
+    }
+  </script>
+
+</body>
+</html>

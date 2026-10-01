@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.svg') }}">
+  <meta name="theme-color" content="#198A00">
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZamFarm Climate | Home</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;0,900;1,700&family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  <style>
+    :root {
+      --forest:   #0a2200;
+      --green:    #198A00;
+      --green-l:  #2db800;
+      --green-dk: #0f5c00;
+      --red:      #C0392B;
+      --orange:   #EF7D00;
+      --gold:     #F5C518;
+      --sky:      #2E86AB;
+      --night:    #060d04;
+      --trans:    0.35s cubic-bezier(.4,0,.2,1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow-x: hidden; }
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--night);
+      color: #fff;
+    }
+
+    /* ══════════════════════════════════════════
+       BACKGROUND SLIDESHOW
+    ══════════════════════════════════════════ */
+    .bg-slideshow { position: fixed; inset: 0; z-index: 0; }
+    .slide {
+      position: absolute; inset: 0;
+      background-size: cover; background-position: center;
+      opacity: 0; transform: scale(1.07);
+      animation: slideShow 42s infinite;
+    }
+    .slide:nth-child(1){animation-delay:0s;  background-image:url('https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=1920&q=80');}
+    .slide:nth-child(2){animation-delay:7s;  background-image:url('https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=1920&q=80');}
+    .slide:nth-child(3){animation-delay:14s; background-image:url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1920&q=80');}
+    .slide:nth-child(4){animation-delay:21s; background-image:url('https://images.unsplash.com/photo-1560493676-04071c5f467b?w=1920&q=80');}
+    .slide:nth-child(5){animation-delay:28s; background-image:url('https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=1920&q=80');}
+    .slide:nth-child(6){animation-delay:35s; background-image:url('https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?w=1920&q=80');}
+    @keyframes slideShow {
+      0%  {opacity:0; transform:scale(1.07)}
+      5%  {opacity:1; transform:scale(1.04)}
+      85% {opacity:1; transform:scale(1.0)}
+      100%{opacity:0; transform:scale(1.0)}
+    }
+    .bg-overlay {
+      position: fixed; inset: 0; z-index: 1;
+      background: linear-gradient(
+        160deg,
+        rgba(6,13,4,.88) 0%,
+        rgba(10,34,0,.72) 40%,
+        rgba(6,13,4,.82) 100%
+      );
+    }
+    /* Vignette */
+    .bg-vignette {
+      position: fixed; inset: 0; z-index: 2;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,.55) 100%);
+    }
+
+    /* ══════════════════════════════════════════
+       FLAG STRIPE
+    ══════════════════════════════════════════ */
+    .flag-stripe {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: 4px; display: flex; z-index: 200;
+    }
+    .flag-stripe span { flex: 1; }
+    .fg{background:#198A00;} .fr{background:#C0392B;}
+    .fb{background:#111;}    .fo{background:#EF7D00;}
+
+    /* ══════════════════════════════════════════
+       TOPBAR / NAVBAR
+    ══════════════════════════════════════════ */
+    .topbar {
+      position: fixed; top: 4px; left: 0; right: 0;
+      height: 68px; z-index: 100;
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      background: rgba(6,13,4,.55);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      transition: background var(--trans);
+    }
+    .topbar.scrolled {
+      background: rgba(6,13,4,.88);
+      border-bottom-color: rgba(25,138,0,.2);
+    }
+
+    /* Brand */
+    .tb-brand {
+      display: flex; align-items: center; gap: 11px;
+      text-decoration: none;
+    }
+    .tb-eagle {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: linear-gradient(135deg,var(--green),var(--forest));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+      box-shadow: 0 0 0 3px rgba(25,138,0,.2), 0 4px 16px rgba(0,0,0,.4);
+      animation: pulseRing 3s ease-in-out infinite;
+    }
+    @keyframes pulseRing {
+      0%,100%{box-shadow:0 0 0 3px rgba(25,138,0,.2),0 4px 16px rgba(0,0,0,.4)}
+      50%{box-shadow:0 0 0 6px rgba(25,138,0,.1),0 4px 20px rgba(0,0,0,.5)}
+    }
+    .tb-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.45rem; font-weight: 700; color: #fff; line-height: 1;
+    }
+    .tb-name .acc { color: var(--gold); font-style: italic; }
+    .tb-name .l2  { display: block; color: var(--green-l); font-size: 1.05rem; }
+
+    /* Nav links (desktop) */
+    .tb-nav {
+      display: flex; align-items: center; gap: 6px;
+    }
+    .tb-link {
+      color: rgba(255,255,255,.55); text-decoration: none;
+      font-size: .84rem; font-weight: 600;
+      padding: 7px 15px; border-radius: 8px;
+      transition: all var(--trans);
+    }
+    .tb-link:hover { color: #fff; background: rgba(255,255,255,.07); }
+
+    /* Sign-in CTA button */
+    .btn-signin-cta {
+      display: flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, var(--green), var(--green-dk));
+      color: #fff; border: none;
+      padding: 10px 24px; border-radius: 22px;
+      font-family: 'Outfit', sans-serif;
+      font-size: .9rem; font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(25,138,0,.40);
+      transition: all var(--trans);
+      position: relative; overflow: hidden;
+    }
+    .btn-signin-cta::before {
+      content: '';
+      position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.15), transparent);
+      transition: left .5s ease;
+    }
+    .btn-signin-cta:hover::before { left: 160%; }
+    .btn-signin-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(25,138,0,.55);
+    }
+
+    /* Register link */
+    .btn-reg-cta {
+      display: flex; align-items: center; gap: 8px;
+      color: var(--gold); background: rgba(245,197,24,.08);
+      border: 1px solid rgba(245,197,24,.25);
+      padding: 9px 20px; border-radius: 22px;
+      font-family: 'Outfit', sans-serif;
+      font-size: .9rem; font-weight: 700;
+      text-decoration: none;
+      transition: all var(--trans);
+    }
+    .btn-reg-cta:hover {
+      background: rgba(245,197,24,.14);
+      border-color: rgba(245,197,24,.5);
+    }
+
+    /* Mobile menu toggle */
+    .tb-menu-btn {
+      display: none; background: none; border: none;
+      color: rgba(255,255,255,.7); font-size: 1.2rem; cursor: pointer;
+    }
+
+    /* ══════════════════════════════════════════
+       HERO SECTION
+    ══════════════════════════════════════════ */
+    .hero {
+      position: relative; z-index: 10;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 100px 24px 80px;
+    }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(245,197,24,.10);
+      border: 1px solid rgba(245,197,24,.28);
+      border-radius: 30px; padding: 7px 18px;
+      font-family: 'DM Mono', monospace;
+      font-size: .68rem; letter-spacing: 2.5px;
+      text-transform: uppercase; color: var(--gold);
+      margin-bottom: 28px;
+      animation: fadeUp .8s .1s both;
+    }
+    .pulse-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--green-l);
+      box-shadow: 0 0 8px var(--green-l);
+      animation: blink 2s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+    .hero-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3.8rem, 8vw, 7rem);
+      font-weight: 900; line-height: .9;
+      margin-bottom: 14px;
+      animation: fadeUp .9s .2s both;
+    }
+    .hero-title .w1 { color: #fff; }
+    .hero-title .w2 { color: var(--gold); font-style: italic; }
+    .hero-title .w3 { display: block; color: var(--green-l); }
+
+    .hero-sub {
+      font-family: 'DM Mono', monospace;
+      font-size: .78rem; letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.45);
+      margin-bottom: 22px;
+      animation: fadeUp .8s .3s both;
+    }
+
+    .hero-desc {
+      font-size: 1.08rem; line-height: 1.78;
+      color: rgba(255,255,255,.62);
+      max-width: 540px; margin: 0 auto 40px;
+      animation: fadeUp .8s .4s both;
+    }
+    .hero-desc strong { color: rgba(255,255,255,.92); font-weight: 700; }
+
+    /* CTA buttons under hero text */
+    .hero-ctas {
+      display: flex; align-items: center; gap: 14px;
+      flex-wrap: wrap; justify-content: center;
+      animation: fadeUp .8s .5s both;
+      margin-bottom: 60px;
+    }
+    .hero-btn-primary {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: linear-gradient(135deg, var(--green), var(--green-dk));
+      color: #fff; border: none;
+      padding: 14px 32px; border-radius: 50px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 1rem; font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 6px 28px rgba(25,138,0,.5);
+      transition: all var(--trans);
+      position: relative; overflow: hidden;
+    }
+    .hero-btn-primary::before {
+      content: '';
+      position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent);
+      transition: left .5s ease;
+    }
+    .hero-btn-primary:hover::before { left: 160%; }
+    .hero-btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(25,138,0,.65);
+    }
+    .hero-btn-secondary {
+      display: inline-flex; align-items: center; gap: 10px;
+      color: rgba(255,255,255,.75);
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.16);
+      padding: 14px 28px; border-radius: 50px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 1rem; font-weight: 700;
+      text-decoration: none;
+      transition: all var(--trans);
+    }
+    .hero-btn-secondary:hover {
+      background: rgba(255,255,255,.12);
+      border-color: rgba(255,255,255,.3);
+      color: #fff;
+    }
+
+    /* Stats row */
+    .hero-stats {
+      display: flex; gap: 40px; justify-content: center;
+      flex-wrap: wrap; margin-top: 8px;
+      animation: fadeUp .8s .65s both;
+    }
+    .stat-item { text-align: center; }
+    .stat-num {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.1rem; font-weight: 700;
+      color: var(--gold); line-height: 1;
+    }
+    .stat-lbl {
+      font-size: .7rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1.2px;
+      color: rgba(255,255,255,.35);
+      margin-top: 3px;
+    }
+
+    /* Scroll cue */
+    .scroll-cue {
+      position: absolute; bottom: 28px; left: 50%;
+      transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 7px;
+      color: rgba(255,255,255,.3); font-size: .65rem;
+      font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+      animation: bounce 2.5s infinite;
+    }
+    @keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(7px)}}
+
+    /* Feature cards row */
+    .features {
+      position: relative; z-index: 10;
+      padding: 24px 40px 80px;
+      display: flex; gap: 18px; justify-content: center; flex-wrap: wrap;
+    }
+    .feat-card {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 18px; padding: 24px 22px;
+      width: 200px; text-align: center;
+      backdrop-filter: blur(10px);
+      transition: all var(--trans);
+      animation: fadeUp .8s both;
+    }
+    .feat-card:nth-child(1){animation-delay:.1s}
+    .feat-card:nth-child(2){animation-delay:.2s}
+    .feat-card:nth-child(3){animation-delay:.3s}
+    .feat-card:nth-child(4){animation-delay:.4s}
+    .feat-card:nth-child(5){animation-delay:.5s}
+    .feat-card:hover {
+      background: rgba(25,138,0,.10);
+      border-color: rgba(25,138,0,.3);
+      transform: translateY(-4px);
+    }
+    .feat-icon {
+      font-size: 2rem; margin-bottom: 10px;
+      display: block;
+      filter: grayscale(.3);
+      transition: filter var(--trans);
+    }
+    .feat-card:hover .feat-icon { filter: grayscale(0); }
+    .feat-name {
+      font-size: .85rem; font-weight: 800;
+      color: rgba(255,255,255,.85);
+    }
+    .feat-desc {
+      font-size: .72rem; color: rgba(255,255,255,.38);
+      font-weight: 500; margin-top: 5px; line-height: 1.5;
+    }
+
+    /* Slide dots */
+    .slide-dots {
+      position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 7px; z-index: 20;
+    }
+    .sdot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(255,255,255,.22);
+      transition: all .4s; cursor: pointer; border: none; padding: 0;
+    }
+    .sdot.active { background: var(--gold); width: 20px; border-radius: 3px; }
+
+    /* ══════════════════════════════════════════
+       SIGN-IN POPUP / MODAL
+    ══════════════════════════════════════════ */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 300;
+      background: rgba(0,0,0,.7);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; visibility: hidden;
+      transition: all .35s ease;
+      padding: 20px;
+    }
+    .modal-overlay.open {
+      opacity: 1; visibility: visible;
+    }
+
+    .modal-card {
+      width: 100%; max-width: 440px;
+      background: rgba(6,18,4,.92);
+      border: 1px solid rgba(255,255,255,.11);
+      border-radius: 26px;
+      padding: 0;
+      overflow: hidden;
+      box-shadow:
+        0 0 0 1px rgba(25,138,0,.15),
+        0 32px 80px rgba(0,0,0,.7),
+        0 0 120px rgba(25,138,0,.08);
+      transform: scale(.92) translateY(24px);
+      transition: all .38s cubic-bezier(.34,1.56,.64,1);
+    }
+    .modal-overlay.open .modal-card {
+      transform: scale(1) translateY(0);
+    }
+
+    /* Zambian flag bar at top of card */
+    .modal-flag {
+      display: flex; height: 4px;
+    }
+    .modal-flag span { flex: 1; }
+
+    /* Modal header gradient strip */
+    .modal-header {
+      background: linear-gradient(160deg, rgba(10,34,0,.9), rgba(6,13,4,.95));
+      padding: 28px 32px 22px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      position: relative;
+    }
+
+    /* Close button */
+    .modal-close {
+      position: absolute; top: 14px; right: 16px;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(255,255,255,.07); border: none;
+      color: rgba(255,255,255,.45); font-size: .9rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all var(--trans);
+    }
+    .modal-close:hover {
+      background: rgba(255,255,255,.14); color: #fff;
+    }
+
+    .modal-eagle {
+      width: 62px; height: 62px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--green), var(--forest));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.8rem; margin: 0 auto 14px;
+      box-shadow:
+        0 0 0 5px rgba(25,138,0,.14),
+        0 0 0 10px rgba(25,138,0,.06),
+        0 10px 32px rgba(0,0,0,.5);
+    }
+    .modal-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.8rem; font-weight: 700; color: #fff; margin-bottom: 4px;
+    }
+    .modal-sub {
+      font-size: .83rem; color: rgba(255,255,255,.4); font-weight: 500;
+    }
+
+    /* Modal body */
+    .modal-body { padding: 26px 32px 28px; }
+
+    /* Flash messages inside modal */
+    .flash-msg {
+      display: flex; align-items: flex-start; gap: 9px;
+      padding: 10px 14px; border-radius: 10px;
+      font-size: .82rem; font-weight: 700; margin-bottom: 18px;
+      line-height: 1.4;
+    }
+    .flash-msg i { margin-top: 1px; flex-shrink: 0; }
+    .flash-msg.error   { background: rgba(192,57,43,.18); border: 1px solid rgba(192,57,43,.35); color: #ff8a7a; }
+    .flash-msg.success { background: rgba(25,138,0,.18);  border: 1px solid rgba(25,138,0,.35);  color: #7dff7a; }
+
+    /* Form elements */
+    .zm-form-group { margin-bottom: 16px; }
+    .zm-label {
+      display: flex; align-items: center; gap: 6px;
+      font-size: .67rem; font-weight: 700; letter-spacing: 1.2px;
+      text-transform: uppercase; color: rgba(255,255,255,.4); margin-bottom: 7px;
+    }
+    .zm-label i { font-size: .76rem; color: var(--green-l); }
+
+    .input-wrap { position: relative; }
+    .input-wrap .iico {
+      position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+      color: rgba(255,255,255,.2); font-size: .88rem;
+      pointer-events: none; transition: color var(--trans);
+    }
+    .input-wrap:focus-within .iico { color: var(--green-l); }
+
+    .zm-input {
+      width: 100%; padding: 12px 13px 12px 41px;
+      background: rgba(255,255,255,.06);
+      border: 1.5px solid rgba(255,255,255,.09);
+      border-radius: 12px;
+      font-family: 'Outfit', sans-serif; font-size: .92rem; font-weight: 500;
+      color: #fff; outline: none; transition: all var(--trans);
+    }
+    .zm-input::placeholder { color: rgba(255,255,255,.2); }
+    .zm-input:focus {
+      border-color: var(--green-l);
+      background: rgba(25,138,0,.10);
+      box-shadow: 0 0 0 3px rgba(25,138,0,.15);
+    }
+
+    .pw-toggle {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: rgba(255,255,255,.22);
+      cursor: pointer; font-size: .88rem; transition: color var(--trans); padding: 2px;
+    }
+    .pw-toggle:hover { color: var(--green-l); }
+
+    /* Sign-in button */
+    .btn-signin {
+      width: 100%; padding: 13px; margin-top: 6px;
+      background: linear-gradient(135deg, var(--green), var(--green-dk));
+      color: #fff; border: none; border-radius: 13px;
+      font-family: 'Outfit', sans-serif;
+      font-size: .97rem; font-weight: 800;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      transition: all var(--trans);
+      position: relative; overflow: hidden;
+      box-shadow: 0 6px 22px rgba(25,138,0,.40);
+      min-height: 48px;
+    }
+    .btn-signin::before {
+      content: ''; position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.15), transparent);
+      transition: left .5s ease;
+    }
+    .btn-signin:hover::before { left: 160%; }
+    .btn-signin:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 32px rgba(25,138,0,.55);
+    }
+    .btn-signin:disabled {
+      opacity: .8; cursor: not-allowed; transform: none;
+    }
+
+    /* Spinner inside button */
+    .btn-spinner {
+      display: none;
+      width: 18px; height: 18px;
+      border: 2.5px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .btn-signin.loading .btn-txt { margin-left: -4px; }
+
+    /* Forgot + register */
+    .modal-links {
+      text-align: center; margin-top: 14px;
+    }
+    .modal-links a {
+      font-size: .82rem; font-weight: 700;
+      color: var(--gold); text-decoration: none;
+      transition: color var(--trans);
+    }
+    .modal-links a:hover { color: var(--green-l); }
+    .modal-links .sep {
+      color: rgba(255,255,255,.18); margin: 0 10px; font-size: .75rem;
+    }
+
+    /* Or divider */
+    .or-div {
+      display: flex; align-items: center; gap: 10px;
+      margin: 16px 0; color: rgba(255,255,255,.18);
+      font-size: .7rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+    }
+    .or-div::before, .or-div::after {
+      content: ''; flex: 1; height: 1px; background: rgba(255,255,255,.08);
+    }
+
+    /* Register CTA inside modal */
+    .modal-reg {
+      display: flex; align-items: center; justify-content: center; gap: 9px;
+      background: rgba(245,197,24,.06);
+      border: 1px solid rgba(245,197,24,.2);
+      border-radius: 12px; padding: 12px;
+      text-decoration: none;
+      transition: all var(--trans);
+    }
+    .modal-reg:hover {
+      background: rgba(245,197,24,.12);
+      border-color: rgba(245,197,24,.4);
+    }
+    .modal-reg .mr-txt {
+      font-size: .85rem; color: rgba(255,255,255,.5); font-weight: 600;
+    }
+    .modal-reg .mr-cta {
+      font-size: .88rem; color: var(--gold); font-weight: 800;
+    }
+
+    /* Bottom gam strip */
+    .gam-strip {
+      display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;
+      margin-top: 18px; padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,.06);
+    }
+    .gb {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      font-size: .58rem; font-weight: 700;
+      color: rgba(255,255,255,.25); text-transform: uppercase;
+      letter-spacing: .8px; transition: color var(--trans);
+      padding: 6px 10px; border-radius: 8px;
+      cursor: default;
+    }
+    .gb:hover { color: rgba(255,255,255,.6); background: rgba(255,255,255,.04); }
+    .gb .gi {
+      font-size: 1.1rem;
+      filter: grayscale(1) opacity(.3);
+      transition: filter var(--trans);
+    }
+    .gb:hover .gi { filter: grayscale(0) opacity(1); }
+
+    @keyframes fadeUp {
+      from{opacity:0;transform:translateY(22px)}
+      to  {opacity:1;transform:translateY(0)}
+    }
+
+    /* ══════════════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════════════ */
+    @media (max-width: 700px) {
+      .topbar { padding: 0 18px; }
+      .tb-nav { display: none; }
+      .tb-menu-btn { display: block; }
+      .hero { padding: 90px 18px 60px; }
+      .features { padding: 10px 16px 60px; }
+      .feat-card { width: calc(50% - 10px); }
+      .modal-body { padding: 22px 20px 24px; }
+      .modal-header { padding: 22px 20px 18px; }
+    }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: rgba(25,138,0,.4); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+  <!-- Flag stripe -->
+  <div class="flag-stripe">
+    <span class="fg"></span><span class="fr"></span>
+    <span class="fb"></span><span class="fo"></span>
+  </div>
+
+  <!-- Background slideshow -->
+  <div class="bg-slideshow" aria-hidden="true">
+    <div class="slide"></div><div class="slide"></div><div class="slide"></div>
+    <div class="slide"></div><div class="slide"></div><div class="slide"></div>
+  </div>
+  <div class="bg-overlay" aria-hidden="true"></div>
+  <div class="bg-vignette" aria-hidden="true"></div>
+
+  <!-- Slide dots -->
+  <div class="slide-dots" id="slideDots" aria-hidden="true">
+    <button class="sdot active"></button><button class="sdot"></button>
+    <button class="sdot"></button><button class="sdot"></button>
+    <button class="sdot"></button><button class="sdot"></button>
+  </div>
+
+  <!-- ══ TOPBAR ══ -->
+  <header class="topbar" id="topbar">
+    <a href="#" class="tb-brand" aria-label="ZamFarm Climate Home">
+      <div class="tb-eagle">🦅</div>
+      <div class="tb-name">Zam<span class="acc">Farm</span><span class="l2">Climate</span></div>
+    </a>
+
+    <nav class="tb-nav" aria-label="Main navigation">
+      <a href="#features" class="tb-link">Features</a>
+      <a href="/about" class="tb-link">About</a>
+      <a href="/register" class="btn-reg-cta">
+        <i class="fa-solid fa-user-plus"></i> Register
+      </a>
+      <button class="btn-signin-cta" id="openLoginBtn" aria-haspopup="dialog" aria-controls="loginModal">
+        <i class="fa-solid fa-right-to-bracket"></i> Sign In
+      </button>
+    </nav>
+
+    <button class="tb-menu-btn" id="tbMenuBtn" aria-label="Open menu">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+  </header>
+
+  <!-- ══ HERO ══ -->
+  <main>
+    <section class="hero" aria-label="Hero">
+
+      <div class="hero-badge">
+        <span class="pulse-dot"></span>
+        Enhance Your Farming Decisions Today
+      </div>
+
+      <h1 class="hero-title">
+        <span class="w1">Zam</span><span class="w2">Farm</span>
+        <span class="w3">Climate</span>
+      </h1>
+
+      <p class="hero-sub">Gamified Climate-Smart Agricultural Decision Support System</p>
+
+      <p class="hero-desc">
+        Empowering <strong>Zambian smallholder farmers</strong> with predictive
+        analytics, real-time weather, yield forecasting, a peer-to-peer marketplace,
+        and a gamification engine built for Zambia's farming communities.
+      </p>
+
+      <div class="hero-ctas">
+        <button class="hero-btn-primary" id="openLoginBtn2">
+          <i class="fa-solid fa-right-to-bracket"></i> Sign In to Your Account
+        </button>
+        <a href="/register" class="hero-btn-secondary">
+          <i class="fa-solid fa-user-plus"></i> Create Free Account
+        </a>
+      </div>
+
+      <div class="hero-stats">
+        <div class="stat-item">
+          <div class="stat-num">8</div>
+          <div class="stat-lbl">Crops Supported</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">5</div>
+          <div class="stat-lbl">Progress Levels</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">10</div>
+          <div class="stat-lbl">Zambian Languages</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">3</div>
+          <div class="stat-lbl">User Roles</div>
+        </div>
+      </div>
+
+      <div class="scroll-cue" aria-hidden="true">
+        <span>Scroll</span>
+        <i class="fa-solid fa-chevron-down"></i>
+      </div>
+    </section>
+
+    <!-- ══ FEATURE CARDS ══ -->
+    <section class="features" id="features" aria-label="Features">
+      <div class="feat-card">
+        <span class="feat-icon">🤖</span>
+        <div class="feat-name">AI Yield Prediction</div>
+        <div class="feat-desc">Random Forest model forecasts your harvest in tonnes per hectare</div>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">🌦️</span>
+        <div class="feat-name">Season Forecast</div>
+        <div class="feat-desc">Upcoming rainfall outlook with ranked crop recommendations</div>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">🎮</span>
+        <div class="feat-name">Gamification</div>
+        <div class="feat-desc">Earn points, climb 5 levels, unlock 13 achievement badges</div>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">🛒</span>
+        <div class="feat-name">Marketplace</div>
+        <div class="feat-desc">Buy and sell produce directly — with chat &amp; voice notes</div>
+      </div>
+      <div class="feat-card">
+        <span class="feat-icon">🌍</span>
+        <div class="feat-name">10 Languages</div>
+        <div class="feat-desc">Interface available in English, Nyanja, Bemba and more</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ══ SIGN-IN MODAL ══ -->
+  <div class="modal-overlay" id="loginModal" role="dialog" aria-modal="true" aria-label="Sign In">
+
+    <div class="modal-card" id="loginCard">
+
+      <!-- Zambian flag bar -->
+      <div class="modal-flag">
+        <span class="fg"></span><span class="fr"></span>
+        <span class="fb"></span><span class="fo"></span>
+      </div>
+
+      <!-- Header -->
+      <div class="modal-header">
+        <button class="modal-close" id="closeLoginBtn" aria-label="Close sign-in dialog">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div class="modal-eagle">🦅</div>
+        <div class="modal-title">Welcome Back</div>
+        <div class="modal-sub">Sign in to your ZamFarm account</div>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash-msg {{ category }}">
+                <i class="fa-solid {{ 'fa-triangle-exclamation' if category == 'error' else 'fa-circle-check' }}"></i>
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form action="/login" method="POST" id="loginForm">
+
+          <div class="zm-form-group">
+            <label class="zm-label" for="identifier">
+              <i class="fa-solid fa-user" id="labelIcon"></i>
+              <span>Username, Email or Phone</span>
+            </label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-user iico" id="identifierIcon"></i>
+              <input type="text" id="identifier" name="identifier"
+                     class="zm-input"
+                     placeholder="Username, email or phone number"
+                     required autocomplete="username"
+                     aria-label="Username, email, or phone number">
+            </div>
+          </div>
+
+          <div class="zm-form-group">
+            <label class="zm-label" for="password">
+              <i class="fa-solid fa-lock"></i> Password
+            </label>
+            <div class="input-wrap">
+              <i class="fa-solid fa-key iico"></i>
+              <input type="password" id="password" name="password"
+                     class="zm-input"
+                     placeholder="Enter your password"
+                     required autocomplete="current-password"
+                     style="padding-right:42px;"
+                     aria-label="Password">
+              <button type="button" class="pw-toggle" id="pwToggle" aria-label="Show or hide password">
+                <i class="fa-regular fa-eye" id="pwEye"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-signin" id="signinBtn">
+            <span class="btn-spinner" id="btnSpinner" aria-hidden="true"></span>
+            <span class="btn-txt" id="signinBtnText">
+              <i class="fa-solid fa-right-to-bracket"></i>&nbsp; Sign In
+            </span>
+          </button>
+
+        </form>
+
+        <div class="modal-links" style="margin-top:14px;">
+          <a href="/forgot-password">
+            <i class="fa-solid fa-key" style="font-size:.76rem;"></i> Forgot password?
+          </a>
+        </div>
+
+        <div class="or-div">or</div>
+
+        <a href="/register" class="modal-reg">
+          <span class="mr-txt">New to ZamFarm?</span>
+          <span class="mr-cta">
+            <i class="fa-solid fa-user-plus" style="font-size:.8rem;"></i> Create Free Account
+          </span>
+        </a>
+
+        <div class="gam-strip">
+          <div class="gb"><span class="gi">🏆</span>Achievements</div>
+          <div class="gb"><span class="gi">⭐</span>XP Points</div>
+          <div class="gb"><span class="gi">🎯</span>Challenges</div>
+          <div class="gb"><span class="gi">📊</span>Analytics</div>
+          <div class="gb"><span class="gi">🌍</span>Climate</div>
+        </div>
+
+      </div><!-- /modal-body -->
+    </div><!-- /modal-card -->
+  </div><!-- /modal-overlay -->
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* ── Modal open / close ── */
+    var overlay  = document.getElementById('loginModal');
+    var card     = document.getElementById('loginCard');
+
+    function openModal() {
+      overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      setTimeout(function () {
+        var inp = document.getElementById('identifier');
+        if (inp) inp.focus();
+      }, 380);
+    }
+
+    function closeModal() {
+      overlay.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('openLoginBtn').addEventListener('click', openModal);
+    document.getElementById('openLoginBtn2').addEventListener('click', openModal);
+    document.getElementById('closeLoginBtn').addEventListener('click', closeModal);
+
+    /* Close on overlay click (outside the card) */
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay) closeModal();
+    });
+
+    /* Close on Escape key */
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    /* Auto-open modal if there are flash messages
+       (means a login attempt just failed) */
+    var flashEl = document.querySelector('.flash-msg');
+    if (flashEl) openModal();
+
+    /* ── Password toggle ── */
+    document.getElementById('pwToggle').addEventListener('click', function () {
+      var pw  = document.getElementById('password');
+      var ico = document.getElementById('pwEye');
+      var hide = pw.type === 'password';
+      pw.type       = hide ? 'text' : 'password';
+      ico.className = hide ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+    });
+
+    /* ── Loading spinner on submit ──
+       Shows the spinner NEXT TO "Signing in..." text */
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var btn     = document.getElementById('signinBtn');
+      var spinner = document.getElementById('btnSpinner');
+      var txtEl   = document.getElementById('signinBtnText');
+
+      /* Show spinner + update label */
+      spinner.style.display = 'block';
+      txtEl.innerHTML = '&nbsp; Signing in\u2026';
+      btn.disabled = true;
+
+      /* Submit after brief UI paint delay */
+      var form = this;
+      setTimeout(function () { form.submit(); }, 280);
+    });
+
+    /* ── Dynamic input icon ── */
+    document.getElementById('identifier').addEventListener('input', function () {
+      var ico    = document.getElementById('identifierIcon');
+      var lblIco = document.getElementById('labelIcon');
+      var val    = this.value.trim();
+      var cls;
+      if (/^[0-9+]/.test(val)) {
+        cls = 'fa-solid fa-mobile-screen-button';
+      } else if (val.indexOf('@') !== -1) {
+        cls = 'fa-solid fa-at';
+      } else {
+        cls = 'fa-solid fa-user';
+      }
+      ico.className    = cls + ' iico';
+      lblIco.className = cls;
+    });
+
+    /* ── Topbar scroll effect ── */
+    window.addEventListener('scroll', function () {
+      document.getElementById('topbar').classList.toggle('scrolled', window.scrollY > 40);
+    }, { passive: true });
+
+    /* ── Slide dot sync ── */
+    (function () {
+      var dots    = document.querySelectorAll('.sdot');
+      var current = 0;
+      function tick() {
+        dots.forEach(function (d) { d.classList.remove('active'); });
+        dots[current].classList.add('active');
+      }
+      setInterval(function () {
+        current = (current + 1) % dots.length; tick();
+      }, 7000);
+      dots.forEach(function (d, i) {
+        d.addEventListener('click', function () { current = i; tick(); });
+      });
+    })();
+
+    /* ── Mobile menu button ── */
+    document.getElementById('tbMenuBtn').addEventListener('click', openModal);
+
+  })();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Management | ZamFarm Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700;900&family=Outfit:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    :root{--g:#198A00;--gl:#23b800;--gd:#0f5c00;--r:#EF0000;--o:#EF7D00;--gold:#F5C518;--sky:#2E86AB;--blk:#141414;--bg:#F4F9F0;--surface:#fff;--surface2:#f0f5ec;--border:rgba(25,138,0,.14);--text:#141414;--text2:#555;--text3:#999;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);}
+    .topbar{background:linear-gradient(135deg,#0a0a0a,#1a1a2e);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,0,0,.4);}
+    .back-btn{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;padding:8px 16px;border-radius:10px;font-size:.82rem;font-weight:700;text-decoration:none;transition:background .2s;}
+    .back-btn:hover{background:rgba(255,255,255,.15);color:#fff;}
+    .topbar-title{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:700;color:#fff;}
+    .topbar-title span{color:var(--gold);}
+    .admin-badge{background:rgba(239,125,0,.15);border:1px solid rgba(239,125,0,.3);border-radius:20px;padding:4px 12px;font-size:.72rem;font-weight:800;color:var(--o);}
+
+    .main{max-width:1200px;margin:0 auto;padding:28px 20px;}
+    .flag-bar{display:flex;height:4px;border-radius:3px;overflow:hidden;margin-bottom:22px;}
+    .flag-bar span{flex:1;}
+    .fb-g{background:var(--g);}.fb-r{background:var(--r);}.fb-b{background:#141414;}.fb-o{background:var(--o);}
+
+    .page-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
+    .page-title{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:700;color:var(--gd);display:flex;align-items:center;gap:10px;}
+    .page-title i{color:var(--o);}
+
+    .stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+    .s-chip{background:var(--surface);border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 12px rgba(0,0,0,.06);border-left:4px solid var(--g);}
+    .s-chip:nth-child(2){border-left-color:var(--o);}
+    .s-chip:nth-child(3){border-left-color:var(--gold);}
+    .s-chip:nth-child(4){border-left-color:var(--r);}
+    .s-ico{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0;background:rgba(25,138,0,.09);color:var(--g);}
+    .s-chip:nth-child(2) .s-ico{background:rgba(239,125,0,.09);color:var(--o);}
+    .s-chip:nth-child(3) .s-ico{background:rgba(245,197,24,.12);color:#7a5c00;}
+    .s-chip:nth-child(4) .s-ico{background:rgba(239,0,0,.08);color:var(--r);}
+    .s-val{font-size:1.5rem;font-weight:800;line-height:1;color:var(--text);}
+    .s-lbl{font-size:.65rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+
+    .zm-card{background:var(--surface);border-radius:14px;padding:22px;box-shadow:0 4px 18px rgba(0,0,0,.07);position:relative;overflow:hidden;margin-bottom:18px;}
+    .zm-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--g),var(--gold),var(--o));}
+    .zm-card h2{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:700;color:var(--gd);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+    .zm-card h2 i{color:var(--o);}
+
+    .users-table{width:100%;border-collapse:separate;border-spacing:0;font-size:.85rem;}
+    .users-table thead th{background:linear-gradient(135deg,#1a1a2e,#2d2d4e);color:#fff;padding:12px 14px;font-size:.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;}
+    .users-table thead th:first-child{border-radius:8px 0 0 0;}
+    .users-table thead th:last-child{border-radius:0 8px 0 0;}
+    .users-table tbody tr:nth-child(even){background:rgba(25,138,0,.02);}
+    .users-table tbody tr:hover{background:rgba(25,138,0,.06);}
+    .users-table tbody td{padding:10px 14px;border-bottom:1px solid var(--border);font-weight:600;color:var(--text);vertical-align:middle;}
+
+    .farmer-name{font-weight:800;color:var(--text);}
+    .farmer-sub{font-size:.72rem;color:var(--text3);font-weight:600;margin-top:1px;}
+    .pts-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(245,197,24,.12);border:1px solid rgba(245,197,24,.25);border-radius:20px;padding:2px 8px;font-size:.72rem;font-weight:800;color:#7a5c00;font-family:'DM Mono',monospace;}
+    .level-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:.72rem;font-weight:800;}
+    .lv1{background:rgba(136,136,136,.1);color:#555;}
+    .lv2{background:rgba(25,138,0,.1);color:var(--gd);}
+    .lv3{background:rgba(239,125,0,.1);color:#7a3e00;}
+    .lv4{background:rgba(245,197,24,.15);color:#7a5c00;}
+    .lv5{background:rgba(139,47,201,.1);color:#5c0080;}
+    .active-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:.7rem;font-weight:800;}
+    .ab-active{background:rgba(25,138,0,.1);color:var(--gd);border:1px solid rgba(25,138,0,.2);}
+    .ab-inactive{background:rgba(239,0,0,.08);color:var(--r);border:1px solid rgba(239,0,0,.15);}
+
+    .action-btns{display:flex;gap:6px;flex-wrap:nowrap;}
+    .btn-sm{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border:none;border-radius:7px;font-family:'Outfit',sans-serif;font-size:.72rem;font-weight:800;cursor:pointer;text-decoration:none;transition:all .2s;white-space:nowrap;min-height:30px;}
+    .btn-toggle{background:rgba(239,125,0,.1);color:var(--o);border:1px solid rgba(239,125,0,.2);}
+    .btn-toggle:hover{background:rgba(239,125,0,.2);}
+    .btn-delete{background:rgba(239,0,0,.08);color:var(--r);border:1px solid rgba(239,0,0,.15);}
+    .btn-delete:hover{background:rgba(239,0,0,.16);}
+
+    .district-tag{background:var(--surface2);border-radius:6px;padding:2px 8px;font-size:.72rem;font-weight:700;color:var(--text2);}
+
+    /* Modal */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:998;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+    .modal-overlay.show{display:flex;}
+    .modal-box{background:var(--surface);border-radius:16px;padding:28px;width:min(420px,95vw);box-shadow:0 20px 60px rgba(0,0,0,.35);position:relative;}
+    .modal-box::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--r),var(--o));border-radius:16px 16px 0 0;}
+    .modal-title{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+    .modal-title i{color:var(--r);}
+    .modal-body{font-size:.88rem;color:var(--text2);line-height:1.6;margin-bottom:20px;}
+    .modal-actions{display:flex;gap:10px;justify-content:flex-end;}
+    .btn-cancel{background:var(--surface2);color:var(--text2);border:1.5px solid var(--border);padding:9px 18px;border-radius:9px;font-family:'Outfit',sans-serif;font-weight:700;font-size:.85rem;cursor:pointer;}
+    .btn-confirm-del{background:linear-gradient(135deg,var(--r),#a30000);color:#fff;border:none;padding:9px 18px;border-radius:9px;font-family:'Outfit',sans-serif;font-weight:800;font-size:.85rem;cursor:pointer;}
+
+    .flash-msg{display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:10px;margin-bottom:16px;font-weight:700;font-size:.88rem;}
+    .flash-success{background:rgba(25,138,0,.1);color:var(--gd);border:1px solid rgba(25,138,0,.2);}
+    .flash-error{background:rgba(239,0,0,.08);color:var(--r);border:1px solid rgba(239,0,0,.15);}
+
+    @media(max-width:900px){.stat-strip{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:500px){.stat-strip{grid-template-columns:1fr 1fr;}}
+  </style>
+</head>
+<body>
+
+  <!-- Delete confirmation modal -->
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal-box">
+      <div class="modal-title"><i class="fa-solid fa-triangle-exclamation"></i> Confirm Delete</div>
+      <div class="modal-body" id="deleteModalBody">
+        Are you sure you want to permanently delete this farmer account? All their predictions, simulations, and gamification data will be removed. This cannot be undone.
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+        <form id="deleteForm" method="POST" style="display:inline;">
+          <button type="submit" class="btn-confirm-del">
+            <i class="fa-solid fa-trash"></i> Delete Permanently
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <a href="/admin" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Admin Dashboard</a>
+      <div class="topbar-title">User Management — <span>All Farmers</span></div>
+    </div>
+    <span class="admin-badge"><i class="fa-solid fa-shield-halved"></i> Admin Panel</span>
+  </div>
+
+  <div class="main">
+    <div class="flag-bar">
+      <span class="fb-g"></span><span class="fb-r"></span><span class="fb-b"></span><span class="fb-o"></span>
+    </div>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+      <div class="flash-msg flash-{{ 'success' if category == 'success' else 'error' }}">
+        <i class="fa-solid fa-{{ 'circle-check' if category == 'success' else 'circle-exclamation' }}"></i>
+        {{ message }}
+      </div>
+      {% endfor %}
+    {% endwith %}
+
+    <div class="page-head">
+      <div class="page-title"><i class="fa-solid fa-users"></i> All Registered Farmers</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stat-strip">
+      <div class="s-chip">
+        <div class="s-ico"><i class="fa-solid fa-users"></i></div>
+        <div>
+          <div class="s-val">{{ farmers | length }}</div>
+          <div class="s-lbl">Total Farmers</div>
+        </div>
+      </div>
+      <div class="s-chip">
+        <div class="s-ico"><i class="fa-solid fa-user-check"></i></div>
+        <div>
+          <div class="s-val">{{ farmers | selectattr(6, 'eq', 1) | list | length }}</div>
+          <div class="s-lbl">Active</div>
+        </div>
+      </div>
+      <div class="s-chip">
+        <div class="s-ico"><i class="fa-solid fa-trophy"></i></div>
+        <div>
+          <div class="s-val">{{ farmers | map(attribute=8) | sum }}</div>
+          <div class="s-lbl">Total Points</div>
+        </div>
+      </div>
+      <div class="s-chip">
+        <div class="s-ico"><i class="fa-solid fa-star"></i></div>
+        <div>
+          <div class="s-val">{{ farmers | selectattr(9, 'ge', 3) | list | length }}</div>
+          <div class="s-lbl">Level 3+ Farmers</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Users table -->
+    <div class="zm-card">
+      <h2><i class="fa-solid fa-table"></i> Farmer Accounts</h2>
+      <div style="overflow-x:auto;">
+        <table class="users-table" id="usersTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Farmer</th>
+              <th>Contact</th>
+              <th>District</th>
+              <th>Farm Size</th>
+              <th>Points</th>
+              <th>Level</th>
+              <th>Status</th>
+              <th>Registered</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for f in farmers %}
+            {% set farmer_id = f[0] %}
+            <tr>
+              <td style="color:var(--text3);font-weight:800;">{{ loop.index }}</td>
+              <td>
+                <div class="farmer-name">{{ f[1] }}</div>
+                <div class="farmer-sub">ID #{{ f[0] }}</div>
+              </td>
+              <td>
+                <div style="font-size:.8rem;font-weight:700;">
+                  {% if f[3] %}<div><i class="fa-solid fa-phone" style="color:var(--o);width:14px;"></i> {{ f[3] }}</div>{% endif %}
+                  {% if f[2] %}<div style="color:var(--text3);"><i class="fa-solid fa-envelope" style="color:var(--sky);width:14px;"></i> {{ f[2][:22] }}{% if f[2]|length > 22 %}…{% endif %}</div>{% endif %}
+                </div>
+              </td>
+              <td>
+                {% if f[4] %}<span class="district-tag"><i class="fa-solid fa-location-dot" style="color:var(--o);"></i> {{ f[4] }}</span>{% else %}—{% endif %}
+              </td>
+              <td style="font-weight:800;">{{ f[5] }} ha</td>
+              <td><span class="pts-badge">{{ f[8] }} pts</span></td>
+              <td>
+                <span class="level-tag lv{{ f[9] }}">
+                  {% if f[9]==1 %}🌱 Novice{% elif f[9]==2 %}🌿 Learner{% elif f[9]==3 %}🌳 Practitioner{% elif f[9]==4 %}🏆 Champion{% else %}👑 Master{% endif %}
+                </span>
+              </td>
+              <td>
+                {% if f[6] %}
+                <span class="active-badge ab-active"><i class="fa-solid fa-circle-dot"></i> Active</span>
+                {% else %}
+                <span class="active-badge ab-inactive"><i class="fa-solid fa-ban"></i> Inactive</span>
+                {% endif %}
+              </td>
+              <td style="font-size:.78rem;color:var(--text3);font-weight:700;">
+                {{ (f[7] | string)[:10] if f[7] else '—' }}
+              </td>
+              <td>
+                <div class="action-btns">
+                  <!-- Toggle active/inactive -->
+                  <form method="POST" action="/admin/user/toggle/{{ farmer_id }}" style="display:inline;">
+                    <button type="submit" class="btn-sm btn-toggle" title="{{ 'Deactivate' if f[6] else 'Activate' }}">
+                      <i class="fa-solid fa-{{ 'toggle-on' if f[6] else 'toggle-off' }}"></i>
+                      {{ 'Deactivate' if f[6] else 'Activate' }}
+                    </button>
+                  </form>
+                  <!-- Delete -->
+                  <button type="button" class="btn-sm btn-delete confirm-delete-btn"
+                          data-id="{{ farmer_id }}"
+                          data-name="{{ f[1] | replace('"','&quot;') }}">
+                    <i class="fa-solid fa-trash"></i> Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+  <script>
+    $(function() {
+      $('#usersTable').DataTable({
+        pageLength: 25,
+        order: [[5, 'desc']], // sort by points descending
+        columnDefs: [{ orderable: false, targets: [9] }],
+        language: {
+          search: '<i class="fa-solid fa-magnifying-glass"></i> ',
+          searchPlaceholder: 'Search farmers…',
+          paginate: {
+            previous: '<i class="fa-solid fa-chevron-left"></i>',
+            next: '<i class="fa-solid fa-chevron-right"></i>'
+          }
+        }
+      });
+    });
+
+    // Delete farmer — reads from data-* attributes, no Jinja in JS
+    document.querySelectorAll('.confirm-delete-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var farmerId   = this.dataset.id;
+        var farmerName = this.dataset.name;
+        document.getElementById('deleteModalBody').innerHTML =
+          'Are you sure you want to permanently delete <strong>' + farmerName + '\'s</strong> account? ' +
+          'All predictions, simulations, gamification data, and badges will be removed. ' +
+          '<strong style="color:var(--r);">This cannot be undone.</strong>';
+        document.getElementById('deleteForm').action = '/admin/user/delete/' + farmerId;
+        document.getElementById('deleteModal').classList.add('show');
+      });
+    });
+
+    function closeDeleteModal() {
+      document.getElementById('deleteModal').classList.remove('show');
+    }
+
+    // Close modal on overlay click
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+      if (e.target === this) closeDeleteModal();
+    });
+  </script>
+
+</body>
+</html>

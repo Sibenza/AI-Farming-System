@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.svg') }}">
+  <meta name="theme-color" content="#198A00">
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | ZamFarm Climate</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,700;0,900&family=Outfit:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    :root{--g:#198A00;--gl:#23b800;--gd:#0f5c00;--r:#EF0000;--o:#EF7D00;--gold:#F5C518;--sky:#2E86AB;--purple:#8B2FC9;--blk:#141414;--cream:#F4F9F0;--tr:0.35s cubic-bezier(.4,0,.2,1);}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Outfit',sans-serif;background:var(--cream);min-height:100vh;}
+    body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 65% 50% at 5% 10%,rgba(139,47,201,.05) 0%,transparent 55%);pointer-events:none;z-index:0;}
+
+    /* Topbar */
+    .topbar{position:fixed;top:0;left:0;right:0;height:64px;background:rgba(20,20,20,.96);backdrop-filter:blur(14px);border-bottom:1px solid rgba(139,47,201,.25);display:flex;align-items:center;justify-content:space-between;padding:0 32px;z-index:90;box-shadow:0 2px 16px rgba(0,0,0,.3);}
+    .tb-brand{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:10px;}
+    .tb-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(139,47,201,.20);border:1px solid rgba(139,47,201,.4);border-radius:20px;padding:4px 12px;font-size:.72rem;font-weight:700;color:#c97fff;}
+    .tb-right{display:flex;align-items:center;gap:10px;}
+    .tb-btn{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);cursor:pointer;transition:background var(--tr);}
+    .tb-btn:hover{background:rgba(139,47,201,.20);}
+    .tb-btn i{color:rgba(255,255,255,.7);font-size:.95rem;}
+    .tb-nav a{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;font-size:.82rem;font-weight:700;color:rgba(255,255,255,.55);text-decoration:none;transition:all var(--tr);}
+    .tb-nav a:hover,.tb-nav a.active{background:rgba(139,47,201,.20);color:#c97fff;}
+
+    .flag-bar{display:flex;height:4px;position:fixed;top:64px;left:0;right:0;z-index:89;}
+    .flag-bar span{flex:1;}
+    .fg{background:var(--g);}.fr{background:var(--r);}.fb{background:var(--blk);}.fo{background:var(--o);}
+
+    .main{padding:82px 32px 52px;min-height:100vh;position:relative;z-index:1;}
+
+    /* Admin hero */
+    .admin-hero{background:linear-gradient(145deg,#1a0033,#141414);border-radius:20px;padding:28px 32px;color:#fff;position:relative;overflow:hidden;margin-bottom:22px;}
+    .admin-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--purple),var(--sky),var(--g),var(--gold));}
+    .admin-hero::after{content:'';position:absolute;inset:-30%;border-radius:50%;background:radial-gradient(ellipse,rgba(139,47,201,.10) 0%,transparent 65%);pointer-events:none;}
+    .ah-name{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:700;margin-bottom:4px;}
+    .ah-role{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:18px;}
+    .ah-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;position:relative;z-index:1;}
+    .ah-stat{background:rgba(255,255,255,.06);border-radius:12px;padding:14px 10px;text-align:center;border:1px solid rgba(255,255,255,.07);}
+    .ah-stat .sv{font-family:'Cormorant Garamond',serif;font-size:1.7rem;font-weight:700;color:var(--gold);}
+    .ah-stat .sl{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.35);margin-top:2px;}
+
+    /* Cards */
+    .zm-card{background:#fff;border-radius:18px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,.07);position:relative;overflow:hidden;margin-bottom:22px;transition:transform var(--tr),box-shadow var(--tr);}
+    .zm-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--purple),var(--sky),var(--g));border-radius:18px 18px 0 0;}
+    .zm-card h2{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:700;color:var(--blk);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+    .zm-card h2 i{color:var(--o);}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+    .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px;}
+
+    /* Form elements */
+    .zm-lbl{font-size:.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gd);margin-bottom:5px;display:block;}
+    .zm-in{width:100%;padding:9px 12px;border:2px solid rgba(25,138,0,.18);border-radius:9px;font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:600;outline:none;transition:all var(--tr);}
+    .zm-in:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(139,47,201,.10);}
+
+    /* Buttons */
+    .btn-purple{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border:none;border-radius:9px;font-family:'Outfit',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,var(--purple),#3d0066);color:#fff;box-shadow:0 4px 14px rgba(139,47,201,.35);transition:all var(--tr);}
+    .btn-purple:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(139,47,201,.5);}
+    .btn-green{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border:none;border-radius:9px;font-family:'Outfit',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;box-shadow:0 4px 14px rgba(25,138,0,.35);transition:all var(--tr);}
+    .btn-green:hover{transform:translateY(-2px);}
+    .btn-red{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border:none;border-radius:8px;font-family:'Outfit',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;background:rgba(239,0,0,.10);color:var(--r);border:1px solid rgba(239,0,0,.2);transition:all var(--tr);}
+    .btn-red:hover{background:rgba(239,0,0,.18);}
+    .btn-outline{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border:1.5px solid rgba(25,138,0,.25);border-radius:8px;font-family:'Outfit',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;background:transparent;color:var(--gd);transition:all var(--tr);}
+    .btn-outline:hover{background:rgba(25,138,0,.06);}
+
+    /* Table */
+    #usersTable thead th,#officersTable thead th,#paramsTable thead th{background:linear-gradient(135deg,#1a0033,#141414);color:#fff!important;font-family:'Outfit',sans-serif;font-size:.72rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:12px 14px;border:none!important;}
+    #usersTable thead th:first-child,#officersTable thead th:first-child,#paramsTable thead th:first-child{border-radius:10px 0 0 0;}
+    #usersTable thead th:last-child,#officersTable thead th:last-child,#paramsTable thead th:last-child{border-radius:0 10px 0 0;}
+    #usersTable tbody tr,#officersTable tbody tr,#paramsTable tbody tr{transition:background var(--tr);}
+    #usersTable tbody tr:nth-child(even),#officersTable tbody tr:nth-child(even){background:rgba(139,47,201,.02);}
+    #usersTable tbody tr:hover,#officersTable tbody tr:hover{background:rgba(139,47,201,.06)!important;}
+    #usersTable tbody td,#officersTable tbody td,#paramsTable tbody td{padding:11px 14px;border-bottom:1px solid rgba(0,0,0,.05)!important;font-size:.84rem;font-weight:600;vertical-align:middle;}
+
+    /* Active/inactive badge */
+    .status-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:.68rem;font-weight:800;}
+    .s-active{background:rgba(25,138,0,.12);color:var(--gd);}
+    .s-inactive{background:rgba(239,0,0,.10);color:var(--r);}
+
+    /* Flash */
+    .flash-msg{display:flex;align-items:center;gap:9px;padding:10px 14px;border-radius:10px;font-size:.82rem;font-weight:700;margin-bottom:16px;}
+    .flash-msg.error{background:rgba(192,57,43,.12);border:1px solid rgba(192,57,43,.3);color:var(--r);}
+    .flash-msg.success{background:rgba(25,138,0,.10);border:1px solid rgba(25,138,0,.25);color:var(--gd);}
+
+    /* Simulation trend chart */
+    #simTrendChart{max-height:200px;}
+
+    /* Gamification config panel */
+    .gamif-config-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+    .gc-item{background:var(--cream);border-radius:12px;padding:14px;}
+    .gc-lbl{font-size:.68rem;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#888;margin-bottom:6px;}
+    .gc-val{font-size:1.2rem;font-weight:800;color:var(--blk);}
+
+    /* Toast */
+    .zm-toast{position:fixed;bottom:28px;right:28px;background:#1a0033;color:#fff;padding:12px 18px;border-radius:12px;font-size:.85rem;font-weight:700;display:flex;align-items:center;gap:9px;box-shadow:0 6px 28px rgba(0,0,0,.28);z-index:1000;transform:translateY(80px);opacity:0;transition:all .4s cubic-bezier(.4,0,.2,1);border-left:5px solid var(--purple);}
+    .zm-toast.show{transform:translateY(0);opacity:1;}
+
+    @media(max-width:992px){.ah-stats{grid-template-columns:repeat(3,1fr);}.two-col,.three-col{grid-template-columns:1fr;}.main{padding:78px 14px 44px;}.tb-nav{display:none;}}
+    ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-thumb{background:rgba(139,47,201,.35);border-radius:3px;}
+  </style>
+</head>
+<body>
+
+  <div id="appData"
+    data-sim-trend="{{ analytics.sim_trend | tojson }}"
+    style="display:none;"></div>
+
+  <div class="flag-bar"><span class="fg"></span><span class="fr"></span><span class="fb"></span><span class="fo"></span></div>
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="tb-brand">
+      🛡️ ZamFarm Climate
+      <span class="tb-badge"><i class="fa-solid fa-shield-halved"></i> Admin</span>
+    </div>
+    <div class="tb-nav">
+      <a href="#analytics" class="active">Analytics</a>
+      <a href="#users">Users</a>
+      <a href="#officers">Officers</a>
+      <a href="#crop-params">Crop Params</a>
+      <a href="/admin/market_prices"><i class="fa-solid fa-money-bill-trend-up"></i> Market Prices</a>
+      <a href="/admin/support"><i class="fa-solid fa-life-ring"></i> Support</a>
+      <a href="/admin/gamification">Gamification</a>
+    </div>
+    <div class="tb-right">
+      <div class="tb-btn" title="Refresh" onclick="location.reload()"><i class="fa-solid fa-rotate-right"></i></div>
+      <div class="tb-btn" title="Logout"  onclick="location.href='/logout'"><i class="fa-solid fa-right-from-bracket"></i></div>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}{% for cat, msg in messages %}
+        <div class="flash-msg {{ cat }}"><i class="fa-solid {{ 'fa-check-circle' if cat == 'success' else 'fa-exclamation-triangle' }}"></i>{{ msg }}</div>
+      {% endfor %}{% endif %}
+    {% endwith %}
+
+    <!-- Admin Hero -->
+    <div class="admin-hero animate__animated animate__fadeInDown" id="analytics">
+      <div style="position:relative;z-index:1;">
+        <div class="ah-name">Welcome, {{ admin_name }} — System Overview</div>
+        <div class="ah-role">ZamFarm Climate Connect · Administrator Dashboard · FR8</div>
+        <div class="ah-stats">
+          <div class="ah-stat">
+            <div class="sv">{{ analytics.total_farmers }}</div>
+            <div class="sl">Farmers</div>
+          </div>
+          <div class="ah-stat">
+            <div class="sv">{{ analytics.total_officers }}</div>
+            <div class="sl">Officers</div>
+          </div>
+          <div class="ah-stat">
+            <div class="sv">{{ analytics.total_simulations }}</div>
+            <div class="sl">Simulations</div>
+          </div>
+          <div class="ah-stat">
+            <div class="sv">{{ analytics.avg_points }}</div>
+            <div class="sl">Avg Points</div>
+          </div>
+          <div class="ah-stat">
+            <div class="sv">{{ analytics.climate_records }}</div>
+            <div class="sl">Climate Records</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts row -->
+    <div class="two-col">
+      <div class="zm-card" data-aos="fade-up">
+        <h2><i class="fa-solid fa-chart-line"></i> Simulation Trend (Last 30 Days)</h2>
+        <canvas id="simTrendChart"></canvas>
+      </div>
+      <div class="zm-card" data-aos="fade-up" data-aos-delay="60">
+        <h2><i class="fa-solid fa-ranking-star"></i> Top Farmers by Points</h2>
+        {% if analytics.top_farmers %}
+        {% for i, f in enumerate(analytics.top_farmers) %}
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(0,0,0,.05);">
+          <span style="font-size:.85rem;font-weight:900;color:#ccc;min-width:20px;">{{ loop.index }}</span>
+          <div style="flex:1;">
+            <div style="font-size:.88rem;font-weight:800;color:var(--blk);">{{ f[0] }}</div>
+            <div style="font-size:.72rem;color:#aaa;font-weight:600;">{{ f[1] }}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:900;color:var(--g);">{{ f[2] }}</div>
+            <div style="font-size:.68rem;font-weight:700;color:var(--o);">Level {{ f[3] }}</div>
+          </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div style="text-align:center;padding:24px;color:#bbb;font-size:.85rem;">No gamification data yet.</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- User Management (FR8) -->
+    <div class="zm-card" data-aos="fade-up" id="users">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+        <h2 style="margin-bottom:0;"><i class="fa-solid fa-users"></i> Farmer Accounts</h2>
+        <a href="/admin/users" class="btn-purple" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:10px;font-weight:800;">
+          <i class="fa-solid fa-users"></i> Full User Management
+        </a>
+      </div>
+      <table id="usersTable" class="table table-hover" style="width:100%">
+        <thead>
+          <tr><th>#</th><th>Name</th><th>District</th><th>Status</th><th>Points</th><th>Registered</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          {% for f in recent_farmers %}
+          <tr>
+            <td style="color:#aaa;font-size:.75rem;">{{ f[0] }}</td>
+            <td><strong>{{ f[1] }}</strong><br><span style="font-size:.72rem;color:#aaa;">{{ f[2] }}</span></td>
+            <td style="font-size:.84rem;">{{ f[3] }}</td>
+            <td><span class="status-badge s-active"><i class="fa-solid fa-circle" style="font-size:.45rem;"></i> Active</span></td>
+            <td style="font-family:'DM Mono',monospace;font-size:.85rem;">—</td>
+            <td style="font-size:.78rem;color:#aaa;">{{ f[4] }}</td>
+            <td>
+              <form action="/admin/user/delete/{{ f[0] }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete {{ f[1] }}?')">
+                <button type="submit" class="btn-red"><i class="fa-solid fa-trash"></i></button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Extension Officers (FR8) -->
+    <div class="zm-card" data-aos="fade-up" id="officers">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+        <h2 style="margin-bottom:0;"><i class="fa-solid fa-user-tie"></i> Extension Officers</h2>
+        <button class="btn-green" onclick="document.getElementById('newOfficerForm').style.display=document.getElementById('newOfficerForm').style.display==='none'?'block':'none'">
+          <i class="fa-solid fa-plus"></i> Add Officer
+        </button>
+      </div>
+      <!-- Add officer form -->
+      <div id="newOfficerForm" style="display:none;background:var(--cream);border-radius:12px;padding:20px;margin-bottom:16px;">
+        <form action="/admin/officer/create" method="POST">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px;">
+            <div><label class="zm-lbl">Full Name</label><input class="zm-in" type="text" name="fullname" required placeholder="Officer name"></div>
+            <div><label class="zm-lbl">Email</label><input class="zm-in" type="email" name="email" required placeholder="officer@email.com"></div>
+            <div><label class="zm-lbl">Phone</label><input class="zm-in" type="text" name="phone" placeholder="+260 97X XXX XXX"></div>
+            <div><label class="zm-lbl">Assigned Zone (District)</label><input class="zm-in" type="text" name="zone" required placeholder="e.g. Lusaka"></div>
+            <div><label class="zm-lbl">Password</label><input class="zm-in" type="password" name="password" required placeholder="Temporary password"></div>
+          </div>
+          <button type="submit" class="btn-green"><i class="fa-solid fa-user-plus"></i> Create Officer</button>
+        </form>
+      </div>
+      <table id="officersTable" class="table table-hover" style="width:100%">
+        <thead>
+          <tr><th>#</th><th>Name</th><th>Email</th><th>Zone</th><th>Phone</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          {% for o in officers %}
+          <tr>
+            <td style="color:#aaa;">{{ loop.index }}</td>
+            <td><strong>{{ o[1] }}</strong></td>
+            <td style="font-size:.82rem;color:#888;">{{ o[2] }}</td>
+            <td><span style="background:rgba(46,134,171,.10);color:var(--sky);padding:3px 9px;border-radius:20px;font-size:.72rem;font-weight:800;">{{ o[3] }}</span></td>
+            <td style="font-size:.82rem;color:#888;">{{ o[4] or '—' }}</td>
+            <td>
+              <form action="/admin/officer/delete/{{ o[0] }}" method="POST" style="display:inline;" onsubmit="return confirm('Remove officer {{ o[1] }}?')">
+                <button type="submit" class="btn-red"><i class="fa-solid fa-trash"></i></button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Crop Parameters (FR8 — configurable) -->
+    <div class="zm-card" data-aos="fade-up" id="crop-params">
+      <h2><i class="fa-solid fa-sliders"></i> Crop Parameters (Admin Configurable — FR8)</h2>
+      <p style="font-size:.82rem;color:#888;font-weight:600;margin-bottom:16px;">
+        Update the agronomic parameters used by the Predictive Analysis Engine.
+        Changes take effect on the next simulation run.
+      </p>
+      <table id="paramsTable" class="table" style="width:100%">
+        <thead>
+          <tr><th>Crop</th><th>Base Yield (T/ha)</th><th>Opt Temp Min °C</th><th>Opt Temp Max °C</th><th>Opt Rain Min mm</th><th>Opt Rain Max mm</th><th>Edit</th></tr>
+        </thead>
+        <tbody>
+          {% for p in crop_params %}
+          <tr>
+            <td><strong>{{ p[1] }}</strong></td>
+            <td><span style="font-weight:800;color:var(--g);">{{ "%.2f"|format(p[2]) }}</span></td>
+            <td>{{ "%.1f"|format(p[3]) }}</td>
+            <td>{{ "%.1f"|format(p[4]) }}</td>
+            <td>{{ "%.0f"|format(p[5]) }}</td>
+            <td>{{ "%.0f"|format(p[6]) }}</td>
+            <td>
+              <button class="btn-outline edit-param-btn"
+                      data-name="{{ p[1] }}"
+                      data-yield="{{ p[2] or '' }}"
+                      data-tmin="{{ p[3] or '' }}" data-tmax="{{ p[4] or '' }}"
+                      data-rmin="{{ p[5] or '' }}" data-rmax="{{ p[6] or '' }}"
+                      onclick="openParamEdit(this)">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div><!-- /main -->
+
+  <!-- Crop param edit modal -->
+  <div class="modal-overlay" id="paramModal" style="display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.5);align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:18px;padding:28px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+      <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;color:var(--blk);margin-bottom:16px;" id="paramModalTitle">Edit Crop Parameters</h3>
+      <form action="/admin/crop_params" method="POST">
+        <input type="hidden" name="crop_name" id="pCropName">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div><label class="zm-lbl">Base Yield (T/ha)</label><input class="zm-in" type="number" step="0.01" name="base_yield" id="pYield" required></div>
+          <div><label class="zm-lbl">Opt Temp Min (°C)</label><input class="zm-in" type="number" step="0.1" name="opt_temp_min" id="pTmin" required></div>
+          <div><label class="zm-lbl">Opt Temp Max (°C)</label><input class="zm-in" type="number" step="0.1" name="opt_temp_max" id="pTmax" required></div>
+          <div><label class="zm-lbl">Opt Rain Min (mm)</label><input class="zm-in" type="number" step="1" name="opt_rain_min" id="pRmin" required></div>
+          <div><label class="zm-lbl">Opt Rain Max (mm)</label><input class="zm-in" type="number" step="1" name="opt_rain_max" id="pRmax" required></div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+          <button type="button" class="btn-outline" onclick="document.getElementById('paramModal').style.display='none'">Cancel</button>
+          <button type="submit" class="btn-green"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="zm-toast" id="zmToast"><i class="fa-solid fa-circle-check"></i><span id="toastMsg">Ready</span></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+  <script>
+    AOS.init({ duration: 560, easing: 'ease-out-cubic', once: true });
+
+    /* DataTables */
+    const dtOpts = {
+      pageLength: 10,
+      language: { search: '<i class="fa-solid fa-magnifying-glass"></i>&nbsp;', searchPlaceholder: 'Search…',
+        paginate: { previous: '<i class="fa-solid fa-chevron-left"></i>', next: '<i class="fa-solid fa-chevron-right"></i>' }
+      }
+    };
+    $('#usersTable').DataTable({ ...dtOpts, order: [[0,'desc']], columnDefs:[{orderable:false,targets:6}] });
+    $('#officersTable').DataTable({ ...dtOpts, columnDefs:[{orderable:false,targets:5}] });
+    $('#paramsTable').DataTable({ ...dtOpts, paging: false, searching: false, info: false });
+
+    /* Simulation trend chart — read from data bridge */
+    const simData  = JSON.parse(document.getElementById('appData').dataset.simTrend || '[]');
+    const labels   = simData.map(r => r[0]).reverse();
+    const values   = simData.map(r => r[1]).reverse();
+    const gradient = document.getElementById('simTrendChart').getContext('2d').createLinearGradient(0,0,0,200);
+    gradient.addColorStop(0,'rgba(139,47,201,.25)');
+    gradient.addColorStop(1,'rgba(139,47,201,0)');
+    new Chart(document.getElementById('simTrendChart'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{ label: 'Simulations', data: values, borderColor: '#8B2FC9', borderWidth: 2.5,
+          pointBackgroundColor: '#EF7D00', pointBorderColor: '#fff', pointBorderWidth: 2,
+          pointRadius: 4, fill: true, backgroundColor: gradient, tension: 0.42 }]
+      },
+      options: { plugins: { legend: { display: false },
+        tooltip: { backgroundColor: '#141414', titleColor: '#c97fff', bodyColor: '#fff', cornerRadius: 8 }
+      },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { family: 'Outfit', weight: '700' }, color: '#aaa', maxRotation: 30 } },
+          y: { grid: { color: 'rgba(0,0,0,.05)' }, ticks: { font: { family: 'Outfit', weight: '700' }, color: '#aaa' }, beginAtZero: true }
+        },
+        animation: { duration: 1200, easing: 'easeOutQuart' }
+      }
+    });
+
+    /* Param edit modal */
+    function openParamEdit(btn) {
+      document.getElementById('paramModalTitle').textContent = 'Edit: ' + btn.dataset.name;
+      document.getElementById('pCropName').value = btn.dataset.name;
+      document.getElementById('pYield').value  = btn.dataset.yield;
+      document.getElementById('pTmin').value   = btn.dataset.tmin;
+      document.getElementById('pTmax').value   = btn.dataset.tmax;
+      document.getElementById('pRmin').value   = btn.dataset.rmin;
+      document.getElementById('pRmax').value   = btn.dataset.rmax;
+      document.getElementById('paramModal').style.display = 'flex';
+    }
+    document.getElementById('paramModal').addEventListener('click', function(e) {
+      if (e.target === this) this.style.display = 'none';
+    });
+
+    /* Smooth scroll for nav */
+    document.querySelectorAll('.tb-nav a').forEach(a => {
+      a.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.querySelectorAll('.tb-nav a').forEach(x => x.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

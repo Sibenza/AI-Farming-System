@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leaderboard | ZamFarm Climate</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,700;0,900&family=Outfit:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    :root{--g:#198A00;--gl:#23b800;--gd:#0f5c00;--r:#EF0000;--o:#EF7D00;--gold:#F5C518;--blk:#141414;--cream:#F4F9F0;--sw:270px;--tr:0.35s cubic-bezier(.4,0,.2,1);}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Outfit',sans-serif;background:var(--cream);min-height:100vh;overflow-x:hidden;}
+    body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 70% 55% at 5% 10%,rgba(245,197,24,.05) 0%,transparent 55%);pointer-events:none;z-index:0;}
+
+    /* Sidebar */
+    .sidebar{position:fixed;top:0;left:0;width:var(--sw);height:100vh;background:linear-gradient(175deg,var(--blk) 0%,#1a2e0a 55%,#0f1f06 100%);display:flex;flex-direction:column;z-index:100;box-shadow:6px 0 32px rgba(0,0,0,.45);overflow-y:auto;transition:transform var(--tr);}
+    .sb-head{background:linear-gradient(135deg,var(--g),var(--gd));padding:26px 24px 20px;position:relative;overflow:hidden;}
+    .sb-head::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:5px;background:linear-gradient(90deg,var(--blk),var(--r),var(--o),var(--g));}
+    .sb-head h2{font-family:'Cormorant Garamond',serif;font-size:1.35rem;font-weight:700;color:#fff;}
+    .sb-head .sub{font-family:'DM Mono',monospace;font-size:.6rem;color:rgba(255,255,255,.45);letter-spacing:2px;text-transform:uppercase;margin-top:3px;}
+    .eagle{font-size:1.8rem;display:block;margin-bottom:5px;animation:float 3s ease-in-out infinite;}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+    .nav-lbl{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.3);padding:16px 24px 5px;}
+    .sidebar a{display:flex;align-items:center;gap:11px;color:rgba(255,255,255,.72);text-decoration:none;padding:11px 24px;font-size:.88rem;font-weight:600;border-left:3px solid transparent;transition:all var(--tr);}
+    .sidebar a i{font-size:1.05rem;min-width:20px;}
+    .sidebar a:hover,.sidebar a.active{color:#fff;background:rgba(25,138,0,.18);border-left-color:var(--o);}
+    .sidebar a:hover i,.sidebar a.active i{color:var(--o);}
+    .sidebar a.logout-link{color:rgba(239,0,0,.75);}
+    .sidebar a.logout-link:hover{background:rgba(239,0,0,.12);border-left-color:var(--r);color:var(--r);}
+    .sb-div{height:1px;background:rgba(255,255,255,.07);margin:5px 20px;}.sp{flex:1;}
+
+    .topbar{position:fixed;top:0;left:var(--sw);right:0;height:64px;background:rgba(255,255,255,.9);backdrop-filter:blur(16px);border-bottom:1px solid rgba(25,138,0,.12);display:flex;align-items:center;justify-content:space-between;padding:0 32px;z-index:90;box-shadow:0 2px 16px rgba(0,0,0,.06);}
+    .tb-title{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;color:var(--gd);display:flex;align-items:center;gap:10px;}
+    .tb-title i{color:var(--gold);}
+    .tb-btn{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--cream);cursor:pointer;transition:background var(--tr);}
+    .tb-btn:hover{background:rgba(25,138,0,.10);}
+    .tb-btn i{color:var(--gd);font-size:1.05rem;}
+
+    .main{margin-left:var(--sw);padding:82px 32px 52px;min-height:100vh;position:relative;z-index:1;}
+    .flag-bar{display:flex;height:5px;border-radius:4px;overflow:hidden;margin-bottom:22px;}
+    .flag-bar span{flex:1;}
+    .fg{background:var(--g);}.fr{background:var(--r);}.fb{background:var(--blk);}.fo{background:var(--o);}
+
+    .zm-card{background:#fff;border-radius:18px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,.07);position:relative;overflow:hidden;margin-bottom:22px;}
+    .zm-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--gold),var(--o),var(--r));border-radius:18px 18px 0 0;}
+    .zm-card h2{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:700;color:var(--gd);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+    .zm-card h2 i{color:var(--gold);}
+
+    /* Top 3 podium */
+    .podium{display:flex;align-items:flex-end;justify-content:center;gap:16px;margin-bottom:28px;padding:20px 0;}
+    .pod{text-align:center;flex:1;max-width:160px;}
+    .pod-box{border-radius:14px 14px 0 0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:12px;position:relative;}
+    .pod-1 .pod-box{height:120px;background:linear-gradient(180deg,rgba(245,197,24,.25),rgba(245,197,24,.10));}
+    .pod-2 .pod-box{height:90px;background:linear-gradient(180deg,rgba(192,192,192,.18),rgba(192,192,192,.08));}
+    .pod-3 .pod-box{height:70px;background:linear-gradient(180deg,rgba(205,127,50,.15),rgba(205,127,50,.06));}
+    .pod-avatar{width:60px;height:60px;border-radius:50%;object-fit:cover;position:absolute;top:-30px;left:50%;transform:translateX(-50%);box-shadow:0 4px 16px rgba(0,0,0,.2);}
+    .pod-1 .pod-avatar{border:3px solid var(--gold);width:70px;height:70px;top:-35px;}
+    .pod-2 .pod-avatar{border:3px solid #aaa;}
+    .pod-3 .pod-avatar{border:3px solid #cd7f32;}
+    .pod-crown{position:absolute;top:-60px;left:50%;transform:translateX(-50%);font-size:1.5rem;}
+    .pod-name{font-size:.82rem;font-weight:800;color:var(--blk);margin-top:10px;line-height:1.2;}
+    .pod-pts{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:900;color:var(--gold);}
+    .pod-lv{font-size:.68rem;font-weight:700;color:#aaa;}
+    .pod-rank{font-size:1.4rem;margin-bottom:6px;}
+
+    /* Leaderboard rows */
+    .lb-tab{display:flex;gap:10px;margin-bottom:18px;}
+    .lb-tab-btn{padding:8px 18px;border-radius:9px;font-size:.82rem;font-weight:700;cursor:pointer;border:1.5px solid rgba(25,138,0,.2);background:transparent;color:#888;transition:all var(--tr);}
+    .lb-tab-btn.active{background:var(--g);border-color:var(--g);color:#fff;}
+
+    .lb-row{display:flex;align-items:center;gap:14px;padding:11px 14px;border-radius:12px;transition:background var(--tr);margin-bottom:6px;}
+    .lb-row:hover{background:rgba(245,197,24,.05);}
+    .lb-row.me{background:rgba(245,197,24,.08);border:1.5px solid rgba(245,197,24,.25);}
+    .lb-rank{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:900;color:#ddd;min-width:32px;text-align:center;}
+    .lb-avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid rgba(25,138,0,.2);flex-shrink:0;}
+    .lb-name{font-size:.9rem;font-weight:800;color:var(--blk);}
+    .lb-district{font-size:.72rem;color:#aaa;font-weight:600;}
+    .lb-pts{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:900;color:var(--g);}
+    .lb-level{font-size:.68rem;font-weight:800;background:rgba(239,125,0,.10);color:var(--o);border-radius:20px;padding:3px 9px;}
+    .lb-streak{font-size:.72rem;font-weight:800;color:#ff9f4a;}
+
+    @media(max-width:992px){:root{--sw:0px;}.sidebar{transform:translateX(-270px);}.sidebar.open{transform:translateX(0);--sw:270px;}.main{margin-left:0;padding:78px 14px 44px;}.topbar{left:0;padding:0 14px;}.podium{flex-wrap:wrap;}.pod{min-width:120px;}}
+    ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-thumb{background:rgba(245,197,24,.35);border-radius:3px;}
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sb-head">
+      <span class="eagle">🦅</span>
+      <h2>ZamFarm Climate</h2>
+      <div class="sub">Leaderboard</div>
+    </div>
+    <p class="nav-lbl">Navigation</p>
+    <a href="/dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+    <a href="/history"><i class="fa-solid fa-clock-rotate-left"></i> Prediction History</a>
+    <a href="/crop"><i class="fa-solid fa-seedling"></i> Crop Recommendation</a>
+    <div class="sb-div"></div>
+    <p class="nav-lbl">Gamification</p>
+    <a href="/simulator"><i class="fa-solid fa-flask"></i> Investment Simulator</a>
+    <a href="/gamification"><i class="fa-solid fa-trophy"></i> My Progress</a>
+    <a href="/leaderboard" class="active"><i class="fa-solid fa-ranking-star"></i> Leaderboard</a>
+    <div class="sb-div"></div>
+    <p class="nav-lbl">Climate</p>
+    <a href="/climate_data"><i class="fa-solid fa-database"></i> Data Ingestion</a>
+    <a href="/climate_forecast"><i class="fa-solid fa-chart-line"></i> Season Forecast</a>
+    <div class="sp"></div><div class="sb-div"></div>
+    <a href="/logout" class="logout-link"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+  </div>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <button id="hamburger" class="btn btn-sm d-lg-none" style="background:none;border:none;font-size:1.2rem;color:var(--gd);"><i class="fa-solid fa-bars"></i></button>
+    <div class="tb-title"><i class="fa-solid fa-ranking-star"></i> National Leaderboard</div>
+    <div class="d-flex gap-2">
+      <div class="tb-btn" onclick="location.href='/gamification'"><i class="fa-solid fa-trophy"></i></div>
+      <div class="tb-btn" onclick="location.href='/dashboard'"><i class="fa-solid fa-gauge-high"></i></div>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <div class="flag-bar animate__animated animate__fadeIn">
+      <span class="fg"></span><span class="fr"></span><span class="fb"></span><span class="fo"></span>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px;" class="animate__animated animate__fadeInDown">
+      <h1 style="font-family:'Cormorant Garamond',serif;font-size:1.85rem;font-weight:700;color:var(--gd);display:flex;align-items:center;gap:12px;">
+        <i class="fa-solid fa-ranking-star" style="color:var(--gold);"></i> Leaderboard
+      </h1>
+      <div style="font-size:.82rem;font-weight:600;color:#888;">
+        Compete with farmers across Zambia · Earn points through daily logins &amp; simulations
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 380px;gap:22px;align-items:start;">
+
+      <!-- LEFT: Main board -->
+      <div>
+        <div class="zm-card" data-aos="fade-right">
+
+          <!-- Tab switcher: National vs District -->
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px;">
+            <h2 style="margin-bottom:0;"><i class="fa-solid fa-globe"></i> Rankings</h2>
+            <div class="lb-tab">
+              <button class="lb-tab-btn active" onclick="showTab('national',this)">🌍 National</button>
+              <button class="lb-tab-btn" onclick="showTab('district',this)">📍 My District</button>
+            </div>
+          </div>
+
+          <!-- Podium (top 3) -->
+          {% if global_board and global_board|length >= 3 %}
+          <div class="podium animate__animated animate__fadeIn">
+            <!-- 2nd place -->
+            <div class="pod pod-2" data-aos="fade-up" data-aos-delay="100">
+              <div class="pod-rank">🥈</div>
+              <div style="position:relative;padding-top:40px;">
+                <div class="pod-box">
+                  <img src="{{ url_for('static',filename='uploads/'+(global_board[1].profile_pic or 'default.png')) }}" class="pod-avatar" alt="">
+                </div>
+              </div>
+              <div class="pod-name">{{ global_board[1].fullname }}</div>
+              <div class="pod-pts">{{ global_board[1].points }}</div>
+              <div class="pod-lv">{{ global_board[1].level_info.icon }} Lv {{ global_board[1].level }}</div>
+            </div>
+            <!-- 1st place -->
+            <div class="pod pod-1" data-aos="fade-up">
+              <div class="pod-rank">👑</div>
+              <div style="position:relative;padding-top:44px;">
+                <div class="pod-box">
+                  <img src="{{ url_for('static',filename='uploads/'+(global_board[0].profile_pic or 'default.png')) }}" class="pod-avatar" alt="">
+                </div>
+              </div>
+              <div class="pod-name">{{ global_board[0].fullname }}</div>
+              <div class="pod-pts">{{ global_board[0].points }}</div>
+              <div class="pod-lv">{{ global_board[0].level_info.icon }} Lv {{ global_board[0].level }}</div>
+            </div>
+            <!-- 3rd place -->
+            <div class="pod pod-3" data-aos="fade-up" data-aos-delay="200">
+              <div class="pod-rank">🥉</div>
+              <div style="position:relative;padding-top:36px;">
+                <div class="pod-box">
+                  <img src="{{ url_for('static',filename='uploads/'+(global_board[2].profile_pic or 'default.png')) }}" class="pod-avatar" alt="">
+                </div>
+              </div>
+              <div class="pod-name">{{ global_board[2].fullname }}</div>
+              <div class="pod-pts">{{ global_board[2].points }}</div>
+              <div class="pod-lv">{{ global_board[2].level_info.icon }} Lv {{ global_board[2].level }}</div>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- National list -->
+          <div id="tab-national">
+            {% for i, entry in enumerate(global_board) %}
+            <div class="lb-row {{ 'me' if entry.is_me else '' }}" data-aos="fade-up" data-aos-delay="{{ loop.index * 30 }}">
+              <div class="lb-rank" {% if i == 0 %}style="color:var(--gold)"{% elif i == 1 %}style="color:#aaa"{% elif i == 2 %}style="color:#cd7f32"{% endif %}>
+                {{ ['🥇','🥈','🥉'][i] if i < 3 else i+1 }}
+              </div>
+              <img src="{{ url_for('static',filename='uploads/'+(entry.profile_pic or 'default.png')) }}" class="lb-avatar" alt="">
+              <div style="flex:1;min-width:0;">
+                <div class="lb-name">{{ entry.fullname }} {% if entry.is_me %}<span style="font-size:.7rem;background:rgba(245,197,24,.15);color:var(--gold);padding:2px 8px;border-radius:20px;font-weight:800;">You</span>{% endif %}</div>
+                <div class="lb-district">{{ entry.district }}</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                {% if entry.streak_days >= 7 %}<span class="lb-streak">🔥{{ entry.streak_days }}d</span>{% endif %}
+                <div style="text-align:right;">
+                  <div class="lb-pts">{{ entry.points }}</div>
+                  <div class="lb-level">{{ entry.level_info.icon }} Lv {{ entry.level }}</div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+
+          <!-- District list -->
+          <div id="tab-district" style="display:none;">
+            {% for i, entry in enumerate(district_board) %}
+            <div class="lb-row {{ 'me' if entry.is_me else '' }}">
+              <div class="lb-rank">{{ i+1 }}</div>
+              <img src="{{ url_for('static',filename='uploads/'+(entry.profile_pic or 'default.png')) }}" class="lb-avatar" alt="">
+              <div style="flex:1;min-width:0;">
+                <div class="lb-name">{{ entry.fullname }} {% if entry.is_me %}<span style="font-size:.7rem;background:rgba(245,197,24,.15);color:var(--gold);padding:2px 8px;border-radius:20px;font-weight:800;">You</span>{% endif %}</div>
+                <div class="lb-district">{{ entry.district }}</div>
+              </div>
+              <div style="text-align:right;">
+                <div class="lb-pts">{{ entry.points }}</div>
+                <div class="lb-level">{{ entry.level_info.icon }} Lv {{ entry.level }}</div>
+              </div>
+            </div>
+            {% endfor %}
+            {% if not district_board %}
+            <div style="text-align:center;padding:32px;color:#bbb;font-size:.88rem;">No farmers in your district yet — be the first!</div>
+            {% endif %}
+          </div>
+
+        </div>
+      </div><!-- /left -->
+
+      <!-- RIGHT: How to climb -->
+      <div>
+        <div class="zm-card" data-aos="fade-left" style="background:linear-gradient(145deg,#0a2200,#141414);color:#fff;">
+          <h2 style="color:var(--gold);"><i class="fa-solid fa-rocket"></i> Climb the Board</h2>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div style="background:rgba(255,255,255,.06);border-radius:12px;padding:14px;border-left:3px solid var(--g);">
+              <div style="font-size:.88rem;font-weight:800;color:#fff;margin-bottom:3px;"><i class="fa-solid fa-right-to-bracket" style="color:var(--gl);margin-right:6px;"></i>Daily Login</div>
+              <div style="font-family:'DM Mono',monospace;font-size:1.1rem;font-weight:800;color:var(--gold);">+10 points</div>
+              <div style="font-size:.72rem;color:rgba(255,255,255,.4);margin-top:2px;">Once per calendar day</div>
+            </div>
+            <div style="background:rgba(255,255,255,.06);border-radius:12px;padding:14px;border-left:3px solid var(--o);">
+              <div style="font-size:.88rem;font-weight:800;color:#fff;margin-bottom:3px;"><i class="fa-solid fa-flask" style="color:var(--o);margin-right:6px;"></i>Run Simulation</div>
+              <div style="font-family:'DM Mono',monospace;font-size:1.1rem;font-weight:800;color:var(--gold);">+50 points</div>
+              <div style="font-size:.72rem;color:rgba(255,255,255,.4);margin-top:2px;">Per completed simulation</div>
+            </div>
+            <div style="background:rgba(255,255,255,.06);border-radius:12px;padding:14px;border-left:3px solid var(--gold);">
+              <div style="font-size:.88rem;font-weight:800;color:#fff;margin-bottom:3px;"><i class="fa-solid fa-fire" style="color:#ff9f4a;margin-right:6px;"></i>7-Day Streak</div>
+              <div style="font-family:'DM Mono',monospace;font-size:1.1rem;font-weight:800;color:var(--gold);">+Badge</div>
+              <div style="font-size:.72rem;color:rgba(255,255,255,.4);margin-top:2px;">Login 7 days in a row</div>
+            </div>
+          </div>
+          <div style="margin-top:16px;">
+            <a href="/simulator" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;border:none;border-radius:12px;font-family:'Outfit',sans-serif;font-size:.92rem;font-weight:800;text-decoration:none;box-shadow:0 4px 18px rgba(25,138,0,.4);">
+              <i class="fa-solid fa-flask"></i> Run a Simulation Now
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /main -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+  <script>
+    AOS.init({ duration: 560, easing: 'ease-out-cubic', once: true });
+    $('#hamburger').on('click', () => $('#sidebar').toggleClass('open'));
+    $(document).on('click', e => { if (!$(e.target).closest('#sidebar,#hamburger').length) $('#sidebar').removeClass('open'); });
+
+    function showTab(tab, btn) {
+      document.getElementById('tab-national').style.display = tab === 'national' ? 'block' : 'none';
+      document.getElementById('tab-district').style.display = tab === 'district' ? 'block' : 'none';
+      document.querySelectorAll('.lb-tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+  </script>
+</body>
+</html>

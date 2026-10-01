@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
+  <meta name="theme-color" content="#198A00">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat · {{ listing_title }} | ZamFarm Marketplace</title>
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    :root{--g:#198A00;--gd:#0f5c00;--r:#EF0000;--o:#EF7D00;--gold:#F5C518;--sky:#2E86AB;
+          --bg:#ECE5DD;--surface:#fff;--border:rgba(0,0,0,.1);--text:#141414;--text2:#667;--text3:#999;--tr:.22s ease;}
+    [data-theme="dark"]{--bg:#0b141a;--surface:#1f2c33;--border:rgba(255,255,255,.08);--text:#e8f5e3;--text2:#9ab890;--text3:#6a8a65;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{height:100%;touch-action:pan-y;}
+    body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);
+         height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+
+    /* ── Topbar ── */
+    .chat-top{flex-shrink:0;height:62px;background:linear-gradient(135deg,var(--g),var(--gd));
+              color:#fff;display:flex;align-items:center;gap:12px;padding:0 14px;
+              box-shadow:0 2px 10px rgba(0,0,0,.15);z-index:20;}
+    .ct-back{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;
+             justify-content:center;color:#fff;text-decoration:none;transition:background var(--tr);}
+    .ct-back:hover{background:rgba(255,255,255,.15);}
+    .ct-ava{width:42px;height:42px;border-radius:50%;object-fit:cover;
+            border:2px solid rgba(255,255,255,.5);flex-shrink:0;}
+    .ct-name{font-size:1rem;font-weight:800;line-height:1.1;}
+    .ct-sub{font-size:.7rem;opacity:.82;}
+
+    /* ── Chat body ── */
+    .chat-body{flex:1;overflow-y:auto;padding:10px 14px 6px;
+               background-image:radial-gradient(rgba(0,0,0,.025) 1px,transparent 1px);
+               background-size:18px 18px;}
+    .chat-inner{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:3px;}
+
+    /* ── Day separator ── */
+    .day-sep{align-self:center;background:rgba(255,255,255,.85);color:var(--text3);
+             font-size:.65rem;font-weight:700;padding:4px 13px;border-radius:12px;
+             box-shadow:0 1px 3px rgba(0,0,0,.1);margin:10px 0 6px;
+             backdrop-filter:blur(4px);letter-spacing:.3px;}
+    [data-theme="dark"] .day-sep{background:rgba(31,44,51,.9);color:#9ab890;}
+
+    /* ── Bubble row (wraps bubble + swipe indicator) ── */
+    .bubble-row{display:flex;align-items:flex-end;gap:6px;position:relative;
+                transition:transform .18s ease;cursor:pointer;user-select:none;}
+    .bubble-row.me{flex-direction:row-reverse;}
+    /* Reply arrow that appears on swipe */
+    .swipe-hint{position:absolute;top:50%;transform:translateY(-50%);
+                width:32px;height:32px;border-radius:50%;
+                background:rgba(25,138,0,.15);display:flex;align-items:center;justify-content:center;
+                color:var(--g);font-size:.85rem;opacity:0;transition:opacity .18s;pointer-events:none;}
+    .bubble-row.me .swipe-hint{right:calc(100% + 4px);}
+    .bubble-row:not(.me) .swipe-hint{left:calc(100% + 4px);}
+    .bubble-row.swiping .swipe-hint{opacity:1;}
+
+    /* ── Bubble ── */
+    .bubble{max-width:76%;padding:8px 12px 5px;border-radius:14px;
+            font-size:.9rem;line-height:1.48;font-weight:500;position:relative;
+            box-shadow:0 1px 2px rgba(0,0,0,.09);word-wrap:break-word;
+            animation:pop .2s ease both;transition:background .15s;}
+    @keyframes pop{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+    .bubble.them{background:var(--surface);border-top-left-radius:3px;color:var(--text);}
+    .bubble.me{background:#DCF8C6;border-top-right-radius:3px;color:#0b2e13;}
+    [data-theme="dark"] .bubble.me{background:#075E54;color:#e8f5e3;}
+    .bubble.highlighted{background:#fffbe6;}
+    [data-theme="dark"] .bubble.highlighted{background:#2a3d00;}
+
+    /* Reply-to preview inside a bubble */
+    .reply-preview{background:rgba(0,0,0,.06);border-left:3px solid var(--g);
+                   border-radius:0 7px 7px 0;padding:5px 9px;margin-bottom:6px;
+                   font-size:.76rem;font-weight:600;color:var(--text2);
+                   cursor:pointer;transition:background .15s;white-space:nowrap;
+                   overflow:hidden;text-overflow:ellipsis;max-width:260px;}
+    .reply-preview:hover{background:rgba(0,0,0,.1);}
+    .reply-preview .rp-who{font-weight:800;color:var(--g);font-size:.72rem;margin-bottom:1px;}
+    .bubble.me .reply-preview{background:rgba(255,255,255,.22);border-left-color:rgba(255,255,255,.6);}
+    .bubble.me .reply-preview .rp-who{color:rgba(255,255,255,.85);}
+
+    /* Time stamp inside bubble */
+    .bub-foot{display:flex;justify-content:flex-end;align-items:center;gap:5px;margin-top:3px;}
+    .bub-time{font-size:.58rem;color:var(--text3);font-weight:600;}
+    .bubble.me .bub-time{color:#5a8a4a;}
+    [data-theme="dark"] .bubble.me .bub-time{color:#9ab890;}
+
+    /* ── Voice note bubble ── */
+    .voice-row{display:flex;align-items:center;gap:10px;min-width:200px;}
+    .voice-play{width:36px;height:36px;border-radius:50%;border:none;background:var(--g);
+                color:#fff;font-size:.88rem;cursor:pointer;flex-shrink:0;transition:transform .15s;}
+    .voice-play:hover{transform:scale(1.08);}
+    .bubble.me .voice-play{background:var(--gd);}
+    .voice-wave{flex:1;height:24px;display:flex;align-items:center;gap:2px;}
+    .voice-wave i{flex:1;background:var(--text3);border-radius:2px;opacity:.45;}
+    .bubble.me .voice-wave i{background:rgba(11,46,19,.35);}
+    .voice-dur{font-size:.7rem;font-weight:700;color:var(--text3);flex-shrink:0;}
+    audio{display:none;}
+
+    /* ── Reply bar (shown when replying to a message) ── */
+    .reply-bar{display:none;flex-shrink:0;background:var(--surface);
+               border-top:1px solid var(--border);padding:8px 14px;
+               align-items:center;gap:10px;max-width:760px;width:100%;margin:0 auto;}
+    .reply-bar.show{display:flex;}
+    .rb-line{flex:1;border-left:3px solid var(--g);padding:4px 10px;
+             background:var(--surface2,#f5f5f5);border-radius:0 8px 8px 0;min-width:0;}
+    .rb-who{font-size:.7rem;font-weight:800;color:var(--g);}
+    .rb-text{font-size:.78rem;color:var(--text2);font-weight:600;
+             white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .rb-cancel{background:none;border:none;color:var(--text3);font-size:1.1rem;
+               cursor:pointer;flex-shrink:0;transition:color var(--tr);}
+    .rb-cancel:hover{color:var(--r);}
+
+    /* ── Input bar ── */
+    .chat-input{flex-shrink:0;background:var(--surface);border-top:1px solid var(--border);padding:10px 12px;}
+    .ci-wrap{max-width:760px;margin:0 auto;display:flex;gap:8px;align-items:flex-end;}
+    .ci-box{flex:1;border:2px solid var(--border);border-radius:22px;padding:10px 16px;
+            font-family:'Outfit',sans-serif;font-size:.92rem;font-weight:500;
+            background:var(--bg);color:var(--text);outline:none;resize:none;
+            max-height:110px;line-height:1.4;transition:border-color var(--tr);}
+    .ci-box:focus{border-color:var(--g);}
+    .ci-btn{
+      width:46px;
+      height:46px;
+      border-radius:50%;
+      border:none;
+      color:#fff;
+      font-size:1.05rem;
+      cursor:pointer;
+      flex-shrink:0;
+      transition:transform var(--tr);
+      box-shadow:0 3px 10px rgba(0,0,0,.18);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+  }
+    .ci-mic{background:linear-gradient(135deg,var(--sky),#1c5f80);}
+    .ci-send{background:linear-gradient(135deg,var(--g),var(--gd));}
+    .ci-btn:hover{transform:scale(1.07);}
+    .ci-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+    /* ── Recording bar ── */
+    .rec-bar{display:none;max-width:760px;margin:0 auto;align-items:center;gap:12px;}
+    .rec-bar.show{display:flex;}
+    .rec-dot{width:12px;height:12px;border-radius:50%;background:var(--r);animation:blink 1s infinite;}
+    @keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+    .rec-time{font-size:.95rem;font-weight:800;color:var(--r);font-variant-numeric:tabular-nums;}
+    .rec-cancel{margin-left:auto;background:none;border:none;color:var(--text3);
+                font-size:.85rem;font-weight:700;cursor:pointer;}
+    .rec-stop{width:46px;height:46px;border-radius:50%;border:none;
+              background:var(--r);color:#fff;font-size:1.05rem;cursor:pointer;flex-shrink:0;}
+
+    /* ── Toast ── */
+    .toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(20px);
+           opacity:0;background:#141414;color:#fff;padding:9px 16px;border-radius:10px;
+           font-size:.82rem;font-weight:700;transition:all .3s;z-index:50;}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+    ::-webkit-scrollbar{width:5px;}
+    ::-webkit-scrollbar-thumb{background:rgba(0,0,0,.15);border-radius:3px;}
+  </style>
+</head>
+<body>
+  <!-- Topbar -->
+  <div class="chat-top">
+    <a href="/marketplace/messages" class="ct-back"><i class="fa-solid fa-arrow-left"></i></a>
+    <img src="{{ url_for('static', filename='uploads/' + other_pic) }}" class="ct-ava" alt="">
+    <div style="flex:1;min-width:0;">
+      <div class="ct-name">{{ other_name }}</div>
+      <div class="ct-sub">{{ listing_title }}</div>
+    </div>
+    <i class="fa-solid fa-leaf" style="opacity:.55;"></i>
+  </div>
+
+  <!-- Data bridge -->
+  <div id="chatData"
+       data-inquiry="{{ inquiry_id }}"
+       data-my-name="{{ farmer[1] if farmer is defined and farmer else 'You' }}"
+       data-other-name="{{ other_name }}"
+       style="display:none;"></div>
+
+  <!-- Chat body -->
+  <div class="chat-body" id="chatBody">
+    <div class="chat-inner" id="chatInner">
+      <div class="day-sep">Loading conversation…</div>
+    </div>
+  </div>
+
+  <!-- Reply bar -->
+  <div class="reply-bar" id="replyBar">
+    <div class="rb-line">
+      <div class="rb-who" id="rbWho"></div>
+      <div class="rb-text" id="rbText"></div>
+    </div>
+    <button class="rb-cancel" id="rbCancel" type="button" title="Cancel reply">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+
+  <!-- Input bar -->
+  <div class="chat-input">
+    <div class="ci-wrap" id="inputRow">
+      <textarea id="msgBox" class="ci-box" rows="1" placeholder="Type a message…"></textarea>
+      <button class="ci-btn ci-mic" id="micBtn" title="Record voice note"><i class="fa-solid fa-microphone"></i></button>
+      <button class="ci-btn ci-send" id="sendBtn" title="Send" style="display:none;"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+    <div class="rec-bar" id="recBar">
+      <span class="rec-dot"></span>
+      <span class="rec-time" id="recTime">0:00</span>
+      <button class="rec-cancel" id="recCancel" type="button">Cancel</button>
+      <button class="rec-stop" id="recStop" title="Send voice note"><i class="fa-solid fa-paper-plane"></i></button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+  (function(){
+    'use strict';
+    var $ = function(id){ return document.getElementById(id); };
+    var CD        = $('chatData').dataset;
+    var INQUIRY   = CD.inquiry;
+    var MY_NAME   = CD.myName   || 'You';
+    var OTHER_NAME= CD.otherName|| 'Them';
+
+    var inner     = $('chatInner');
+    var msgBox    = $('msgBox');
+    var lastCount = -1;
+
+    // Reply state
+    var replyTo = null;    // { id, mine, preview } or null
+
+    /* ══════════════════════════════
+       DATE SEPARATOR HELPERS
+    ══════════════════════════════ */
+    function friendlyDate(dateStr) {
+      /* dateStr = "YYYY-MM-DD" */
+      if (!dateStr) return '';
+      var now   = new Date();
+      var today = now.toISOString().slice(0, 10);
+      var yest  = new Date(now - 864e5).toISOString().slice(0, 10);
+
+      if (dateStr === today) return 'Today';
+      if (dateStr === yest)  return 'Yesterday';
+
+      /* Within the last 7 days → day name */
+      var diff = (Date.now() - new Date(dateStr).getTime()) / 864e5;
+      if (diff < 7) {
+        var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+        return days[new Date(dateStr).getDay()];
+      }
+
+      /* Otherwise full date like "03 July 2025" */
+      var months = ['January','February','March','April','May','June',
+                    'July','August','September','October','November','December'];
+      var d = new Date(dateStr);
+      return ('0' + d.getDate()).slice(-2) + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+    }
+
+    /* ══════════════════════════════
+       BUBBLE RENDERING
+    ══════════════════════════════ */
+    function escapeHtml(s) {
+      return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+    function fmtDur(sec) {
+      sec = Math.max(0, Math.round(sec || 0));
+      var m = Math.floor(sec / 60), s = sec % 60;
+      return m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    function bubbleHtml(m, msgMap) {
+      var side    = m.mine ? 'me' : 'them';
+      var content = '';
+
+      /* Reply-to preview */
+      if (m.replyToId && msgMap[m.replyToId]) {
+        var parent = msgMap[m.replyToId];
+        var who    = parent.mine ? MY_NAME : OTHER_NAME;
+        var prev   = parent.type === 'voice' ? '🎤 Voice note'
+                                              : escapeHtml((parent.body || '').slice(0, 60));
+        content += '<div class="reply-preview" data-goto="' + m.replyToId + '">' +
+                     '<div class="rp-who">' + escapeHtml(who) + '</div>' +
+                     '<div>' + prev + '</div>' +
+                   '</div>';
+      }
+
+      /* Message body */
+      if (m.type === 'voice' && m.audio) {
+        var bars = '';
+        for (var i = 0; i < 16; i++) {
+          bars += '<i style="height:' + (6 + ((i * 7) % 18)) + 'px;"></i>';
+        }
+        content += '<div class="voice-row">' +
+                     '<button class="voice-play" data-audio="' + m.audio + '">' +
+                       '<i class="fa-solid fa-play"></i>' +
+                     '</button>' +
+                     '<div class="voice-wave">' + bars + '</div>' +
+                     '<span class="voice-dur">' + fmtDur(m.duration) + '</span>' +
+                     '<audio src="' + m.audio + '" preload="none"></audio>' +
+                   '</div>';
+      } else {
+        content += escapeHtml(m.body);
+      }
+
+      /* Timestamp footer */
+      content += '<div class="bub-foot"><span class="bub-time">' + escapeHtml(m.time) + '</span></div>';
+
+      return '<div class="bubble-row ' + side + '" data-id="' + m.id + '">' +
+               '<div class="swipe-hint"><i class="fa-solid fa-reply"></i></div>' +
+               '<div class="bubble ' + side + '">' + content + '</div>' +
+             '</div>';
+    }
+
+    function scrollDown() { var c = $('chatBody'); c.scrollTop = c.scrollHeight; }
+
+    /* ══════════════════════════════
+       RENDER / REFRESH
+    ══════════════════════════════ */
+    function render(messages) {
+      if (messages.length === lastCount) return;
+      lastCount = messages.length;
+
+      /* Build a lookup map for reply-to previews */
+      var msgMap = {};
+      messages.forEach(function(m){ msgMap[m.id] = m; });
+
+      if (!messages.length) {
+        inner.innerHTML = '<div class="day-sep">No messages yet — say hello!</div>';
+        return;
+      }
+
+      var html      = '';
+      var lastDate  = '';
+
+      messages.forEach(function(m) {
+        /* Day separator */
+        if (m.date && m.date !== lastDate) {
+          html += '<div class="day-sep">' + friendlyDate(m.date) + '</div>';
+          lastDate = m.date;
+        }
+        html += bubbleHtml(m, msgMap);
+      });
+
+      inner.innerHTML = html;
+      wirePlayButtons();
+      wireSwipe();
+      wireReplyPreviews();
+      scrollDown();
+    }
+
+    /* ══════════════════════════════
+       VOICE NOTE PLAYBACK
+    ══════════════════════════════ */
+    function wirePlayButtons() {
+      inner.querySelectorAll('.voice-play').forEach(function(btn) {
+        if (btn.dataset.wired) return;
+        btn.dataset.wired = '1';
+        btn.addEventListener('click', function() {
+          var audio = btn.parentElement.querySelector('audio');
+          var icon  = btn.querySelector('i');
+          if (audio.paused) {
+            inner.querySelectorAll('audio').forEach(function(a){ if(a!==audio) a.pause(); });
+            audio.play();
+            icon.className = 'fa-solid fa-pause';
+            audio.onended  = function(){ icon.className = 'fa-solid fa-play'; };
+          } else {
+            audio.pause(); icon.className = 'fa-solid fa-play';
+          }
+        });
+      });
+    }
+
+    /* ══════════════════════════════
+       SWIPE-TO-REPLY
+       Works on both touch (mobile) and mouse (desktop)
+    ══════════════════════════════ */
+    function wireSwipe() {
+      inner.querySelectorAll('.bubble-row').forEach(function(row) {
+        if (row.dataset.swireWired) return;
+        row.dataset.swireWired = '1';
+
+        var isMine    = row.classList.contains('me');
+        var startX    = null;
+        var triggered = false;
+        var THRESHOLD = 60;   // px to trigger reply
+
+        function onStart(x) { startX = x; triggered = false; }
+        function onMove(x) {
+          if (startX === null) return;
+          var dx = x - startX;
+          /* Swipe right for "them", swipe left for "me" */
+          var swipeAmt = isMine ? -dx : dx;
+          if (swipeAmt < 0) return;
+          var shift = Math.min(swipeAmt, THRESHOLD * 1.2);
+          var dir   = isMine ? -1 : 1;
+          row.style.transform = 'translateX(' + (dir * shift) + 'px)';
+          row.classList.toggle('swiping', swipeAmt > 20);
+          if (!triggered && swipeAmt >= THRESHOLD) {
+            triggered = true;
+            triggerReply(row);
+          }
+        }
+        function onEnd() {
+          startX = null;
+          row.style.transform = '';
+          row.classList.remove('swiping');
+        }
+
+        /* Touch */
+        row.addEventListener('touchstart', function(e){ onStart(e.touches[0].clientX); }, {passive:true});
+        row.addEventListener('touchmove',  function(e){ onMove(e.touches[0].clientX); },  {passive:true});
+        row.addEventListener('touchend',   onEnd);
+        row.addEventListener('touchcancel',onEnd);
+
+        /* Mouse (desktop drag) */
+        row.addEventListener('mousedown', function(e){ onStart(e.clientX); });
+        window.addEventListener('mousemove', function(e){
+          if (startX !== null) onMove(e.clientX);
+        });
+        window.addEventListener('mouseup', onEnd);
+      });
+    }
+
+    function triggerReply(row) {
+      var id      = parseInt(row.getAttribute('data-id'), 10);
+      var bubble  = row.querySelector('.bubble');
+      var isMine  = row.classList.contains('me');
+      var bodyEl  = bubble.querySelector('.bubble.me, .bubble.them');
+
+      /* Vibrate on mobile if supported */
+      if (window.navigator && window.navigator.vibrate) { window.navigator.vibrate(40); }
+
+      /* Determine preview text */
+      var voiceEl = bubble.querySelector('.voice-play');
+      var preview = voiceEl ? '🎤 Voice note' : (bubble.textContent || '').trim().slice(0, 80);
+
+      setReplyTo({
+        id:      id,
+        mine:    isMine,
+        preview: preview,
+      });
+    }
+
+    /* Reply-to preview clicks (scroll to parent) */
+    function wireReplyPreviews() {
+      inner.querySelectorAll('.reply-preview').forEach(function(el) {
+        if (el.dataset.wired) return;
+        el.dataset.wired = '1';
+        el.addEventListener('click', function() {
+          var targetId = el.getAttribute('data-goto');
+          var target   = inner.querySelector('[data-id="' + targetId + '"]');
+          if (target) {
+            target.scrollIntoView({behavior:'smooth', block:'center'});
+            target.querySelector('.bubble').classList.add('highlighted');
+            setTimeout(function(){
+              target.querySelector('.bubble').classList.remove('highlighted');
+            }, 1500);
+          }
+        });
+      });
+    }
+
+    /* ══════════════════════════════
+       REPLY BAR
+    ══════════════════════════════ */
+    function setReplyTo(msg) {
+      replyTo = msg;
+      var bar = $('replyBar');
+      bar.classList.add('show');
+      $('rbWho').textContent  = msg.mine ? 'You' : OTHER_NAME;
+      $('rbText').textContent = msg.preview;
+      msgBox.focus();
+    }
+
+    function clearReply() {
+      replyTo = null;
+      $('replyBar').classList.remove('show');
+    }
+
+    $('rbCancel').addEventListener('click', clearReply);
+
+    /* ══════════════════════════════
+       LOAD & POLL
+    ══════════════════════════════ */
+    function loadMessages() {
+      fetch('/api/marketplace/chat/' + INQUIRY, {credentials:'same-origin'})
+        .then(function(r){ return r.json(); })
+        .then(function(d){ if (d.messages) render(d.messages); })
+        .catch(function(){});
+    }
+
+    /* ══════════════════════════════
+       SEND TEXT
+    ══════════════════════════════ */
+    function toast(t) {
+      var el = $('toast'); el.textContent = t;
+      el.classList.add('show');
+      setTimeout(function(){ el.classList.remove('show'); }, 2600);
+    }
+
+    function sendText() {
+      var body = msgBox.value.trim();
+      if (!body) return;
+      var fd = new FormData();
+      fd.append('body', body);
+      if (replyTo) fd.append('reply_to_id', replyTo.id);
+      msgBox.value = ''; msgBox.style.height = 'auto';
+      clearReply(); toggleSend();
+      lastCount = -1;    // force re-render
+      fetch('/marketplace/chat/' + INQUIRY + '/send', {
+        method:'POST', credentials:'same-origin', body:fd
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(d){ if (!d.ok) toast('Could not send message.'); loadMessages(); })
+      .catch(function(){ toast('Network error.'); });
+    }
+
+    function toggleSend() {
+      var has = msgBox.value.trim().length > 0;
+      $('sendBtn').style.display = has ? 'flex' : 'none';
+      $('micBtn').style.display  = has ? 'none' : 'flex';
+    }
+    msgBox.addEventListener('input', function(){
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 110) + 'px';
+      toggleSend();
+    });
+    msgBox.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendText(); }
+    });
+    $('sendBtn').addEventListener('click', sendText);
+
+    /* ══════════════════════════════
+       VOICE RECORDING
+    ══════════════════════════════ */
+    var mediaRecorder=null, chunks=[], recStart=0, recTimer=null, recStream=null, cancelled=false;
+
+    function showRec(show) {
+      $('recBar').classList.toggle('show', show);
+      $('inputRow').style.display = show ? 'none' : 'flex';
+    }
+    function tickRec() {
+      var s = Math.floor((Date.now() - recStart) / 1000);
+      $('recTime').textContent = fmtDur(s);
+      if (s >= 120) stopRec(false);
+    }
+
+    $('micBtn').addEventListener('click', function() {
+      if (!navigator.mediaDevices || !window.MediaRecorder) {
+        toast('Voice notes are not supported by this browser.'); return;
+      }
+      navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream) {
+        recStream = stream; chunks = []; cancelled = false;
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = function(e){ if(e.data.size>0) chunks.push(e.data); };
+        mediaRecorder.onstop = function() {
+          recStream.getTracks().forEach(function(t){ t.stop(); });
+          if (cancelled) return;
+          var dur  = Math.round((Date.now() - recStart) / 1000);
+          var blob = new Blob(chunks, {type: mediaRecorder.mimeType || 'audio/webm'});
+          var ext  = (blob.type.indexOf('ogg') >= 0) ? 'ogg'
+                   : (blob.type.indexOf('mp4') >= 0) ? 'mp4' : 'webm';
+          var fd = new FormData();
+          fd.append('audio', blob, 'voice.' + ext);
+          fd.append('duration', dur);
+          if (replyTo) fd.append('reply_to_id', replyTo.id);
+          clearReply();
+          lastCount = -1;
+          fetch('/marketplace/chat/' + INQUIRY + '/send', {
+            method:'POST', credentials:'same-origin', body:fd
+          })
+          .then(function(r){ return r.json(); })
+          .then(function(d){ if (!d.ok) toast('Could not send voice note.'); loadMessages(); })
+          .catch(function(){ toast('Network error.'); });
+        };
+        mediaRecorder.start();
+        recStart = Date.now(); showRec(true);
+        recTimer = setInterval(tickRec, 250); tickRec();
+      }).catch(function(){ toast('Microphone permission denied.'); });
+    });
+
+    function stopRec(cancel) {
+      cancelled = !!cancel;
+      if (recTimer) { clearInterval(recTimer); recTimer = null; }
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+      showRec(false);
+    }
+    $('recStop').addEventListener('click', function(){ stopRec(false); });
+    $('recCancel').addEventListener('click', function(){ stopRec(true); });
+
+    /* ── Init ── */
+    loadMessages();
+    setInterval(loadMessages, 4000);
+    toggleSend();
+    msgBox.focus();
+  })();
+  </script>
+</body>
+</html>

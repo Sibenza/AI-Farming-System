@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.svg') }}">
+  <meta name="theme-color" content="#198A00">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Farm Assistant | ZamFarm Climate</title>
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700;900&family=Outfit:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    :root{--g:#198A00;--gl:#23b800;--gd:#0f5c00;--r:#EF0000;--o:#EF7D00;--gold:#F5C518;--sky:#2E86AB;--blk:#141414;--bg:#F4F9F0;--surface:#fff;--surface2:#f0f5ec;--border:rgba(25,138,0,.14);--text:#141414;--text2:#555;--text3:#999;--tr:.3s cubic-bezier(.4,0,.2,1);}
+    [data-theme="dark"]{--bg:#0d1a0a;--surface:#132010;--surface2:#1a2e14;--border:rgba(35,184,0,.15);--text:#e8f5e3;--text2:#9ab890;--text3:#5a7a55;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{height:100%;}
+    body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;}
+
+    .flag-strip{position:fixed;top:0;left:0;right:0;display:flex;height:3px;z-index:60;}
+    .flag-strip span{flex:1;}
+    .fg{background:var(--g);}.fr{background:var(--r);}.fb{background:var(--blk);}.fo{background:var(--o);}
+
+    .layout{display:flex;height:100vh;padding-top:3px;}
+
+    /* ── Sidebar ── */
+    .cb-side{width:270px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:width var(--tr),transform var(--tr);overflow:hidden;}
+    .cb-side.collapsed{width:0;border-right:none;}
+    .cb-side-inner{width:270px;display:flex;flex-direction:column;height:100%;}
+    .cb-side-head{padding:16px 14px 10px;display:flex;align-items:center;gap:10px;}
+    .cb-logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--g),var(--gd));display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:#fff;flex-shrink:0;}
+    .cb-logo-txt{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:700;color:var(--g);line-height:1;}
+    .cb-logo-sub{font-size:.6rem;color:var(--text3);font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+    .cb-newchat{margin:6px 12px 12px;padding:11px 14px;border-radius:11px;border:none;background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;font-family:'Outfit',sans-serif;font-size:.86rem;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:9px;justify-content:center;transition:transform var(--tr),box-shadow var(--tr);box-shadow:0 4px 14px rgba(25,138,0,.25);}
+    .cb-newchat:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(25,138,0,.35);}
+    .cb-hist-lbl{font-family:'DM Mono',monospace;font-size:.6rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);padding:6px 16px;}
+    .cb-hist{flex:1;overflow-y:auto;padding:0 8px 10px;}
+    .cb-hist-item{display:flex;align-items:center;gap:8px;padding:10px 10px;border-radius:9px;cursor:pointer;color:var(--text2);font-size:.83rem;font-weight:600;margin-bottom:2px;transition:background var(--tr);position:relative;}
+    .cb-hist-item:hover{background:var(--surface2);}
+    .cb-hist-item.active{background:rgba(25,138,0,.1);color:var(--gd);font-weight:800;}
+    .cb-hist-item i.fa-message{color:var(--text3);flex-shrink:0;font-size:.8rem;}
+    .cb-hist-title{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .cb-hist-del{opacity:0;color:var(--text3);background:none;border:none;cursor:pointer;font-size:.78rem;padding:3px;flex-shrink:0;transition:opacity var(--tr),color var(--tr);}
+    .cb-hist-item:hover .cb-hist-del{opacity:1;}
+    .cb-hist-del:hover{color:var(--r);}
+    .cb-hist-empty{padding:18px 16px;font-size:.78rem;color:var(--text3);font-weight:600;text-align:center;}
+    .cb-side-foot{padding:10px 12px;border-top:1px solid var(--border);}
+    .cb-back2{display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:9px;color:var(--text2);text-decoration:none;font-size:.84rem;font-weight:700;transition:background var(--tr);}
+    .cb-back2:hover{background:var(--surface2);}
+
+    /* ── Main ── */
+    .cb-main{flex:1;display:flex;flex-direction:column;min-width:0;height:100%;}
+    .cb-top{flex-shrink:0;height:60px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:0 16px;}
+    .cb-toggle{width:38px;height:38px;border-radius:9px;background:var(--surface2);border:none;color:var(--g);font-size:1rem;cursor:pointer;flex-shrink:0;transition:background var(--tr);}
+    .cb-toggle:hover{background:rgba(25,138,0,.12);}
+    .cb-bot-ava{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--gd));display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:#fff;flex-shrink:0;}
+    .cb-title{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;color:var(--g);line-height:1;}
+    .cb-sub{font-size:.68rem;color:var(--text3);font-weight:600;display:flex;align-items:center;gap:5px;}
+    .cb-dot{width:7px;height:7px;border-radius:50%;background:var(--g);display:inline-block;}
+    .cb-engine{margin-left:auto;font-size:.62rem;font-weight:800;letter-spacing:.5px;padding:4px 9px;border-radius:20px;background:var(--surface2);color:var(--text3);}
+    .cb-engine.ai{background:rgba(46,134,171,.12);color:var(--sky);}
+
+    .cb-chat{flex:1;overflow-y:auto;padding:20px 16px 12px;}
+    .cb-wrap{max-width:760px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:14px;}
+    .msg{display:flex;gap:10px;align-items:flex-end;animation:fadeUp .3s ease both;}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+    .msg.user{flex-direction:row-reverse;}
+    .msg-ava{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.9rem;}
+    .msg-ava.bot{background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;}
+    .msg-ava.user{background:var(--sky);color:#fff;}
+    .bubble{max-width:80%;padding:11px 15px;border-radius:16px;font-size:.9rem;line-height:1.55;font-weight:500;white-space:pre-wrap;word-wrap:break-word;}
+    .msg.bot .bubble{background:var(--surface);border:1px solid var(--border);border-bottom-left-radius:5px;color:var(--text);}
+    .msg.user .bubble{background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;border-bottom-right-radius:5px;}
+    .bubble strong{font-weight:800;}
+    .bubble-links{margin-top:10px;display:flex;flex-direction:column;gap:6px;}
+    .bubble-link{display:inline-flex;align-items:center;gap:8px;font-size:.8rem;font-weight:700;text-decoration:none;border-radius:9px;padding:8px 11px;transition:background var(--tr);}
+    .bubble-link.web{color:var(--g);background:rgba(25,138,0,.08);border:1px solid rgba(25,138,0,.2);}
+    .bubble-link.web:hover{background:rgba(25,138,0,.16);}
+    .bubble-link.video{color:var(--r);background:rgba(239,0,0,.07);border:1px solid rgba(239,0,0,.18);}
+    .bubble-link.video:hover{background:rgba(239,0,0,.13);}
+
+    .typing{display:flex;gap:4px;padding:5px 2px;}
+    .typing span{width:7px;height:7px;border-radius:50%;background:var(--text3);animation:blink 1.2s infinite both;}
+    .typing span:nth-child(2){animation-delay:.2s;}
+    .typing span:nth-child(3){animation-delay:.4s;}
+    @keyframes blink{0%,80%,100%{opacity:.25;}40%{opacity:1;}}
+
+    .cb-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px;}
+    .cb-chip{font-size:.8rem;font-weight:700;color:var(--gd);background:var(--surface);border:1.5px solid var(--border);border-radius:20px;padding:8px 14px;cursor:pointer;transition:all var(--tr);}
+    .cb-chip:hover{background:rgba(25,138,0,.08);border-color:var(--g);transform:translateY(-1px);}
+
+    .cb-input-bar{flex-shrink:0;background:var(--surface);border-top:1px solid var(--border);padding:12px 16px;}
+    .cb-input-wrap{max-width:760px;margin:0 auto;display:flex;gap:10px;align-items:flex-end;}
+    .cb-input{flex:1;border:2px solid var(--border);border-radius:22px;padding:11px 16px;font-family:'Outfit',sans-serif;font-size:.92rem;font-weight:500;background:var(--surface2);color:var(--text);outline:none;resize:none;max-height:120px;line-height:1.4;transition:border-color var(--tr);}
+    .cb-input:focus{border-color:var(--g);}
+    .cb-send{width:46px;height:46px;border-radius:50%;border:none;background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;font-size:1.05rem;cursor:pointer;flex-shrink:0;transition:transform var(--tr);box-shadow:0 4px 14px rgba(25,138,0,.3);}
+    .cb-send:hover{transform:scale(1.06);}
+    .cb-send:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+    .cb-disclaimer{max-width:760px;margin:7px auto 0;text-align:center;font-size:.65rem;color:var(--text3);font-weight:600;}
+
+    .cb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:40;}
+
+    @media(max-width:760px){
+      .cb-side{position:fixed;top:3px;bottom:0;left:0;z-index:50;width:270px;box-shadow:6px 0 24px rgba(0,0,0,.18);}
+      .cb-side.collapsed{transform:translateX(-100%);width:270px;border-right:1px solid var(--border);}
+      .cb-overlay.show{display:block;}
+    }
+
+    ::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-thumb{background:rgba(25,138,0,.3);border-radius:3px;}
+  </style>
+</head>
+<body>
+  <div class="flag-strip"><span class="fg"></span><span class="fr"></span><span class="fb"></span><span class="fo"></span></div>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="cb-side" id="cbSide">
+      <div class="cb-side-inner">
+        <div class="cb-side-head">
+          <div class="cb-logo">🌾</div>
+          <div>
+            <div class="cb-logo-txt">Farm Assistant</div>
+            <div class="cb-logo-sub">ZamFarm Climate</div>
+          </div>
+        </div>
+        <button class="cb-newchat" id="cbNewChat"><i class="fa-solid fa-plus"></i> New Chat</button>
+        <div class="cb-hist-lbl">History</div>
+        <div class="cb-hist" id="cbHist"></div>
+        <div class="cb-side-foot">
+          <a href="/dashboard" class="cb-back2"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</a>
+        </div>
+      </div>
+    </aside>
+    <div class="cb-overlay" id="cbOverlay"></div>
+
+    <!-- Main -->
+    <main class="cb-main">
+      <div class="cb-top">
+        <button class="cb-toggle" id="cbToggle" title="Toggle sidebar"><i class="fa-solid fa-bars"></i></button>
+        <div class="cb-bot-ava">🌾</div>
+        <div>
+          <div class="cb-title">Farm Assistant</div>
+          <div class="cb-sub"><span class="cb-dot"></span> Online · ask me anything about farming</div>
+        </div>
+        <span class="cb-engine" id="cbEngine">Assistant</span>
+      </div>
+
+      <div id="cbData"
+           data-name="{{ farmer[1] if farmer is defined and farmer else 'Farmer' }}"
+           data-district="{{ farmer[7] if farmer is defined and farmer else '' }}"
+           style="display:none;"></div>
+
+      <div class="cb-chat" id="cbChatScroll">
+        <div class="cb-wrap" id="cbWrap"></div>
+      </div>
+
+      <div class="cb-input-bar">
+        <div class="cb-input-wrap">
+          <textarea id="cbInput" class="cb-input" rows="1" placeholder="Ask about weather, prices, pests, planting…"></textarea>
+          <button class="cb-send" id="cbSend" title="Send"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+        <div class="cb-disclaimer">
+          <i class="fa-solid fa-circle-info"></i>
+          The Farm Assistant gives general guidance. For serious issues, consult your extension officer.
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+  (function() {
+    'use strict';
+    var $ = function(id){ return document.getElementById(id); };
+    var CB = $('cbData') ? $('cbData').dataset : {};
+    var NAME = (CB.name || 'Farmer').split(' ')[0];
+
+    var wrap    = $('cbWrap');
+    var input   = $('cbInput');
+    var sendBtn = $('cbSend');
+    var engineTag = $('cbEngine');
+
+    var STORE_KEY = 'zf_chats_v1';
+    var chats = [];        // [{id, title, messages:[{role,text,links}], updated}]
+    var currentId = null;
+
+    /* ---------- storage ---------- */
+    function loadChats(){
+      try { chats = JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); }
+      catch(e){ chats = []; }
+      if (!Array.isArray(chats)) chats = [];
+    }
+    function saveChats(){
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(chats)); } catch(e){ /* storage full or unavailable */ }
+    }
+    function currentChat(){ return chats.find(function(c){ return c.id === currentId; }) || null; }
+
+    function newId(){ return 'c' + Date.now() + Math.floor(Math.random()*1000); }
+
+    /* ---------- helpers ---------- */
+    function escapeHtml(s){
+      return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+    function formatText(s){
+      return escapeHtml(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    }
+    function scrollDown(){ var c = $('cbChatScroll'); c.scrollTop = c.scrollHeight; }
+
+    /* ---------- rendering ---------- */
+    function renderMessage(m){
+      var msg = document.createElement('div');
+      msg.className = 'msg ' + m.role;
+      var ava = document.createElement('div');
+      ava.className = 'msg-ava ' + (m.role === 'user' ? 'user' : 'bot');
+      ava.innerHTML = m.role === 'user' ? '<i class="fa-solid fa-user"></i>' : '🌾';
+      var bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.innerHTML = formatText(m.text);
+      if (m.links && m.links.length){
+        var lw = document.createElement('div');
+        lw.className = 'bubble-links';
+        m.links.forEach(function(l){
+          var a = document.createElement('a');
+          a.className = 'bubble-link ' + (l.type === 'video' ? 'video' : 'web');
+          a.href = l.url; a.target = '_blank'; a.rel = 'noopener';
+          var icon = l.type === 'video' ? 'fa-brands fa-youtube' : 'fa-solid fa-up-right-from-square';
+          a.innerHTML = '<i class="' + icon + '"></i> ' + escapeHtml(l.label);
+          lw.appendChild(a);
+        });
+        bubble.appendChild(lw);
+      }
+      msg.appendChild(ava); msg.appendChild(bubble);
+      return msg;
+    }
+
+    function renderChat(){
+      wrap.innerHTML = '';
+      var chat = currentChat();
+      if (!chat || !chat.messages.length){
+        // Welcome + suggestions for an empty chat
+        wrap.appendChild(renderMessage({role:'bot',
+          text:"Hello " + NAME + "! 👋 I'm your ZamFarm Farm Assistant. I can help with weather, crop prices, "
+             + "planting advice, pests and diseases, fertiliser, and how to use the app. What would you like to know?",
+          links:[]}));
+        addSuggestions();
+      } else {
+        chat.messages.forEach(function(m){ wrap.appendChild(renderMessage(m)); });
+      }
+      scrollDown();
+    }
+
+    var SUGGESTIONS = [
+      "What's the weather like today?",
+      "Between groundnuts and maize, which yields better under normal rainfall?",
+      "What is the cost of growing soya beans per hectare?",
+      "My maize leaves have brown spots — what is it?",
+      "When should I plant this season?",
+      "How do I earn points in the app?"
+    ];
+    function addSuggestions(){
+      var holder = document.createElement('div');
+      holder.className = 'msg bot';
+      var chips = '<div class="cb-chips">';
+      SUGGESTIONS.forEach(function(s){ chips += '<button class="cb-chip" type="button">' + escapeHtml(s) + '</button>'; });
+      chips += '</div>';
+      holder.innerHTML = '<div class="msg-ava bot" style="visibility:hidden;">🌾</div><div style="max-width:80%;">' + chips + '</div>';
+      wrap.appendChild(holder);
+      holder.querySelectorAll('.cb-chip').forEach(function(btn){
+        btn.addEventListener('click', function(){ sendMessage(btn.textContent); });
+      });
+    }
+
+    /* ---------- history sidebar ---------- */
+    function renderHistory(){
+      var box = $('cbHist');
+      box.innerHTML = '';
+      if (!chats.length){
+        box.innerHTML = '<div class="cb-hist-empty">No chats yet.<br>Start a new conversation!</div>';
+        return;
+      }
+      var sorted = chats.slice().sort(function(a,b){ return b.updated - a.updated; });
+      sorted.forEach(function(c){
+        var item = document.createElement('div');
+        item.className = 'cb-hist-item' + (c.id === currentId ? ' active' : '');
+        item.innerHTML = '<i class="fa-solid fa-message"></i>' +
+                         '<span class="cb-hist-title">' + escapeHtml(c.title || 'New chat') + '</span>' +
+                         '<button class="cb-hist-del" title="Delete"><i class="fa-solid fa-trash"></i></button>';
+        item.addEventListener('click', function(e){
+          if (e.target.closest('.cb-hist-del')) return;
+          currentId = c.id; renderChat(); renderHistory(); closeSideOnMobile();
+        });
+        item.querySelector('.cb-hist-del').addEventListener('click', function(e){
+          e.stopPropagation();
+          chats = chats.filter(function(x){ return x.id !== c.id; });
+          if (currentId === c.id){ currentId = chats.length ? chats[0].id : null; if(!currentId) startNewChat(); }
+          saveChats(); renderHistory(); renderChat();
+        });
+        box.appendChild(item);
+      });
+    }
+
+    function startNewChat(){
+      var existingEmpty = chats.find(function(c){ return c.messages.length === 0; });
+      if (existingEmpty){ currentId = existingEmpty.id; }
+      else {
+        var c = { id:newId(), title:'New chat', messages:[], updated:Date.now() };
+        chats.push(c); currentId = c.id; saveChats();
+      }
+      renderChat(); renderHistory(); input.focus(); closeSideOnMobile();
+    }
+
+    /* ---------- sending ---------- */
+    function setEngine(engine){
+      if (engine === 'ai'){ engineTag.textContent = 'AI'; engineTag.classList.add('ai'); }
+      else { engineTag.textContent = 'Assistant'; engineTag.classList.remove('ai'); }
+    }
+
+    function showTyping(){
+      var t = document.createElement('div');
+      t.className = 'msg bot'; t.id = 'typingMsg';
+      t.innerHTML = '<div class="msg-ava bot">🌾</div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>';
+      wrap.appendChild(t); scrollDown();
+    }
+    function hideTyping(){ var t = $('typingMsg'); if (t) t.remove(); }
+
+    function sendMessage(text){
+      text = (text || input.value).trim();
+      if (!text) return;
+      var chat = currentChat();
+      if (!chat){ startNewChat(); chat = currentChat(); }
+
+      // remove suggestion chips if this is the first message
+      if (chat.messages.length === 0){ wrap.innerHTML = ''; }
+
+      // add + render user msg
+      var userMsg = { role:'user', text:text, links:[] };
+      chat.messages.push(userMsg);
+      wrap.appendChild(renderMessage(userMsg));
+      if (chat.title === 'New chat'){ chat.title = text.slice(0, 40); }
+      chat.updated = Date.now();
+      saveChats(); renderHistory();
+
+      input.value = ''; input.style.height = 'auto';
+      sendBtn.disabled = true;
+      showTyping();
+
+      // build history for the API (prior turns, excluding this user msg)
+      var history = chat.messages.slice(0, -1).map(function(m){
+        return { role: m.role === 'user' ? 'user' : 'assistant', content: m.text };
+      });
+
+      fetch('/api/chatbot', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        credentials:'same-origin',
+        body: JSON.stringify({ message:text, history:history })
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        hideTyping();
+        var botMsg = { role:'bot', text:(d.reply || "Sorry, I didn't catch that."), links:(d.links || []) };
+        chat.messages.push(botMsg);
+        chat.updated = Date.now();
+        saveChats(); renderHistory();
+        wrap.appendChild(renderMessage(botMsg));
+        setEngine(d.engine);
+        sendBtn.disabled = false; input.focus(); scrollDown();
+      })
+      .catch(function(){
+        hideTyping();
+        var botMsg = { role:'bot', text:"I'm having trouble connecting right now. Please try again in a moment.", links:[] };
+        chat.messages.push(botMsg); saveChats();
+        wrap.appendChild(renderMessage(botMsg));
+        sendBtn.disabled = false; scrollDown();
+      });
+    }
+
+    /* ---------- sidebar toggle ---------- */
+    function isMobile(){ return window.innerWidth <= 760; }
+    function closeSideOnMobile(){ if (isMobile()){ $('cbSide').classList.add('collapsed'); $('cbOverlay').classList.remove('show'); } }
+    $('cbToggle').addEventListener('click', function(){
+      var side = $('cbSide');
+      side.classList.toggle('collapsed');
+      if (isMobile()) $('cbOverlay').classList.toggle('show', !side.classList.contains('collapsed'));
+    });
+    $('cbOverlay').addEventListener('click', closeSideOnMobile);
+
+    /* ---------- input events ---------- */
+    input.addEventListener('input', function(){
+      this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+    input.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); }
+    });
+    sendBtn.addEventListener('click', function(){ sendMessage(); });
+    $('cbNewChat').addEventListener('click', startNewChat);
+
+    /* ---------- init ---------- */
+    loadChats();
+    if (chats.length){ currentId = chats.slice().sort(function(a,b){return b.updated-a.updated;})[0].id; }
+    else { startNewChat(); }
+    if (isMobile()){ $('cbSide').classList.add('collapsed'); }
+    renderChat(); renderHistory(); input.focus();
+  })();
+  </script>
+</body>
+</html>

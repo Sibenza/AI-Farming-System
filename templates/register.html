@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlRoot">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZamFarm Climate | Register</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,700;0,900;1,700&family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <style>
+    :root{--g:#198A00;--gl:#23b800;--gd:#0f5c00;--r:#C0392B;--o:#EF7D00;--gold:#F5C518;--blk:#0a2200;--cream:#F7F3EC;--tr:0.38s cubic-bezier(.4,0,.2,1);}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    html,body{min-height:100vh;overflow-x:hidden;}
+    body{font-family:'Outfit',sans-serif;background:var(--blk);display:flex;align-items:center;justify-content:center;padding:48px 16px;position:relative;}
+    body::before{content:'';position:fixed;inset:0;background:linear-gradient(145deg,#0a2200 0%,#141414 45%,#1a0600 75%,#2a1000 100%);z-index:-2;}
+    body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 65% 55% at 15% 20%,rgba(25,138,0,.20) 0%,transparent 55%),radial-gradient(ellipse 55% 45% at 85% 75%,rgba(239,125,0,.16) 0%,transparent 55%);z-index:-1;pointer-events:none;}
+
+    /* Floating particles */
+    .fp{position:fixed;font-size:1.3rem;opacity:.12;pointer-events:none;z-index:0;animation:driftUp linear infinite;}
+    @keyframes driftUp{0%{transform:translateY(110vh) rotate(0deg);opacity:.12}100%{transform:translateY(-10vh) rotate(270deg);opacity:0}}
+
+    /* Flag stripe */
+    .flag-stripe{position:fixed;top:0;left:0;right:0;height:4px;display:flex;z-index:100;}
+    .flag-stripe span{flex:1;}
+    .fg{background:var(--g);}.fr{background:var(--r);}.fb{background:#141414;}.fo{background:var(--o);}
+
+    /* Language toggle */
+    .lang-toggle{position:fixed;top:14px;right:18px;z-index:200;display:flex;gap:6px;}
+    .lt-btn{padding:5px 12px;border-radius:20px;font-family:'DM Mono',monospace;font-size:.65rem;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.07);color:rgba(255,255,255,.65);transition:all var(--tr);}
+    .lt-btn.active{background:var(--g);border-color:var(--g);color:#fff;}
+
+    /* Card */
+    .card{background:rgba(8,26,0,.82);border:1px solid rgba(255,255,255,.10);border-radius:24px;padding:40px 38px 36px;width:100%;max-width:620px;position:relative;z-index:10;backdrop-filter:blur(24px);box-shadow:0 0 0 1px rgba(25,138,0,.10),0 28px 72px rgba(0,0,0,.55);animation:cardIn .7s cubic-bezier(.22,1,.36,1) both;}
+    @keyframes cardIn{from{opacity:0;transform:translateY(28px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+    .card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--g),var(--gold),var(--o),var(--r));border-radius:24px 24px 0 0;}
+
+    /* Header */
+    .c-head{text-align:center;margin-bottom:28px;}
+    .eagle-ring{display:inline-flex;align-items:center;justify-content:center;width:68px;height:68px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--gd));font-size:2rem;margin-bottom:14px;box-shadow:0 0 0 5px rgba(25,138,0,.14),0 0 0 10px rgba(25,138,0,.06);animation:pulseR 3s ease-in-out infinite;}
+    @keyframes pulseR{0%,100%{box-shadow:0 0 0 5px rgba(25,138,0,.14),0 0 0 10px rgba(25,138,0,.06)}50%{box-shadow:0 0 0 8px rgba(25,138,0,.09),0 0 0 16px rgba(25,138,0,.03)}}
+    .c-title{font-family:'Cormorant Garamond',serif;font-size:1.55rem;font-weight:700;color:#fff;margin-bottom:3px;}
+    .c-sub{font-size:.8rem;color:rgba(255,255,255,.38);font-weight:500;}
+
+    /* Flag divider */
+    .f-div{display:flex;height:3px;border-radius:2px;overflow:hidden;margin-bottom:24px;}
+    .f-div span{flex:1;}
+
+    /* Flash */
+    .flash-msg{display:flex;align-items:center;gap:9px;padding:10px 13px;border-radius:10px;font-size:.82rem;font-weight:700;margin-bottom:16px;}
+    .flash-msg.error{background:rgba(192,57,43,.18);border:1px solid rgba(192,57,43,.4);color:#ff8a7a;}
+    .flash-msg.success{background:rgba(25,138,0,.18);border:1px solid rgba(25,138,0,.4);color:#7dff7a;}
+
+    /* Section labels */
+    .sec-lbl{font-family:'DM Mono',monospace;font-size:.62rem;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:12px;margin-top:4px;display:flex;align-items:center;gap:8px;}
+    .sec-lbl::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.08);}
+
+    /* Grid */
+    .ig2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    .ig2 .full{grid-column:1/-1;}
+
+    /* Form elements */
+    .fg-grp{margin-bottom:0;}
+    .zm-lbl{display:flex;align-items:center;gap:6px;font-size:.68rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.45);margin-bottom:6px;}
+    .zm-lbl i{font-size:.76rem;color:var(--gl);}
+    .iw{position:relative;}
+    .iw .ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.22);font-size:.88rem;pointer-events:none;transition:color var(--tr);}
+    .iw:focus-within .ico{color:var(--gl);}
+    .zm-in{width:100%;padding:11px 13px 11px 40px;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.10);border-radius:11px;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:500;color:#fff;outline:none;transition:all var(--tr);appearance:none;}
+    .zm-in::placeholder{color:rgba(255,255,255,.22);}
+    .zm-in:focus{border-color:var(--gl);background:rgba(25,138,0,.10);box-shadow:0 0 0 3px rgba(25,138,0,.14);}
+    .zm-in:valid:not(:placeholder-shown){border-color:rgba(25,138,0,.5);}
+    .zm-sel{padding-right:36px;}
+    .sel-wrap{position:relative;}
+    .sel-wrap::after{content:'\f078';font-family:'Font Awesome 6 Free';font-weight:900;position:absolute;right:13px;top:50%;transform:translateY(-50%);color:var(--gl);pointer-events:none;font-size:.68rem;}
+
+    /* Strength bar */
+    .str-bars{display:flex;gap:4px;margin-top:5px;}
+    .str-seg{flex:1;height:3px;border-radius:3px;background:rgba(255,255,255,.10);transition:background .3s;}
+    .str-lbl{font-size:.65rem;font-weight:700;color:rgba(255,255,255,.3);margin-top:3px;height:12px;}
+
+    /* File upload */
+    .file-lbl{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px dashed rgba(255,255,255,.18);border-radius:11px;cursor:pointer;transition:all var(--tr);background:rgba(255,255,255,.04);font-size:.85rem;font-weight:600;color:rgba(255,255,255,.4);}
+    .file-lbl:hover{border-color:var(--gl);color:rgba(255,255,255,.7);}
+    .file-lbl i{color:var(--o);}
+    .file-lbl input{display:none;}
+    #avatarPreview{display:none;width:50px;height:50px;border-radius:50%;object-fit:cover;border:2px solid var(--g);margin-left:auto;}
+
+    /* Submit */
+    .btn-reg{width:100%;padding:13px;margin-top:6px;background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;border:none;border-radius:12px;font-family:'Outfit',sans-serif;font-size:.98rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:all var(--tr);position:relative;overflow:hidden;box-shadow:0 5px 22px rgba(25,138,0,.40);}
+    .btn-reg::before{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.13),transparent);transition:left .5s;}
+    .btn-reg:hover::before{left:160%;}
+    .btn-reg:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(25,138,0,.55);}
+    .b-txt{transition:opacity .2s;}.b-spi{display:none;align-items:center;gap:8px;}
+    .btn-reg.loading .b-txt{opacity:0;position:absolute;}.btn-reg.loading .b-spi{display:flex;}
+
+    /* Login link */
+    .lg-row{text-align:center;margin-top:20px;font-size:.82rem;font-weight:500;color:rgba(255,255,255,.35);}
+    .lg-row a{color:var(--gold);font-weight:700;text-decoration:none;transition:color var(--tr);}
+    .lg-row a:hover{color:var(--gl);}
+
+    /* Password toggle */
+    .pw-tog{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,.22);cursor:pointer;font-size:.88rem;transition:color var(--tr);padding:0;}
+    .pw-tog:hover{color:var(--gl);}
+
+    /* Step indicator */
+    .step-row{display:flex;justify-content:center;gap:0;margin-bottom:24px;}
+    .s-dot{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;position:relative;}
+    .s-dot::before{content:'';position:absolute;top:14px;left:-50%;right:50%;height:2px;background:rgba(255,255,255,.10);z-index:0;}
+    .s-dot:first-child::before{display:none;}
+    .s-dot.done::before{background:var(--g);}
+    .s-circ{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:800;color:rgba(255,255,255,.3);position:relative;z-index:1;transition:all .4s;}
+    .s-dot.done .s-circ{border-color:var(--g);background:var(--g);color:#fff;}
+    .s-dot.cur .s-circ{border-color:var(--gold);background:rgba(245,197,24,.15);color:var(--gold);box-shadow:0 0 0 4px rgba(245,197,24,.15);}
+    .s-lbl{font-size:.58rem;font-weight:700;color:rgba(255,255,255,.28);text-transform:uppercase;letter-spacing:.8px;}
+    .s-dot.done .s-lbl,.s-dot.cur .s-lbl{color:rgba(255,255,255,.55);}
+
+    @media(max-width:580px){.ig2{grid-template-columns:1fr;}.ig2 .full{grid-column:auto;}.card{padding:32px 20px 28px;}}
+    ::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-thumb{background:rgba(25,138,0,.4);border-radius:3px;}
+  </style>
+</head>
+<body>
+
+  <!-- Particles -->
+  <div class="fp" style="left:5%; animation-duration:14s;animation-delay:0s;">🌿</div>
+  <div class="fp" style="left:25%;animation-duration:18s;animation-delay:3s;">🍃</div>
+  <div class="fp" style="left:60%;animation-duration:12s;animation-delay:1s;">🌱</div>
+  <div class="fp" style="left:80%;animation-duration:20s;animation-delay:5s;">🌿</div>
+
+  <!-- Flag stripe -->
+  <div class="flag-stripe"><span class="fg"></span><span class="fr"></span><span class="fb"></span><span class="fo"></span></div>
+
+  <!-- Language toggle (NFR8) -->
+  <div class="lang-toggle" style="flex-wrap:wrap;max-width:320px;">
+    <button class="lt-btn active" onclick="setLang('en')"  id="lbEn">EN</button>
+    <button class="lt-btn"        onclick="setLang('ny')"  id="lbNy">NY</button>
+    <button class="lt-btn"        onclick="setLang('bem')" id="lbBem">BEM</button>
+    <button class="lt-btn"        onclick="setLang('ton')" id="lbTon">TON</button>
+    <button class="lt-btn"        onclick="setLang('loz')" id="lbLoz">LOZ</button>
+  </div>
+
+  <div class="card">
+    <div class="c-head">
+      <div class="eagle-ring">🦅</div>
+      <div class="c-title" data-en="Farmer Registration" data-ny="Kulembetsa Mlimi" data-bem="Ukwandika Ukulima">Farmer Registration</div>
+      <div class="c-sub"   data-en="Join the ZamFarm Climate network today" data-ny="Dindani mu ZamFarm Climate lero" data-bem="Ingila mu ZamFarm Climate lelo">Join the ZamFarm Climate network today</div>
+    </div>
+
+    <!-- Flag divider -->
+    <div class="f-div"><span class="fg"></span><span class="fr"></span><span class="fb"></span><span class="fo"></span></div>
+
+    <!-- Step indicators -->
+    <div class="step-row" id="stepRow">
+      <div class="s-dot cur" id="sd1"><div class="s-circ">1</div><div class="s-lbl" data-en="Personal" data-ny="Wekha" data-bem="Weka">Personal</div></div>
+      <div class="s-dot"     id="sd2"><div class="s-circ">2</div><div class="s-lbl" data-en="Farm"     data-ny="Munda"  data-bem="Ukulima">Farm</div></div>
+      <div class="s-dot"     id="sd3"><div class="s-circ">3</div><div class="s-lbl" data-en="Account"  data-ny="Akaunti" data-bem="Akaunti">Account</div></div>
+    </div>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}{% for category, message in messages %}
+        <div class="flash-msg {{ category }}">
+          <i class="fa-solid {{ 'fa-triangle-exclamation' if category == 'error' else 'fa-circle-check' }}"></i>
+          {{ message }}
+        </div>
+      {% endfor %}{% endif %}
+    {% endwith %}
+
+    <form action="/register" method="POST" enctype="multipart/form-data" id="regForm" novalidate>
+
+      <!-- Section 1: Personal -->
+      <div class="sec-lbl"><i class="fa-solid fa-user-circle" style="color:var(--o);font-size:.75rem;"></i>
+        <span data-en="Personal Information" data-ny="Zambiri Zanu" data-bem="Ifyabupuba">Personal Information</span>
+      </div>
+
+      <div class="ig2" style="margin-bottom:14px;">
+        <div class="fg-grp full">
+          <label class="zm-lbl"><i class="fa-solid fa-id-card"></i>
+            <span data-en="Full Name" data-ny="Dzina Lonse" data-bem="Isina Lyonse">Full Name</span>
+          </label>
+          <div class="iw"><i class="fa-solid fa-user ico"></i>
+            <input type="text" name="fullname" class="zm-in" placeholder="e.g. Chanda Mutale" required autocomplete="name">
+          </div>
+        </div>
+
+        <div class="fg-grp">
+          <label class="zm-lbl"><i class="fa-solid fa-envelope"></i>
+            <span data-en="Email Address" data-ny="Imelo" data-bem="Imeelo">Email Address</span>
+          </label>
+          <div class="iw"><i class="fa-solid fa-at ico"></i>
+            <input type="email" name="email" class="zm-in" placeholder="you@example.com" autocomplete="email">
+          </div>
+        </div>
+
+        <div class="fg-grp">
+          <label class="zm-lbl"><i class="fa-solid fa-phone"></i>
+            <span data-en="Phone (used for login)" data-ny="Foni (yolowera)" data-bem="Ifoni (yalowela)">Phone (login)</span>
+          </label>
+          <div class="iw"><i class="fa-solid fa-mobile-screen-button ico"></i>
+            <input type="text" name="phone" class="zm-in" placeholder="+260 97X XXX XXX" required autocomplete="tel">
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Farm -->
+      <div class="sec-lbl"><i class="fa-solid fa-tractor" style="color:var(--o);font-size:.75rem;"></i>
+        <span data-en="Farm Details" data-ny="Zambiri za Munda" data-bem="Ifyakulima">Farm Details</span>
+      </div>
+
+      <div class="ig2" style="margin-bottom:14px;">
+        <div class="fg-grp">
+          <label class="zm-lbl"><i class="fa-solid fa-ruler-combined"></i>
+            <span data-en="Farm Size (Hectares)" data-ny="Kukula kwa Munda (Ha)" data-bem="Ubukulu bwa Ukulima (Ha)">Farm Size (Ha)</span>
+          </label>
+          <div class="iw"><i class="fa-solid fa-expand ico"></i>
+            <input type="number" name="farm_size" step="0.1" min="0.1" class="zm-in" placeholder="e.g. 3.5" required>
+          </div>
+        </div>
+
+        <div class="fg-grp">
+          <label class="zm-lbl"><i class="fa-solid fa-mountain"></i>
+            <span data-en="Soil Type" data-ny="Mtundu wa Dothi" data-bem="Ubwali bwa Mpanga">Soil Type</span>
+          </label>
+          <div class="iw sel-wrap">
+            <i class="fa-solid fa-layer-group ico"></i>
+            <select name="soil_type" class="zm-in zm-sel">
+              <option value="1">🟤 Loamy</option>
+              <option value="2">🟡 Sandy</option>
+              <option value="3">🔵 Clay</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="fg-grp">
+          <label class="zm-lbl"><i class="fa-solid fa-tree-city"></i>
+            <span data-en="Village" data-ny="Mudzi" data-bem="Umushi">Village</span>
+          </label>
+          <div class="iw"><i class="fa-solid fa-house ico"></i>
+            <input type="text" name="village" class="zm-in" placeholder="Village name" required>
+          </div>
+        </div>
+
+        <div class="fg-grp">
+          <label class="zm-lbl"><i class="fa-solid fa-map-location-dot"></i>
+            <span data-en="District" data-ny="Distriki" data-bem="Distriki">District</span>
+          </label>
+          <div class="iw"><i class="fa-solid fa-map-marker-alt ico"></i>
+            <input type="text" name="district" class="zm-in" placeholder="e.g. Lusaka" required>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Account -->
+      <div class="sec-lbl"><i class="fa-solid fa-lock" style="color:var(--o);font-size:.75rem;"></i>
+        <span data-en="Account & Profile" data-ny="Akaunti ndi Chithunzi" data-bem="Akaunti na Chifungo">Account &amp; Profile</span>
+      </div>
+
+      <div class="ig2" style="margin-bottom:14px;">
+        <div class="fg-grp full">
+          <label class="zm-lbl"><i class="fa-solid fa-key"></i>
+            <span data-en="Password" data-ny="Chinsinsi" data-bem="Akasaamu">Password</span>
+          </label>
+          <div class="iw" style="position:relative;">
+            <i class="fa-solid fa-lock ico"></i>
+            <input type="password" name="password" id="pwInput" class="zm-in" placeholder="Create a strong password" required style="padding-right:42px;">
+            <button type="button" class="pw-tog" id="pwTog"><i class="fa-regular fa-eye" id="pwEye"></i></button>
+          </div>
+          <div class="str-bars"><div class="str-seg" id="ss1"></div><div class="str-seg" id="ss2"></div><div class="str-seg" id="ss3"></div><div class="str-seg" id="ss4"></div></div>
+          <div class="str-lbl" id="strLbl"></div>
+        </div>
+
+        <div class="fg-grp full">
+          <label class="zm-lbl"><i class="fa-solid fa-camera"></i>
+            <span data-en="Profile Picture (optional)" data-ny="Chithunzi (mosamalira)" data-bem="Chifungo (tamashicindikisha)">Profile Picture (optional)</span>
+          </label>
+          <label class="file-lbl" id="fileLabel">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span id="fileTxt" data-en="Click to upload photo" data-ny="Dinani kuti mutumize chithunzi" data-bem="Chingileni ukutumisha efyo">Click to upload photo</span>
+            <input type="file" name="profile_pic" id="picInput" accept="image/*">
+            <img id="avatarPreview" alt="Preview">
+          </label>
+        </div>
+
+        <!-- Language preference (NFR8) -->
+        <div class="fg-grp full">
+          <label class="zm-lbl"><i class="fa-solid fa-language"></i>
+            <span data-en="Preferred Language" data-ny="Chilankhulo" data-bem="Ululimi">Preferred Language</span>
+          </label>
+          <div class="iw sel-wrap">
+            <i class="fa-solid fa-globe ico"></i>
+            <select name="preferred_language" class="zm-in zm-sel">
+              <option value="en">🇬🇧 English</option>
+              <option value="ny">🇿🇲 Nyanja / Chewa</option>
+              <option value="bem">🇿🇲 Bemba</option>
+              <option value="ton">🇿🇲 Tonga</option>
+              <option value="loz">🇿🇲 Lozi / Silozi</option>
+              <option value="kau">🇿🇲 Kaunde</option>
+              <option value="lva">🇿🇲 Luvale</option>
+              <option value="lun">🇿🇲 Lunda</option>
+              <option value="nse">🇿🇲 Nsenga</option>
+              <option value="tum">🇿🇲 Tumbuka</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-reg" id="regBtn">
+        <span class="b-txt"><i class="fa-solid fa-circle-check"></i>&nbsp;
+          <span data-en="Register Farmer" data-ny="Lembetsani Mlimi" data-bem="Andikeni Ukulima">Register Farmer</span>
+        </span>
+        <span class="b-spi"><span class="spinner-border spinner-border-sm" style="width:16px;height:16px;border-width:2px;"></span>&nbsp; Registering…</span>
+      </button>
+
+    </form>
+
+    <p class="lg-row">
+      <span data-en="Already registered?" data-ny="Mwalembetsedwa kale?" data-bem="Mwakwandika kale?">Already registered?</span>
+      <a href="/login"><i class="fa-solid fa-right-to-bracket" style="font-size:.78rem;"></i>
+        <span data-en="Login Here" data-ny="Lowani Apa" data-bem="Ingilileni Apa">Login Here</span>
+      </a>
+    </p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    /* Language switching (NFR8) */
+    let currentLang = 'en';
+    function setLang(lang) {
+      currentLang = lang;
+      document.querySelectorAll('[data-en]').forEach(el => {
+        el.textContent = el.dataset[lang] || el.dataset.en;
+      });
+      ['lbEn','lbNy','lbBem','lbTon','lbLoz'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+      });
+      const map = {en:'lbEn',ny:'lbNy',bem:'lbBem',ton:'lbTon',loz:'lbLoz'};
+      const active = document.getElementById(map[lang] || 'lbEn');
+      if (active) active.classList.add('active');
+      localStorage.setItem('zf_lang', lang);
+    }
+
+    /* Password toggle */
+    document.getElementById('pwTog').addEventListener('click', function() {
+      const pw = document.getElementById('pwInput');
+      const ico = document.getElementById('pwEye');
+      const h = pw.type === 'password';
+      pw.type = h ? 'text' : 'password';
+      ico.className = h ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+    });
+
+    /* Password strength */
+    document.getElementById('pwInput').addEventListener('input', function() {
+      const v = this.value;
+      let score = 0;
+      if (v.length >= 8)          score++;
+      if (/[A-Z]/.test(v))        score++;
+      if (/[0-9]/.test(v))        score++;
+      if (/[^A-Za-z0-9]/.test(v)) score++;
+      const colors = ['','#EF0000','#EF7D00','#F5C518','#198A00'];
+      const labels = ['','Weak 😬','Fair 🙂','Good 👍','Strong 💪'];
+      for (let i = 1; i <= 4; i++) {
+        document.getElementById('ss'+i).style.background = i <= score ? colors[score] : 'rgba(255,255,255,.10)';
+      }
+      document.getElementById('strLbl').textContent = v ? labels[score] : '';
+      document.getElementById('strLbl').style.color = colors[score] || 'rgba(255,255,255,.3)';
+    });
+
+    /* Profile picture preview */
+    document.getElementById('picInput').addEventListener('change', function() {
+      const file = this.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        document.getElementById('avatarPreview').src = e.target.result;
+        document.getElementById('avatarPreview').style.display = 'block';
+        document.getElementById('fileTxt').textContent = file.name;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    /* Step progress — based on input completion */
+    function updateSteps() {
+      const s1 = document.querySelector('[name=fullname]').value && document.querySelector('[name=phone]').value;
+      const s2 = document.querySelector('[name=farm_size]').value && document.querySelector('[name=village]').value && document.querySelector('[name=district]').value;
+      const sd1 = document.getElementById('sd1');
+      const sd2 = document.getElementById('sd2');
+      const sd3 = document.getElementById('sd3');
+      if (s1) { sd1.className = 's-dot done'; sd2.className = s2 ? 's-dot done' : 's-dot cur'; }
+      else { sd1.className = 's-dot cur'; sd2.className = 's-dot'; }
+      if (s1 && s2) sd3.className = 's-dot cur'; else if (!s2) sd3.className = 's-dot';
+    }
+    document.querySelectorAll('.zm-in').forEach(el => el.addEventListener('input', updateSteps));
+
+    /* Form submit */
+    document.getElementById('regForm').addEventListener('submit', function() {
+      document.getElementById('regBtn').classList.add('loading');
+    });
+  </script>
+</body>
+</html>

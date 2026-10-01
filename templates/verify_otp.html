@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify OTP | ZamFarm Climate</title>
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700;900&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    :root{--g:#198A00;--gl:#23b800;--gd:#0f5c00;--r:#EF0000;--o:#EF7D00;--gold:#F5C518;--blk:#141414;--bg:#F4F9F0;--surface:#fff;--surface2:#f0f5ec;--border:rgba(25,138,0,.14);--text:#141414;--text2:#555;--text3:#999;}
+    [data-theme="dark"]{--bg:#0d1a0a;--surface:#132010;--surface2:#1a2e14;--border:rgba(35,184,0,.15);--text:#e8f5e3;--text2:#9ab890;--text3:#5a7a55;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+    .card{background:var(--surface);border-radius:20px;width:min(440px,100%);box-shadow:0 16px 48px rgba(0,0,0,.14);overflow:hidden;}
+    .card-hero{background:linear-gradient(160deg,var(--gd),#0a2200,var(--blk));padding:32px 32px 24px;text-align:center;position:relative;}
+    .card-hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--g),var(--gold),var(--o));}
+    .hero-icon{font-size:2.8rem;display:block;margin-bottom:10px;}
+    .hero-title{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:700;color:#fff;margin-bottom:4px;}
+    .hero-sub{font-size:.82rem;color:rgba(255,255,255,.5);font-weight:600;}
+    .hero-id{margin-top:10px;background:rgba(245,197,24,.12);border:1px solid rgba(245,197,24,.25);border-radius:20px;padding:4px 14px;display:inline-block;font-size:.78rem;font-weight:800;color:var(--gold);}
+    .steps{display:flex;gap:6px;justify-content:center;margin-top:14px;}
+    .step-dot{width:32px;height:6px;border-radius:3px;background:rgba(255,255,255,.2);}
+    .step-dot.done{background:rgba(35,184,0,.6);}
+    .step-dot.active{background:var(--gold);}
+    .card-body{padding:28px 32px;}
+    .form-group{margin-bottom:16px;}
+    .zm-label{display:block;font-size:.7rem;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--gd);margin-bottom:6px;}
+    [data-theme="dark"] .zm-label{color:var(--gl);}
+    .iw{position:relative;}
+    .iw i.ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#bbb;font-size:.9rem;pointer-events:none;}
+    .iw:focus-within i.ico{color:var(--g);}
+    .zm-input{width:100%;padding:12px 12px 12px 40px;border:2px solid var(--border);border-radius:11px;font-family:'Outfit',sans-serif;font-size:.92rem;font-weight:600;color:var(--text);background:var(--surface2);outline:none;transition:border-color .2s,box-shadow .2s;}
+    .zm-input:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(25,138,0,.12);}
+    .otp-input{text-align:center;font-size:1.8rem;font-weight:800;letter-spacing:10px;font-family:'DM Mono',monospace;padding-left:20px;}
+    .hint{font-size:.72rem;color:var(--text3);font-weight:600;margin-top:5px;}
+    .timer{font-size:.78rem;font-weight:800;color:var(--o);margin-top:4px;font-family:'DM Mono',monospace;}
+    .btn-primary{width:100%;padding:14px;background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;border:none;border-radius:12px;font-family:'Outfit',sans-serif;font-size:1rem;font-weight:800;cursor:pointer;transition:all .2s;box-shadow:0 6px 20px rgba(25,138,0,.35);display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(25,138,0,.5);}
+    .back-link{text-align:center;margin-top:14px;font-size:.85rem;color:var(--text3);}
+    .back-link a{color:var(--g);font-weight:700;text-decoration:none;}
+    .flash{padding:12px 16px;border-radius:10px;margin-bottom:14px;font-size:.84rem;font-weight:700;display:flex;align-items:flex-start;gap:10px;}
+    .flash-info{background:rgba(46,134,171,.1);color:var(--sky);border:1px solid rgba(46,134,171,.2);}
+    .flash-error{background:rgba(239,0,0,.08);color:var(--r);border:1px solid rgba(239,0,0,.15);}
+    .flash-success{background:rgba(25,138,0,.1);color:var(--gd);border:1px solid rgba(25,138,0,.2);}
+    .divider{height:1px;background:var(--border);margin:20px 0;}
+    .pwd-strength{height:5px;border-radius:3px;background:var(--surface2);margin-top:6px;overflow:hidden;}
+    .pwd-fill{height:100%;border-radius:3px;transition:width .3s,background .3s;width:0;}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="card-hero">
+      <span class="hero-icon">📱</span>
+      <div class="hero-title">Enter Your OTP</div>
+      <div class="hero-sub">A 6-digit code was sent to</div>
+      <div class="hero-id">{{ identifier }}</div>
+      <div class="steps">
+        <div class="step-dot done"></div>
+        <div class="step-dot active"></div>
+        <div class="step-dot"></div>
+      </div>
+    </div>
+    <div class="card-body">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}
+        <div class="flash flash-{{ cat }}">
+          <i class="fa-solid fa-{{ 'circle-info' if cat=='info' else 'circle-check' if cat=='success' else 'triangle-exclamation' }}"></i>
+          <span>{{ msg }}</span>
+        </div>
+        {% endfor %}
+      {% endwith %}
+
+      <form method="POST">
+        <div class="form-group">
+          <label class="zm-label">6-Digit OTP Code</label>
+          <div class="iw">
+            <i class="fa-solid fa-key ico"></i>
+            <input type="text" name="otp" class="zm-input otp-input"
+                   placeholder="000000" maxlength="6"
+                   pattern="[0-9]{6}" inputmode="numeric"
+                   autofocus required>
+          </div>
+          <div class="timer" id="timerDisplay">⏱ Expires in <span id="countdown">10:00</span></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="form-group">
+          <label class="zm-label">New Password</label>
+          <div class="iw">
+            <i class="fa-solid fa-lock ico"></i>
+            <input type="password" name="new_password" id="newPwd"
+                   class="zm-input" placeholder="Min 6 characters"
+                   required oninput="checkStrength(this.value)">
+          </div>
+          <div class="pwd-strength"><div class="pwd-fill" id="pwdFill"></div></div>
+        </div>
+        <div class="form-group">
+          <label class="zm-label">Confirm New Password</label>
+          <div class="iw">
+            <i class="fa-solid fa-lock-open ico"></i>
+            <input type="password" name="confirm_password"
+                   class="zm-input" placeholder="Repeat new password" required>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary">
+          <i class="fa-solid fa-check-circle"></i> Reset Password
+        </button>
+      </form>
+      <div class="back-link">
+        <a href="/forgot-password"><i class="fa-solid fa-arrow-left"></i> Request a new OTP</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Countdown timer - OTP valid for 10 minutes
+    var seconds = 600;
+    var timer = setInterval(function() {
+      seconds--;
+      var m = Math.floor(seconds / 60);
+      var s = seconds % 60;
+      var el = document.getElementById('countdown');
+      if (el) el.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+      if (seconds <= 0) {
+        clearInterval(timer);
+        var td = document.getElementById('timerDisplay');
+        if (td) td.innerHTML = '⚠️ OTP has expired. <a href="/forgot-password" style="color:var(--o);font-weight:800;">Request a new one</a>';
+      }
+    }, 1000);
+
+    // Password strength indicator
+    function checkStrength(pwd) {
+      var fill  = document.getElementById('pwdFill');
+      if (!fill) return;
+      var score = 0;
+      if (pwd.length >= 6) score++;
+      if (pwd.length >= 10) score++;
+      if (/[A-Z]/.test(pwd)) score++;
+      if (/[0-9]/.test(pwd)) score++;
+      if (/[^a-zA-Z0-9]/.test(pwd)) score++;
+      var colors = ['#EF0000','#EF7D00','#F5C518','#198A00','#0f5c00'];
+      fill.style.width  = (score * 20) + '%';
+      fill.style.background = colors[score - 1] || '#EF0000';
+    }
+  </script>
+</body>
+</html>

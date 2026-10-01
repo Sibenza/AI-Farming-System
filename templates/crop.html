@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.svg') }}">
+  <meta name="theme-color" content="#198A00">
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+
+  <!-- ============================================================
+       PAGE META
+  ============================================================ -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crop Recommendation | Smart Farming Zambia</title>
+
+  <!-- ============================================================
+       GOOGLE FONTS
+       Playfair Display — headings  |  Nunito — body text
+  ============================================================ -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- ============================================================
+       MATERIALIZE CSS — ripple, cards, components
+  ============================================================ -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+  <!-- ============================================================
+       BOOTSTRAP 5 — grid, utilities, badges
+  ============================================================ -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+
+  <!-- ============================================================
+       FONT AWESOME 6 — icons
+  ============================================================ -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- ============================================================
+       ANIMATE.CSS — entrance animations
+  ============================================================ -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
+  <!-- ============================================================
+       AOS — Animate On Scroll
+  ============================================================ -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+
+  <!-- ============================================================
+       ORIGINAL STYLESHEET (preserved for Flask integration)
+  ============================================================ -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+
+  <style>
+
+    /* ============================================================
+       ZAMBIAN FLAG DESIGN TOKENS
+         Green  #198A00 | Red    #EF0000
+         Black  #141414 | Orange #EF7D00 | Gold #F5C518
+    ============================================================ */
+    :root {
+      --zm-green:       #198A00;
+      --zm-green-light: #23b800;
+      --zm-green-dark:  #0f5c00;
+      --zm-red:         #EF0000;
+      --zm-black:       #141414;
+      --zm-orange:      #EF7D00;
+      --zm-gold:        #F5C518;
+      --zm-cream:       #F4F9F0;
+      --sidebar-w:      270px;
+      --card-r:         20px;
+      --trans:          0.35s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* ── Reset ───────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--zm-cream);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Subtle ambient background glow */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 70% 55% at 5%  10%, rgba(25,138,0,.08)  0%, transparent 55%),
+        radial-gradient(ellipse 55% 45% at 95% 85%, rgba(239,125,0,.07) 0%, transparent 55%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ============================================================
+       SIDEBAR
+    ============================================================ */
+    .sidebar {
+      position: fixed; top: 0; left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: linear-gradient(175deg, var(--zm-black) 0%, #1a2e0a 50%, #0f1f06 100%);
+      display: flex; flex-direction: column;
+      padding: 0 0 24px 0;
+      z-index: 100;
+      box-shadow: 6px 0 32px rgba(0,0,0,.45);
+      overflow-y: auto;
+      transition: transform var(--trans);
+    }
+    .sidebar-header {
+      background: linear-gradient(135deg, var(--zm-green), var(--zm-green-dark));
+      padding: 28px 24px 22px;
+      position: relative; overflow: hidden;
+    }
+    .sidebar-header::after {
+      content: '';
+      position: absolute; bottom: -1px; left: 0; right: 0; height: 5px;
+      background: linear-gradient(90deg, var(--zm-black), var(--zm-red), var(--zm-orange), var(--zm-green));
+    }
+    .sidebar-header h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.45rem; font-weight: 900; color: #fff;
+    }
+    .sidebar-header .eagle-badge {
+      font-size: 2rem; display: block; margin-bottom: 6px;
+      animation: floatBadge 3s ease-in-out infinite;
+    }
+    @keyframes floatBadge {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-5px); }
+    }
+    .nav-label {
+      font-size: .65rem; font-weight: 800; letter-spacing: 2.5px;
+      text-transform: uppercase; color: rgba(255,255,255,.35);
+      padding: 18px 24px 6px;
+    }
+    .sidebar a {
+      display: flex; align-items: center; gap: 12px;
+      color: rgba(255,255,255,.78); text-decoration: none;
+      padding: 12px 24px; font-size: .92rem; font-weight: 700;
+      border-left: 3px solid transparent;
+      transition: all var(--trans);
+    }
+    .sidebar a i { font-size: 1.15rem; min-width: 22px; }
+    .sidebar a:hover, .sidebar a.active {
+      color: #fff; background: rgba(25,138,0,.18);
+      border-left-color: var(--zm-orange);
+    }
+    .sidebar a:hover i { color: var(--zm-orange); }
+    .sidebar a.logout-link { color: rgba(239,0,0,.85); }
+    .sidebar a.logout-link:hover {
+      background: rgba(239,0,0,.15);
+      border-left-color: var(--zm-red); color: var(--zm-red);
+    }
+    .sidebar-divider { height: 1px; background: rgba(255,255,255,.08); margin: 6px 20px; }
+    .spacer-top { flex: 1; }
+
+    /* ============================================================
+       TOPBAR
+    ============================================================ */
+    .topbar {
+      position: fixed; top: 0; left: var(--sidebar-w); right: 0;
+      height: 64px;
+      background: rgba(255,255,255,.88);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(25,138,0,.15);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px; z-index: 90;
+      box-shadow: 0 2px 16px rgba(0,0,0,.07);
+    }
+    .topbar-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.25rem; font-weight: 700; color: var(--zm-green-dark);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .topbar-title i { color: var(--zm-orange); }
+    .topbar-actions { display: flex; align-items: center; gap: 12px; }
+    .topbar-badge {
+      width: 38px; height: 38px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--zm-cream); cursor: pointer;
+      transition: background var(--trans);
+    }
+    .topbar-badge:hover { background: rgba(25,138,0,.12); }
+    .topbar-badge i { color: var(--zm-green-dark); font-size: 1.1rem; }
+
+    /* ============================================================
+       MAIN CONTENT
+    ============================================================ */
+    .main-content {
+      margin-left: var(--sidebar-w);
+      padding: 84px 36px 52px;
+      min-height: 100vh;
+      position: relative; z-index: 1;
+    }
+
+    /* Zambian flag stripe */
+    .flag-banner {
+      display: flex; height: 5px; border-radius: 4px;
+      overflow: hidden; margin-bottom: 24px;
+    }
+    .flag-banner span { flex: 1; }
+    .flag-banner .f-green  { background: var(--zm-green); }
+    .flag-banner .f-red    { background: var(--zm-red); }
+    .flag-banner .f-black  { background: var(--zm-black); }
+    .flag-banner .f-orange { background: var(--zm-orange); }
+
+    /* Page heading */
+    .page-heading {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 28px; flex-wrap: wrap;
+    }
+    .page-heading h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem; font-weight: 900; color: var(--zm-green-dark);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .page-heading h1 i { color: var(--zm-orange); }
+
+    /* ============================================================
+       TWO-COLUMN LAYOUT
+       Left: Weather + Form  |  Right: Recommendation result
+    ============================================================ */
+    .page-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* ============================================================
+       BASE CARD
+    ============================================================ */
+    .zm-card {
+      background: #fff;
+      border-radius: var(--card-r);
+      padding: 28px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.07);
+      position: relative; overflow: hidden;
+      transition: transform var(--trans), box-shadow var(--trans);
+    }
+    .zm-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 36px rgba(0,0,0,.11);
+    }
+    /* Gradient top accent bar */
+    .zm-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, var(--zm-green), var(--zm-gold), var(--zm-orange));
+      border-radius: var(--card-r) var(--card-r) 0 0;
+    }
+    .zm-card h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem; font-weight: 700; color: var(--zm-green-dark);
+      margin-bottom: 20px;
+      display: flex; align-items: center; gap: 9px;
+    }
+    .zm-card h2 i { color: var(--zm-orange); }
+
+    /* ============================================================
+       LIVE WEATHER PANEL
+    ============================================================ */
+    .weather-panel {
+      background: linear-gradient(145deg, #0f5c00 0%, #1a2e0a 50%, #141414 100%);
+      border-radius: var(--card-r);
+      padding: 28px;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.25);
+    }
+    /* Decorative glow */
+    .weather-panel::after {
+      content: '';
+      position: absolute; inset: -40%;
+      border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(25,138,0,.12) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    /* Flag accent */
+    .weather-panel::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, var(--zm-green), var(--zm-gold), var(--zm-orange), var(--zm-red));
+      border-radius: var(--card-r) var(--card-r) 0 0;
+    }
+    .weather-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px; position: relative; z-index: 1;
+    }
+    .weather-header h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem; font-weight: 700; color: #fff;
+      display: flex; align-items: center; gap: 9px; margin: 0;
+    }
+    .weather-header h2 i { color: var(--zm-gold); }
+
+    /* Location badge */
+    .weather-location {
+      display: flex; align-items: center; gap: 6px;
+      font-size: .78rem; font-weight: 700;
+      color: rgba(255,255,255,.65);
+      background: rgba(255,255,255,.08);
+      border-radius: 20px; padding: 4px 12px;
+      border: 1px solid rgba(255,255,255,.12);
+    }
+    .weather-location i { color: var(--zm-orange); font-size: .75rem; }
+
+    /* Big temperature display */
+    .weather-main {
+      display: flex; align-items: center; gap: 20px;
+      margin-bottom: 20px; position: relative; z-index: 1;
+    }
+    .weather-icon-big {
+      font-size: 4rem; line-height: 1;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,.4));
+      animation: floatBadge 4s ease-in-out infinite;
+    }
+    .weather-temp-main {
+      font-family: 'Playfair Display', serif;
+      font-size: 3.8rem; font-weight: 900; color: #fff;
+      line-height: 1; text-shadow: 0 4px 16px rgba(0,0,0,.3);
+    }
+    .weather-temp-unit { font-size: 1.4rem; color: var(--zm-gold); }
+    .weather-desc {
+      font-size: .88rem; font-weight: 700;
+      color: rgba(255,255,255,.7); margin-top: 4px;
+      text-transform: capitalize;
+    }
+
+    /* Weather stats grid */
+    .weather-stats {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 10px; position: relative; z-index: 1;
+    }
+    .w-stat {
+      background: rgba(255,255,255,.07);
+      border-radius: 12px; padding: 12px 10px; text-align: center;
+      border: 1px solid rgba(255,255,255,.10);
+      transition: background var(--trans);
+    }
+    .w-stat:hover { background: rgba(255,255,255,.12); }
+    .w-stat .ws-icon { font-size: 1.2rem; margin-bottom: 5px; }
+    .w-stat .ws-val {
+      font-size: .95rem; font-weight: 800; color: #fff;
+    }
+    .w-stat .ws-lbl {
+      font-size: .65rem; font-weight: 700;
+      color: rgba(255,255,255,.45);
+      text-transform: uppercase; letter-spacing: .8px; margin-top: 2px;
+    }
+
+    /* Auto-fill notice */
+    .autofill-notice {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(25,138,0,.12);
+      border: 1px solid rgba(25,138,0,.3);
+      border-radius: 10px; padding: 10px 14px;
+      margin-top: 16px; position: relative; z-index: 1;
+      font-size: .8rem; font-weight: 700; color: var(--zm-green-light);
+    }
+    .autofill-notice i { color: var(--zm-gold); }
+
+    /* Weather loading skeleton */
+    .weather-loading {
+      text-align: center; padding: 24px;
+      position: relative; z-index: 1;
+    }
+    .weather-loading .spin {
+      font-size: 2.5rem;
+      animation: spin 1.2s linear infinite;
+      display: block; margin-bottom: 10px;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    .weather-loading p {
+      font-size: .85rem; font-weight: 700; color: rgba(255,255,255,.6);
+    }
+
+    /* ============================================================
+       FORM STYLES
+    ============================================================ */
+    .zm-form-group { margin-bottom: 18px; }
+
+    .zm-label {
+      display: flex; align-items: center; gap: 6px;
+      font-size: .72rem; font-weight: 800;
+      letter-spacing: .9px; text-transform: uppercase;
+      color: var(--zm-green-dark); margin-bottom: 6px;
+    }
+    .zm-label i { font-size: .8rem; color: var(--zm-orange); }
+
+    /* Input with leading icon */
+    .input-icon-wrap { position: relative; }
+    .input-icon-wrap .field-icon {
+      position: absolute; left: 13px; top: 50%;
+      transform: translateY(-50%);
+      color: #ccc; font-size: .88rem;
+      pointer-events: none;
+      transition: color var(--trans);
+    }
+    .input-icon-wrap:focus-within .field-icon { color: var(--zm-green); }
+
+    /* "Auto-filled" badge on input */
+    .autofilled-badge {
+      position: absolute; right: 10px; top: 50%;
+      transform: translateY(-50%);
+      background: rgba(25,138,0,.15);
+      color: var(--zm-green);
+      font-size: .62rem; font-weight: 800;
+      letter-spacing: .8px; text-transform: uppercase;
+      padding: 3px 8px; border-radius: 20px;
+      border: 1px solid rgba(25,138,0,.3);
+      pointer-events: none;
+      opacity: 0; transition: opacity var(--trans);
+    }
+    .autofilled-badge.show { opacity: 1; }
+
+    .zm-input, .zm-select {
+      width: 100%;
+      padding: 11px 14px 11px 40px;
+      border: 2px solid rgba(25,138,0,.2);
+      border-radius: 11px;
+      font-family: 'Nunito', sans-serif;
+      font-size: .9rem; font-weight: 600;
+      color: var(--zm-black); background: #fafffe;
+      outline: none; appearance: none;
+      transition: border-color var(--trans), box-shadow var(--trans), background var(--trans);
+    }
+    .zm-input:focus, .zm-select:focus {
+      border-color: var(--zm-green); background: #fff;
+      box-shadow: 0 0 0 4px rgba(25,138,0,.12);
+    }
+    /* Autofilled state — gold border */
+    .zm-input.autofilled { border-color: var(--zm-gold); background: rgba(245,197,24,.04); }
+
+    .zm-select-wrap { position: relative; }
+    .zm-select-wrap::after {
+      content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+      position: absolute; right: 13px; top: 50%; transform: translateY(-50%);
+      color: var(--zm-green); pointer-events: none; font-size: .72rem;
+    }
+    .zm-select { padding-right: 36px; }
+
+    /* Submit button */
+    .btn-recommend {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, var(--zm-green), var(--zm-green-dark));
+      color: #fff; border: none; border-radius: 12px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 1rem; font-weight: 800;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 9px;
+      transition: all var(--trans);
+      box-shadow: 0 5px 20px rgba(25,138,0,.40);
+      position: relative; overflow: hidden;
+    }
+    .btn-recommend::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,.15) 0%, transparent 60%);
+      opacity: 0; transition: opacity var(--trans);
+    }
+    .btn-recommend:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 32px rgba(25,138,0,.55);
+    }
+    .btn-recommend:hover::before { opacity: 1; }
+    .btn-recommend .btn-text { transition: opacity .2s; }
+    .btn-recommend .btn-spin  { display: none; align-items: center; gap: 8px; }
+    .btn-recommend.loading .btn-text { opacity: 0; position: absolute; }
+    .btn-recommend.loading .btn-spin { display: flex; }
+
+    /* ============================================================
+       RESULT PANEL (right column)
+    ============================================================ */
+    /* Placeholder shown before any recommendation is made */
+    .result-placeholder {
+      text-align: center;
+      padding: 48px 24px;
+    }
+    .result-placeholder .ph-icon {
+      font-size: 4rem; margin-bottom: 16px;
+      animation: floatBadge 3.5s ease-in-out infinite;
+    }
+    .result-placeholder h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem; color: #bbb; margin-bottom: 8px;
+    }
+    .result-placeholder p { font-size: .85rem; color: #ccc; font-weight: 600; }
+
+    /* Actual result content */
+    .result-content { display: none; }
+
+    /* Crop result hero */
+    .crop-result-hero {
+      background: linear-gradient(135deg, var(--zm-green), var(--zm-green-dark));
+      border-radius: 16px; padding: 28px 24px;
+      text-align: center; margin-bottom: 20px;
+      position: relative; overflow: hidden;
+      box-shadow: 0 8px 28px rgba(25,138,0,.35);
+    }
+    .crop-result-hero::before {
+      content: '';
+      position: absolute; inset: -30%;
+      background: radial-gradient(ellipse, rgba(255,255,255,.07) 0%, transparent 65%);
+    }
+    .crop-emoji {
+      font-size: 3.5rem;
+      display: block; margin-bottom: 10px;
+      animation: floatBadge 3s ease-in-out infinite;
+      position: relative; z-index: 1;
+    }
+    .crop-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem; font-weight: 900; color: #fff;
+      text-shadow: 0 4px 12px rgba(0,0,0,.25);
+      position: relative; z-index: 1;
+    }
+    .crop-confidence {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(245,197,24,.18);
+      border: 1px solid rgba(245,197,24,.4);
+      border-radius: 30px; padding: 5px 14px;
+      font-size: .75rem; font-weight: 800; color: var(--zm-gold);
+      margin-top: 12px; position: relative; z-index: 1;
+    }
+
+    /* Why this crop section */
+    .why-section { margin-bottom: 20px; }
+    .why-section h4 {
+      font-family: 'Playfair Display', serif;
+      font-size: .95rem; font-weight: 700; color: var(--zm-green-dark);
+      display: flex; align-items: center; gap: 7px; margin-bottom: 12px;
+    }
+    .why-section h4 i { color: var(--zm-orange); }
+    .why-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px;
+      background: var(--zm-cream); border-radius: 10px;
+      margin-bottom: 8px; font-size: .85rem; font-weight: 700;
+      color: #444;
+      border-left: 3px solid var(--zm-green);
+      transition: background var(--trans);
+    }
+    .why-row:hover { background: rgba(25,138,0,.06); }
+    .why-row:nth-child(2) { border-left-color: var(--zm-orange); }
+    .why-row:nth-child(3) { border-left-color: var(--zm-gold); }
+    .why-row i { color: var(--zm-green); min-width: 18px; }
+    .why-row:nth-child(2) i { color: var(--zm-orange); }
+    .why-row:nth-child(3) i { color: #b8900d; }
+
+    /* ── Enhanced Why explanation components ── */
+    .why-verdict{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:12px;margin-bottom:14px;}
+    .why-perfect{background:rgba(25,138,0,.09);border:1px solid rgba(25,138,0,.2);}
+    .why-good{background:rgba(25,138,0,.06);border:1px solid rgba(25,138,0,.14);}
+    .why-moderate{background:rgba(245,197,24,.09);border:1px solid rgba(245,197,24,.25);}
+    .why-challenging{background:rgba(239,125,0,.08);border:1px solid rgba(239,125,0,.2);}
+
+    .inputs-summary{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+    .input-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;background:var(--zm-cream);border:1px solid rgba(25,138,0,.18);border-radius:20px;font-size:.74rem;font-weight:800;color:#555;}
+    .input-chip i{color:var(--zm-green);font-size:.68rem;}
+
+    .why-row-v2{display:flex;align-items:flex-start;gap:10px;padding:11px 12px;background:var(--zm-cream);border-radius:11px;margin-bottom:9px;border-left:3px solid var(--zm-green);}
+    .wr-icon{font-size:1.2rem;flex-shrink:0;margin-top:1px;}
+    .wr-body{flex:1;}
+    .wr-label{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:#777;margin-bottom:4px;}
+    .wr-msg{font-size:.8rem;font-weight:600;color:#444;line-height:1.6;margin-bottom:8px;}
+    .wr-bar-wrap{margin-top:4px;}
+    .wr-range-label{font-size:.67rem;font-weight:700;color:#999;margin-bottom:4px;}
+    .wr-bar-track{height:8px;background:#e0e0e0;border-radius:4px;position:relative;overflow:hidden;}
+    .wr-bar-range{position:absolute;top:0;height:100%;background:rgba(25,138,0,.25);border-radius:4px;}
+    .wr-bar-pin{position:absolute;top:-2px;width:12px;height:12px;border-radius:50%;border:2px solid #fff;transform:translateX(-50%);box-shadow:0 1px 4px rgba(0,0,0,.2);z-index:2;}
+    .wr-pin-optimal,.wr-pin-excellent{background:var(--zm-green);}
+    .wr-pin-acceptable,.wr-pin-good{background:var(--zm-gold);}
+    .wr-pin-marginal,.wr-pin-low,.wr-pin-high,.wr-pin-fair{background:var(--zm-orange);}
+    .wr-pin-stress,.wr-pin-poor{background:#EF0000;}
+    .wr-bar-ends{display:flex;justify-content:space-between;font-size:.6rem;color:#bbb;font-weight:600;margin-top:3px;}
+    .soil-suit-badge{display:inline-block;margin-top:6px;padding:2px 9px;border-radius:20px;font-size:.67rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;}
+    .suit-excellent{background:rgba(25,138,0,.12);color:#0f5c00;}
+    .suit-good{background:rgba(245,197,24,.15);color:#7a5c00;}
+    .suit-fair{background:rgba(239,125,0,.12);color:#7a3e00;}
+    .suit-poor{background:rgba(239,0,0,.1);color:#7a0000;}
+
+    /* ── Comparison table ── */
+    .comparison-section{margin-top:18px;padding-top:16px;border-top:1px solid rgba(0,0,0,.07);}
+    .comparison-table{width:100%;border-collapse:collapse;font-size:.75rem;}
+    .comparison-table th{background:linear-gradient(135deg,#041000,#0a2200);color:rgba(255,255,255,.8);padding:7px 10px;text-align:left;font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;line-height:1.4;}
+    .comparison-table td{padding:7px 10px;border-bottom:1px solid rgba(0,0,0,.06);vertical-align:middle;}
+    .comparison-table tr.ct-winner td{background:rgba(25,138,0,.05);font-weight:700;}
+    .comparison-table tr:hover td{background:rgba(25,138,0,.04);}
+    .ct-crop-name{font-weight:800;color:#333;font-size:.8rem;}
+    .ct-recommended-tag{display:block;font-size:.6rem;font-weight:800;color:var(--zm-green-dark);letter-spacing:.4px;text-transform:uppercase;}
+    .ct-range{color:#666;font-weight:600;font-family:'DM Mono',monospace;font-size:.7rem;}
+    .ct-check{text-align:center;font-size:.9rem;}
+    .ct-score-bar{position:relative;height:18px;background:#eee;border-radius:9px;overflow:hidden;min-width:60px;}
+    .ct-score-fill{height:100%;background:linear-gradient(90deg,var(--zm-green),#23b800);border-radius:9px;width:0%;transition:width 1s ease .5s;}
+    .ct-fill-top{background:linear-gradient(90deg,var(--zm-green-dark),var(--zm-green));}
+    .ct-score-text{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:.65rem;font-weight:800;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.3);z-index:1;}
+
+    /* Suitability progress bar */
+    .suitability-bar-wrap { margin-bottom: 20px; }
+    .suit-label-row {
+      display: flex; justify-content: space-between;
+      margin-bottom: 7px; font-size: .75rem; font-weight: 800;
+      color: #999; text-transform: uppercase; letter-spacing: .8px;
+    }
+    .suit-label-row span:last-child { color: var(--zm-green-dark); }
+    .suit-bar {
+      height: 10px; background: #e8e8e8;
+      border-radius: 10px; overflow: hidden;
+    }
+    .suit-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--zm-green), var(--zm-gold), var(--zm-orange));
+      border-radius: 10px; width: 0%;
+      transition: width 1.4s cubic-bezier(.4,0,.2,1) .3s;
+    }
+
+    /* Other suitable crops */
+    .also-suitable h4 {
+      font-family: 'Playfair Display', serif;
+      font-size: .95rem; font-weight: 700; color: var(--zm-green-dark);
+      display: flex; align-items: center; gap: 7px; margin-bottom: 12px;
+    }
+    .also-suitable h4 i { color: var(--zm-orange); }
+    .also-crops-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;
+    }
+    .also-chip {
+      background: var(--zm-cream); border-radius: 12px;
+      padding: 12px; text-align: center;
+      border: 1.5px solid rgba(25,138,0,.15);
+      cursor: pointer;
+      transition: all var(--trans);
+    }
+    .also-chip:hover {
+      border-color: var(--zm-green);
+      background: rgba(25,138,0,.06);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(0,0,0,.07);
+    }
+    .also-chip .ac-emoji { font-size: 1.5rem; display: block; margin-bottom: 4px; }
+    .also-chip .ac-name  { font-size: .8rem; font-weight: 800; color: var(--zm-green-dark); }
+    .also-chip .ac-score { font-size: .7rem; font-weight: 700; color: #999; margin-top: 2px; }
+
+    /* Error state */
+    .result-error {
+      display: none; text-align: center; padding: 32px 20px;
+    }
+    .result-error .err-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .result-error h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem; color: var(--zm-red); margin-bottom: 8px;
+    }
+    .result-error p { font-size: .85rem; color: #999; font-weight: 600; }
+
+    /* ============================================================
+       TOAST
+    ============================================================ */
+    .zm-toast {
+      position: fixed; bottom: 28px; right: 28px;
+      background: var(--zm-green-dark); color: #fff;
+      padding: 13px 20px; border-radius: 12px;
+      font-size: .88rem; font-weight: 700;
+      display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 6px 28px rgba(0,0,0,.3);
+      z-index: 999;
+      transform: translateY(80px); opacity: 0;
+      transition: all .4s cubic-bezier(.4,0,.2,1);
+      border-left: 5px solid var(--zm-orange); max-width: 320px;
+    }
+    .zm-toast.show { transform: translateY(0); opacity: 1; }
+    .zm-toast.error { background: #7a0000; border-left-color: var(--zm-red); }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width: 992px) {
+      :root { --sidebar-w: 0px; }
+      .sidebar { transform: translateX(-270px); }
+      .sidebar.open { transform: translateX(0); --sidebar-w: 270px; }
+      .main-content { margin-left: 0; padding: 80px 18px 44px; }
+      .topbar { left: 0; padding: 0 18px; }
+      .page-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── Scrollbar ────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--zm-cream); }
+    ::-webkit-scrollbar-thumb { background: rgba(25,138,0,.4); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--zm-green); }
+
+  </style>
+</head>
+<body>
+
+  <!--
+    DATA BRIDGE — Jinja2 values are written here as data-* attributes.
+    JavaScript reads them below. This keeps all Jinja out of <script> blocks,
+    eliminating VS Code linter errors while working exactly the same way.
+  -->
+  <div id="appData"
+       data-has-result="{{ 'true' if recommended_crop is defined and recommended_crop else 'false' }}"
+       data-district="{{ farmer[7] if farmer is defined else 'your district' }}"
+       style="display:none;">
+  </div>
+
+  <!-- ============================================================
+       SIDEBAR
+  ============================================================ -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span class="eagle-badge">🦅</span>
+      <h2>Smart Farming</h2>
+    </div>
+    <p class="nav-label">Main Menu</p>
+    <a href="/dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+    <a href="/history"><i class="fa-solid fa-clock-rotate-left"></i> Prediction History</a>
+    <a href="/crop" class="active"><i class="fa-solid fa-seedling"></i> Crop Recommendation</a>
+    <div class="sidebar-divider"></div>
+    <p class="nav-label">Tools</p>
+    <a href="#"><i class="fa-solid fa-brain"></i> AI Yield Prediction</a>
+    <a href="#"><i class="fa-solid fa-cloud-sun-rain"></i> Weather Intelligence</a>
+    <div class="spacer-top"></div>
+    <div class="sidebar-divider"></div>
+    <a href="/logout" class="logout-link"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+  </div>
+
+  <!-- ============================================================
+       TOPBAR
+  ============================================================ -->
+  <div class="topbar">
+    <button id="hamburger" class="btn btn-sm d-lg-none"
+      style="background:none;border:none;font-size:1.3rem;color:var(--zm-green-dark);">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+    <div class="topbar-title">
+      <i class="fa-solid fa-seedling"></i> Crop Recommendation
+    </div>
+    <div class="topbar-actions">
+      <div class="topbar-badge" title="Notifications">
+        <i class="fa-solid fa-bell"></i>
+      </div>
+      <div class="topbar-badge" title="Dashboard" onclick="location.href='/dashboard'">
+        <i class="fa-solid fa-gauge-high"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MAIN CONTENT
+  ============================================================ -->
+  <div class="main-content">
+
+    <!-- Flag stripe -->
+    <div class="flag-banner animate__animated animate__fadeIn">
+      <span class="f-green"></span><span class="f-red"></span>
+      <span class="f-black"></span><span class="f-orange"></span>
+    </div>
+
+    <!-- Page heading -->
+    <div class="page-heading animate__animated animate__fadeInDown">
+      <h1><i class="fa-solid fa-leaf"></i> Crop Recommendation</h1>
+    </div>
+
+    <div class="page-grid">
+
+      <!-- ======================================================
+           LEFT COLUMN: Weather Panel + Form
+      ====================================================== -->
+      <div>
+
+        <!-- ── Live Weather Panel ────────────────────────────── -->
+        <!--
+          The weather panel fetches live data from OpenWeatherMap
+          using the farmer's district (passed from Flask as farmer[7]).
+          API: api.openweathermap.org/data/2.5/weather?q={district},ZM
+          On success, it auto-fills the Temperature and Rainfall fields.
+        -->
+        <div class="weather-panel animate__animated animate__fadeInLeft" data-aos="fade-right">
+
+          <div class="weather-header">
+            <h2><i class="fa-solid fa-cloud-sun"></i> Live Weather</h2>
+            <!-- District name injected from Flask session -->
+            <div class="weather-location" id="weatherLocation">
+              <i class="fa-solid fa-location-dot"></i>
+              <span>{{ farmer[7] if farmer is defined else "Your District" }}, Zambia</span>
+            </div>
+          </div>
+
+          <!-- Loading skeleton shown while fetching -->
+          <div class="weather-loading" id="weatherLoading">
+            <span class="spin">🌦️</span>
+            <p>Fetching live weather for {{ farmer[7] if farmer is defined else "your district" }}…</p>
+          </div>
+
+          <!-- Weather data shown after fetch -->
+          <div id="weatherData" style="display:none;">
+            <div class="weather-main">
+              <div class="weather-icon-big" id="wIcon">⛅</div>
+              <div>
+                <div>
+                  <span class="weather-temp-main" id="wTemp">—</span>
+                  <span class="weather-temp-unit">°C</span>
+                </div>
+                <div class="weather-desc" id="wDesc">Loading…</div>
+              </div>
+            </div>
+            <div class="weather-stats">
+              <div class="w-stat">
+                <div class="ws-icon">💧</div>
+                <div class="ws-val" id="wHumidity">—</div>
+                <div class="ws-lbl">Humidity %</div>
+              </div>
+              <div class="w-stat">
+                <div class="ws-icon">🌧️</div>
+                <div class="ws-val" id="wRainfall">—</div>
+                <div class="ws-lbl">Rainfall mm</div>
+              </div>
+              <div class="w-stat">
+                <div class="ws-icon">💨</div>
+                <div class="ws-val" id="wWind">—</div>
+                <div class="ws-lbl">Wind km/h</div>
+              </div>
+            </div>
+            <!-- Notice that fields were auto-filled -->
+            <div class="autofill-notice" id="autofillNotice" style="display:none;">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              Temperature &amp; Rainfall auto-filled from live weather!
+            </div>
+          </div>
+
+          <!-- Error state -->
+          <div id="weatherError" style="display:none; position:relative; z-index:1; text-align:center; padding:16px 0;">
+            <div style="font-size:1.8rem; margin-bottom:8px;">⚠️</div>
+            <p style="font-size:.82rem; font-weight:700; color:rgba(255,255,255,.6);">
+              Could not load weather data. Enter values manually.
+            </p>
+          </div>
+
+        </div><!-- /weather-panel -->
+
+
+        <!-- ── Recommendation Form ───────────────────────────── -->
+        <!--
+          Form submits to Flask route /recommend_crop via POST.
+          Temperature and Rainfall are pre-filled by the weather fetch.
+          Soil type is selected manually by the farmer.
+        -->
+        <div class="zm-card animate__animated animate__fadeInLeft" data-aos="fade-right" data-aos-delay="100">
+
+          <h2><i class="fa-solid fa-sliders"></i> Crop Parameters</h2>
+
+          <form action="/recommend_crop" method="POST" id="cropForm">
+
+            <!-- Rainfall (mm) — auto-filled from weather API -->
+            <div class="zm-form-group">
+              <label class="zm-label" for="rainfall">
+                <i class="fa-solid fa-cloud-rain"></i> Rainfall (mm)
+              </label>
+              <div class="input-icon-wrap">
+                <i class="fa-solid fa-droplet field-icon"></i>
+                <input type="number" id="rainfall" name="rainfall"
+                       class="zm-input" placeholder="e.g. 650"
+                       step="0.1" min="0" value="650" required>
+                <span class="autofilled-badge" id="rainfallBadge">Auto</span>
+              </div>
+            </div>
+
+            <!-- Temperature (°C) — auto-filled from weather API -->
+            <div class="zm-form-group">
+              <label class="zm-label" for="temperature">
+                <i class="fa-solid fa-temperature-half"></i> Temperature (°C)
+              </label>
+              <div class="input-icon-wrap">
+                <i class="fa-solid fa-thermometer-half field-icon"></i>
+                <input type="number" id="temperature" name="temperature"
+                       class="zm-input" placeholder="e.g. 26"
+                       step="0.1" value="26" required>
+                <span class="autofilled-badge" id="tempBadge">Auto</span>
+              </div>
+            </div>
+
+            <!-- Soil Type — manual selection -->
+            <div class="zm-form-group">
+              <label class="zm-label" for="soil">
+                <i class="fa-solid fa-mountain"></i> Soil Type
+              </label>
+              <div class="zm-select-wrap input-icon-wrap">
+                <i class="fa-solid fa-layer-group field-icon"></i>
+                <select id="soil" name="soil" class="zm-select">
+                  <option value="1">🟤 Loamy — best for most crops</option>
+                  <option value="2">🟡 Sandy — fast-draining, warm</option>
+                  <option value="3">🔵 Clay — water-retaining, heavy</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" class="btn-recommend" id="recommendBtn">
+              <span class="btn-text">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>&nbsp; Recommend Best Crop
+              </span>
+              <span class="btn-spin">
+                <span class="spinner-border spinner-border-sm text-light"></span>
+                &nbsp; Analysing…
+              </span>
+            </button>
+
+          </form>
+
+        </div><!-- /form card -->
+
+      </div><!-- /left column -->
+
+
+      <!-- ======================================================
+           RIGHT COLUMN: Recommendation Result
+      ====================================================== -->
+      <div>
+        <div class="zm-card" id="resultCard" data-aos="fade-left">
+
+          <!-- Placeholder state — shown before form is submitted -->
+          <div class="result-placeholder" id="resultPlaceholder">
+            <div class="ph-icon">🌾</div>
+            <h3>Awaiting Analysis</h3>
+            <p>Fill in the parameters on the left and click<br>
+               <strong>Recommend Best Crop</strong> to get your result.</p>
+          </div>
+
+          <!-- ── Result content — shown after Flask returns result ──
+               Flask renders {{ recommended_crop }} and {{ confidence }}
+               when the form is submitted.
+               We check if the variable exists and show the result panel.
+          -->
+          {% if recommended_crop is defined and recommended_crop %}
+          <div class="result-content" id="resultContent" style="display:block;">
+
+            <h2><i class="fa-solid fa-robot"></i> Recommendation</h2>
+
+            <!-- Crop hero panel -->
+            <div class="crop-result-hero">
+              <span class="crop-emoji" id="cropEmoji">
+                {% if recommended_crop|lower == 'maize' %}🌽
+                {% elif recommended_crop|lower == 'soyabeans' or recommended_crop|lower == 'soybeans' %}🌱
+                {% elif recommended_crop|lower == 'groundnuts' %}🥜
+                {% elif recommended_crop|lower == 'cassava' %}🍠
+                {% elif recommended_crop|lower == 'sunflower' %}🌻
+                {% elif recommended_crop|lower == 'cotton' %}🌿
+                {% elif recommended_crop|lower == 'sorghum' %}🌾
+                {% elif recommended_crop|lower == 'millet' %}🌿
+                {% elif recommended_crop|lower == 'potatoes' %}🥔
+                {% elif recommended_crop|lower == 'wheat' %}🌾
+                {% else %}🌱
+                {% endif %}
+              </span>
+              <div class="crop-name">{{ recommended_crop }}</div>
+              {% if confidence is defined %}
+              <div class="crop-confidence">
+                <i class="fa-solid fa-circle-check"></i>
+                Confidence: {{ confidence }}%
+              </div>
+              {% endif %}
+            </div>
+
+            <!-- Suitability bar -->
+            <div class="suitability-bar-wrap">
+              <div class="suit-label-row">
+                <span><i class="fa-solid fa-gauge-high" style="color:var(--zm-green)"></i> Suitability Score</span>
+                <span id="suitPct">—</span>
+              </div>
+              <div class="suit-bar">
+                <div class="suit-bar-fill" id="suitBarFill"
+                     data-pct="{{ confidence if confidence is defined else 88 }}">
+                </div>
+              </div>
+            </div>
+
+            <!-- ── WHY THIS CROP — data-driven explanation ── -->
+            {% if explanation is defined and explanation %}
+            <div class="why-section">
+
+              <!-- Overall verdict -->
+              <div class="why-verdict why-{{ explanation.overall }}">
+                <span style="font-size:1.3rem;">
+                  {% if explanation.overall == 'perfect' %}🏆
+                  {% elif explanation.overall == 'good' %}✅
+                  {% elif explanation.overall == 'moderate' %}🟡
+                  {% else %}⚠️{% endif %}
+                </span>
+                <div>
+                  <div style="font-size:.82rem;font-weight:800;margin-bottom:3px;">Assessment</div>
+                  <div style="font-size:.8rem;font-weight:600;line-height:1.55;">{{ explanation.verdict }}</div>
+                </div>
+              </div>
+
+              <!-- Your inputs summary -->
+              <div class="inputs-summary">
+                <div class="input-chip">
+                  <i class="fa-solid fa-thermometer-half"></i>
+                  <span>{{ input_temperature }}°C</span>
+                </div>
+                <div class="input-chip">
+                  <i class="fa-solid fa-cloud-rain"></i>
+                  <span>{{ input_rainfall }}mm</span>
+                </div>
+                <div class="input-chip">
+                  <i class="fa-solid fa-mountain"></i>
+                  <span>{{ input_soil }}</span>
+                </div>
+              </div>
+
+              <h4 style="font-size:.85rem;font-weight:800;margin:14px 0 10px;display:flex;align-items:center;gap:6px;">
+                <i class="fa-solid fa-circle-info" style="color:var(--o);"></i> Why {{ recommended_crop }}?
+              </h4>
+
+              <!-- Temperature row -->
+              <div class="why-row why-row-v2">
+                <div class="wr-icon">{{ explanation.temperature.icon }}</div>
+                <div class="wr-body">
+                  <div class="wr-label">🌡️ Temperature</div>
+                  <div class="wr-msg">{{ explanation.temperature.msg }}</div>
+                  <div class="wr-bar-wrap">
+                    <div class="wr-range-label">Ideal: {{ explanation.temperature.min }}°C – {{ explanation.temperature.max }}°C</div>
+                    <div class="wr-bar-track">
+                      <div class="wr-bar-range"
+                           data-start="{{ ((explanation.temperature.min - 5) / 45 * 100)|round|int }}"
+                           data-end="{{ ((explanation.temperature.max - 5) / 45 * 100)|round|int }}">
+                      </div>
+                      <div class="wr-bar-pin wr-pin-{{ explanation.temperature.status }}"
+                           data-pos="{{ ((explanation.temperature.actual - 5) / 45 * 100)|round|int }}">
+                      </div>
+                    </div>
+                    <div class="wr-bar-ends"><span>5°C</span><span>50°C</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Rainfall row -->
+              <div class="why-row why-row-v2">
+                <div class="wr-icon">{{ explanation.rainfall.icon }}</div>
+                <div class="wr-body">
+                  <div class="wr-label">🌧️ Rainfall</div>
+                  <div class="wr-msg">{{ explanation.rainfall.msg }}</div>
+                  <div class="wr-bar-wrap">
+                    <div class="wr-range-label">Ideal: {{ explanation.rainfall.min|int }}mm – {{ explanation.rainfall.max|int }}mm</div>
+                    <div class="wr-bar-track">
+                      <div class="wr-bar-range"
+                           data-start="{{ ((explanation.rainfall.min / 1600) * 100)|round|int }}"
+                           data-end="{{ ((explanation.rainfall.max / 1600) * 100)|round|int }}">
+                      </div>
+                      <div class="wr-bar-pin wr-pin-{{ explanation.rainfall.status }}"
+                           data-pos="{{ ((explanation.rainfall.actual / 1600) * 100)|round|int }}">
+                      </div>
+                    </div>
+                    <div class="wr-bar-ends"><span>0mm</span><span>1600mm</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Soil row -->
+              <div class="why-row why-row-v2">
+                <div class="wr-icon">{{ explanation.soil.icon }}</div>
+                <div class="wr-body">
+                  <div class="wr-label">🏔️ Soil ({{ explanation.soil.name }})</div>
+                  <div class="wr-msg">{{ explanation.soil.msg }}</div>
+                  <span class="soil-suit-badge suit-{{ explanation.soil.status }}">
+                    {{ explanation.soil.suitability }} for {{ recommended_crop }}
+                  </span>
+                </div>
+              </div>
+
+            </div><!-- /why-section -->
+
+            <!-- ── FULL CROP COMPARISON TABLE ── -->
+            {% if comparison is defined and comparison %}
+            <div class="comparison-section">
+              <h4 style="font-size:.85rem;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:6px;">
+                <i class="fa-solid fa-table-cells" style="color:var(--o);"></i>
+                All Crops vs Your Conditions
+              </h4>
+              <div style="font-size:.72rem;color:var(--text3);font-weight:600;margin-bottom:10px;">
+                Ranked by AI model confidence. ✅ = within range · ❌ = outside range
+              </div>
+              <table class="comparison-table">
+                <thead>
+                  <tr>
+                    <th>Crop</th>
+                    <th>AI Score</th>
+                    <th>Temp Range</th>
+                    <th>Rain Range</th>
+                    <th>Your Temp<br>{{ input_temperature }}°C</th>
+                    <th>Your Rain<br>{{ input_rainfall }}mm</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in comparison %}
+                  <tr class="{% if loop.first %}ct-winner{% endif %}">
+                    <td>
+                      <span class="ct-crop-name">{{ row.emoji }} {{ row.name }}</span>
+                      {% if loop.first %}<span class="ct-recommended-tag">✦ Recommended</span>{% endif %}
+                    </td>
+                    <td>
+                      <div class="ct-score-bar">
+                        <div class="ct-score-fill {% if loop.first %}ct-fill-top{% endif %}"
+                             data-pct="{{ row.score }}"></div>
+                        <span class="ct-score-text">{{ row.score }}%</span>
+                      </div>
+                    </td>
+                    <td class="ct-range">{{ row.temp_range }}</td>
+                    <td class="ct-range">{{ row.rain_range }}</td>
+                    <td class="ct-check">{% if row.temp_ok %}✅{% else %}❌{% endif %}</td>
+                    <td class="ct-check">{% if row.rain_ok %}✅{% else %}❌{% endif %}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% endif %}
+
+            {% else %}
+            <!-- Fallback if explanation not available -->
+            <div class="why-section">
+              <h4><i class="fa-solid fa-circle-info"></i> Why This Crop?</h4>
+              <div class="why-row">
+                <i class="fa-solid fa-thermometer-half"></i>
+                Temperature range suitable for {{ recommended_crop }}
+              </div>
+              <div class="why-row">
+                <i class="fa-solid fa-cloud-rain"></i>
+                Rainfall levels compatible with crop water requirements
+              </div>
+              <div class="why-row">
+                <i class="fa-solid fa-mountain"></i>
+                Soil type supports growth and root development
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- Also suitable crops -->
+            {% if also_suitable is defined and also_suitable %}
+            <div class="also-suitable">
+              <h4><i class="fa-solid fa-list-check"></i> Also Suitable</h4>
+              <div class="also-crops-grid">
+                {% for crop in also_suitable %}
+                <div class="also-chip">
+                  <span class="ac-emoji">
+                    {% if crop.name|lower == 'maize' %}🌽
+                    {% elif crop.name|lower == 'soyabeans' %}🌱
+                    {% elif crop.name|lower == 'groundnuts' %}🥜
+                    {% elif crop.name|lower == 'cassava' %}🍠
+                    {% elif crop.name|lower == 'sunflower' %}🌻
+                    {% else %}🌱
+                    {% endif %}
+                  </span>
+                  <div class="ac-name">{{ crop.name }}</div>
+                  <div class="ac-score">{{ crop.score }}% match</div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+
+          </div><!-- /result-content -->
+          {% endif %}
+
+        </div><!-- /result card -->
+      </div><!-- /right column -->
+
+    </div><!-- /page-grid -->
+  </div><!-- /main-content -->
+
+
+  <!-- ============================================================
+       TOAST
+  ============================================================ -->
+  <div class="zm-toast" id="zmToast">
+    <i class="fa-solid fa-circle-info" id="toastIcon"></i>
+    <span id="toastMsg">Ready!</span>
+  </div>
+
+
+  <!-- ============================================================
+       SCRIPTS
+  ============================================================ -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+
+  <script>
+    /* ============================================================
+       INIT LIBRARIES
+    ============================================================ */
+    AOS.init({ duration: 580, easing: 'ease-out-cubic', once: true });
+    M.AutoInit();
+
+    /* ============================================================
+       TOAST HELPER
+    ============================================================ */
+    function showToast(msg, isError = false, duration = 3500) {
+      const $t = $('#zmToast');
+      $t.toggleClass('error', isError).removeClass('show');
+      $('#toastMsg').text(msg);
+      $('#toastIcon').attr('class',
+        isError ? 'fa-solid fa-triangle-exclamation'
+                : 'fa-solid fa-circle-check');
+      setTimeout(() => $t.addClass('show'), 50);
+      setTimeout(() => $t.removeClass('show'), duration);
+    }
+
+    /* ============================================================
+       SIDEBAR TOGGLE — mobile
+    ============================================================ */
+    $('#hamburger').on('click', () => $('#sidebar').toggleClass('open'));
+    $(document).on('click', function (e) {
+      if (!$(e.target).closest('#sidebar, #hamburger').length)
+        $('#sidebar').removeClass('open');
+    });
+
+    /* ============================================================
+       WEATHER ICON MAPPER
+       Maps OpenWeatherMap condition IDs to emoji icons
+    ============================================================ */
+    function weatherIcon(id) {
+      if (id >= 200 && id < 300) return '⛈️';   // Thunderstorm
+      if (id >= 300 && id < 400) return '🌦️';   // Drizzle
+      if (id >= 500 && id < 600) return '🌧️';   // Rain
+      if (id >= 600 && id < 700) return '❄️';   // Snow
+      if (id >= 700 && id < 800) return '🌫️';   // Mist/fog
+      if (id === 800)             return '☀️';   // Clear
+      if (id === 801)             return '🌤️';   // Few clouds
+      if (id === 802)             return '⛅';   // Scattered
+      return '☁️';                               // Overcast/other
+    }
+
+    /* ============================================================
+       LIVE WEATHER FETCH
+       Uses OpenWeatherMap API with the farmer's district (Jinja).
+       API Key from app.py is passed via Flask config or inline here.
+       On success: populates the weather panel and auto-fills
+                   the Temperature and Rainfall form fields.
+    ============================================================ */
+    var DISTRICT    = document.getElementById('appData').dataset.district;
+    var API_KEY     = "9a15cce295222fccf0e5cb17f852cfbd";
+    var WEATHER_URL = 'https://api.openweathermap.org/data/2.5/weather?q=' + encodeURIComponent(DISTRICT) + ',ZM&appid=' + API_KEY + '&units=metric';
+
+    function fetchWeather() {
+      $.ajax({
+        url: WEATHER_URL,
+        method: 'GET',
+        timeout: 8000,
+
+        success: function (data) {
+          /* ── Extract values from API response ───────────────── */
+          const temp      = data.main.temp.toFixed(1);
+          const humidity  = data.main.humidity;
+          const windKmh   = (data.wind.speed * 3.6).toFixed(1);
+          const desc      = data.weather[0].description;
+          const condId    = data.weather[0].id;
+          // OpenWeatherMap only includes rain.1h if it actually rained.
+          // We estimate rainfall from humidity when no rain data is present.
+          const rainfall  = data.rain
+            ? (data.rain['1h'] || data.rain['3h'] || 0).toFixed(1)
+            : (humidity > 70 ? ((humidity - 70) * 0.8).toFixed(1) : '0.0');
+
+          /* ── Populate weather panel ─────────────────────────── */
+          $('#wIcon').text(weatherIcon(condId));
+          $('#wTemp').text(temp);
+          $('#wDesc').text(desc);
+          $('#wHumidity').text(humidity + '%');
+          $('#wRainfall').text(rainfall + ' mm');
+          $('#wWind').text(windKmh + ' km/h');
+
+          /* ── Show weather data, hide loading ───────────────── */
+          $('#weatherLoading').fadeOut(300, function () {
+            $('#weatherData').fadeIn(400);
+          });
+
+          /* ── Auto-fill form fields ──────────────────────────── */
+          // Short delay so user sees the weather first
+          setTimeout(function () {
+            // Fill Temperature
+            $('#temperature')
+              .val(temp)
+              .addClass('autofilled')
+              .trigger('change');
+            $('#tempBadge').addClass('show');
+
+            // Fill Rainfall
+            $('#rainfall')
+              .val(rainfall)
+              .addClass('autofilled')
+              .trigger('change');
+            $('#rainfallBadge').addClass('show');
+
+            // Show auto-fill notice
+            $('#autofillNotice').slideDown(300);
+
+            showToast(`🌤️ Live weather loaded for ${DISTRICT}! Fields auto-filled.`);
+          }, 600);
+        },
+
+        error: function (xhr) {
+          /* ── Weather fetch failed — show error state ─────────── */
+          console.warn('Weather fetch failed:', xhr.status, xhr.statusText);
+          $('#weatherLoading').fadeOut(300, function () {
+            $('#weatherError').fadeIn(400);
+          });
+          showToast('⚠️ Could not load live weather. Enter values manually.', true);
+        }
+      });
+    }
+
+    /* ============================================================
+       FORM SUBMIT — loading state
+    ============================================================ */
+    $('#cropForm').on('submit', function () {
+      const rain = $('#rainfall').val();
+      const temp = $('#temperature').val();
+      if (!rain || !temp) {
+        event.preventDefault();
+        showToast('⚠️ Please fill in all fields.', true);
+        return;
+      }
+      $('#recommendBtn').addClass('loading');
+      showToast('🌿 Analysing crop suitability…');
+    });
+
+    /* ============================================================
+       SUITABILITY BAR — animate on page load if result exists
+       The data-pct attribute is read from the #suitBarFill element
+    ============================================================ */
+    function animateSuitBar() {
+      const $fill = $('#suitBarFill');
+      if (!$fill.length) return;
+      const pct = parseInt($fill.data('pct')) || 88;
+      setTimeout(function () {
+        $fill.css('width', pct + '%');
+        $('#suitPct').text(pct + '%');
+      }, 500);
+    }
+
+    /* ============================================================
+       PAGE LOAD
+    ============================================================ */
+    $(document).ready(function () {
+
+      // Fetch live weather on load
+      fetchWeather();
+
+      // Animate suitability bar if result is showing
+      animateSuitBar();
+
+      // ── Animate range indicator bars ─────────────────────────────────
+      setTimeout(function() {
+        document.querySelectorAll('.wr-bar-range').forEach(function(el) {
+          var s = Math.max(0, Math.min(100, parseInt(el.dataset.start || 0)));
+          var e = Math.max(0, Math.min(100, parseInt(el.dataset.end   || 100)));
+          el.style.left  = s + '%';
+          el.style.width = Math.max(2, e - s) + '%';
+        });
+        document.querySelectorAll('.wr-bar-pin').forEach(function(el) {
+          var p = Math.max(2, Math.min(98, parseInt(el.dataset.pos || 50)));
+          el.style.left = p + '%';
+        });
+        // Animate comparison table score bars
+        document.querySelectorAll('.ct-score-fill').forEach(function(el) {
+          var pct = Math.min(100, parseFloat(el.dataset.pct || 0));
+          el.style.width = pct + '%';
+        });
+      }, 400);
+
+      // ── Read Flask-injected values from the data bridge element ──
+      // No Jinja tags in JavaScript — VS Code linter stays happy.
+      const appData   = document.getElementById('appData');
+      const hasResult = appData.dataset.hasResult === 'true';
+      const district  = appData.dataset.district;
+
+      // Hide placeholder and show result if Flask returned a recommendation
+      if (hasResult) {
+        $('#resultPlaceholder').hide();
+        $('#resultContent').show();
+        showToast('🌱 Crop recommendation ready!');
+      } else {
+        // Show weather-loading toast with the farmer's district name
+        setTimeout(() => showToast('🌍 Loading live weather for ' + district + '…'), 800);
+      }
+
+    });
+
+  </script>
+
+</body>
+</html>

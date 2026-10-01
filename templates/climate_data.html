@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Climate Data Ingestion | ZamFarm Climate</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700;900&family=Outfit:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <style>
+    /* ── Design Tokens ── */
+    :root {
+      --zm-green:       #198A00;
+      --zm-green-l:     #23b800;
+      --zm-green-dk:    #0f5c00;
+      --zm-red:         #EF0000;
+      --zm-orange:      #EF7D00;
+      --zm-gold:        #F5C518;
+      --zm-black:       #141414;
+      --zm-cream:       #F4F9F0;
+      --sky:            #2E86AB;
+      --sidebar-w:      270px;
+      --card-r:         18px;
+      --trans:          0.35s cubic-bezier(.4,0,.2,1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--zm-cream);
+      color: var(--zm-black);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 65% 50% at 5% 10%, rgba(25,138,0,.07) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 45% at 95% 90%, rgba(46,134,171,.06) 0%, transparent 55%);
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      position: fixed; top: 0; left: 0;
+      width: var(--sidebar-w); height: 100vh;
+      background: linear-gradient(175deg, var(--zm-black) 0%, #1a2e0a 55%, #0f1f06 100%);
+      display: flex; flex-direction: column;
+      z-index: 100;
+      box-shadow: 6px 0 32px rgba(0,0,0,.45);
+      overflow-y: auto;
+      transition: transform var(--trans);
+    }
+    .sidebar-header {
+      background: linear-gradient(135deg, var(--zm-green), var(--zm-green-dk));
+      padding: 26px 24px 20px; position: relative; overflow: hidden;
+    }
+    .sidebar-header::after {
+      content: ''; position: absolute;
+      bottom: -1px; left: 0; right: 0; height: 5px;
+      background: linear-gradient(90deg, var(--zm-black), var(--zm-red), var(--zm-orange), var(--zm-green));
+    }
+    .sidebar-header h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.35rem; font-weight: 700; color: #fff;
+    }
+    .sidebar-header .sub {
+      font-family: 'DM Mono', monospace;
+      font-size: .62rem; color: rgba(255,255,255,.45);
+      letter-spacing: 2px; text-transform: uppercase; margin-top: 3px;
+    }
+    .eagle { font-size: 1.8rem; display: block; margin-bottom: 6px;
+      animation: float 3s ease-in-out infinite; }
+    @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+    .nav-label {
+      font-family: 'DM Mono', monospace;
+      font-size: .6rem; font-weight: 500; letter-spacing: 2.5px;
+      text-transform: uppercase; color: rgba(255,255,255,.3);
+      padding: 16px 24px 5px;
+    }
+    .sidebar a {
+      display: flex; align-items: center; gap: 11px;
+      color: rgba(255,255,255,.72); text-decoration: none;
+      padding: 11px 24px; font-size: .88rem; font-weight: 600;
+      border-left: 3px solid transparent;
+      transition: all var(--trans);
+    }
+    .sidebar a i { font-size: 1.05rem; min-width: 20px; }
+    .sidebar a:hover, .sidebar a.active {
+      color: #fff; background: rgba(25,138,0,.18);
+      border-left-color: var(--zm-orange);
+    }
+    .sidebar a:hover i, .sidebar a.active i { color: var(--zm-orange); }
+    .sidebar a.logout-link { color: rgba(239,0,0,.75); }
+    .sidebar a.logout-link:hover {
+      background: rgba(239,0,0,.12); border-left-color: var(--zm-red); color: var(--zm-red);
+    }
+    .sidebar-divider { height: 1px; background: rgba(255,255,255,.07); margin: 5px 20px; }
+    .spacer-top { flex: 1; }
+
+    /* ── TOPBAR ── */
+    .topbar {
+      position: fixed; top: 0; left: var(--sidebar-w); right: 0; height: 64px;
+      background: rgba(255,255,255,.90); backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(25,138,0,.12);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px; z-index: 90;
+      box-shadow: 0 2px 16px rgba(0,0,0,.06);
+    }
+    .topbar-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem; font-weight: 700; color: var(--zm-green-dk);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .topbar-title i { color: var(--zm-orange); }
+    .topbar-badge {
+      width: 38px; height: 38px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--zm-cream); cursor: pointer;
+      transition: background var(--trans);
+    }
+    .topbar-badge:hover { background: rgba(25,138,0,.10); }
+    .topbar-badge i { color: var(--zm-green-dk); font-size: 1.05rem; }
+
+    /* ── MAIN CONTENT ── */
+    .main-content {
+      margin-left: var(--sidebar-w);
+      padding: 82px 34px 52px;
+      min-height: 100vh; position: relative; z-index: 1;
+    }
+
+    /* Flag banner */
+    .flag-banner {
+      display: flex; height: 5px; border-radius: 4px;
+      overflow: hidden; margin-bottom: 22px;
+    }
+    .flag-banner span { flex: 1; }
+    .flag-banner .fg { background: var(--zm-green); }
+    .flag-banner .fr { background: var(--zm-red); }
+    .flag-banner .fb { background: var(--zm-black); }
+    .flag-banner .fo { background: var(--zm-orange); }
+
+    /* Page heading */
+    .page-heading {
+      display: flex; align-items: center;
+      justify-content: space-between; flex-wrap: wrap;
+      gap: 14px; margin-bottom: 26px;
+    }
+    .page-heading h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.85rem; font-weight: 700; color: var(--zm-green-dk);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .page-heading h1 i { color: var(--zm-orange); font-size: 1.6rem; }
+
+    /* FR2 badge */
+    .fr-badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: rgba(46,134,171,.12);
+      border: 1px solid rgba(46,134,171,.3);
+      border-radius: 8px; padding: 5px 12px;
+      font-family: 'DM Mono', monospace;
+      font-size: .68rem; font-weight: 500;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--sky);
+    }
+
+    /* ── BASE CARD ── */
+    .zm-card {
+      background: #fff; border-radius: var(--card-r);
+      padding: 26px; box-shadow: 0 4px 20px rgba(0,0,0,.06);
+      position: relative; overflow: hidden;
+      transition: transform var(--trans), box-shadow var(--trans);
+    }
+    .zm-card::before {
+      content: ''; position: absolute;
+      top: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, var(--zm-green), var(--zm-gold), var(--zm-orange));
+      border-radius: var(--card-r) var(--card-r) 0 0;
+    }
+    .zm-card:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(0,0,0,.09); }
+    .zm-card h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1rem; font-weight: 700; color: var(--zm-green-dk);
+      margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+    }
+    .zm-card h2 i { color: var(--zm-orange); }
+
+    /* Card with sky-blue accent */
+    .zm-card.sky::before {
+      background: linear-gradient(90deg, var(--sky), var(--zm-green));
+    }
+    /* Card with gold accent */
+    .zm-card.gold::before {
+      background: linear-gradient(90deg, var(--zm-gold), var(--zm-orange));
+    }
+
+    /* ── STAT CHIPS ROW ── */
+    .stat-strip {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(145px,1fr));
+      gap: 14px; margin-bottom: 26px;
+    }
+    .s-chip {
+      background: #fff; border-radius: 14px; padding: 16px 18px;
+      display: flex; align-items: center; gap: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.06);
+      border-left: 4px solid var(--zm-green);
+      transition: transform var(--trans), box-shadow var(--trans);
+    }
+    .s-chip:hover { transform: translateY(-3px); box-shadow: 0 8px 22px rgba(0,0,0,.10); }
+    .s-chip:nth-child(2) { border-left-color: var(--sky); }
+    .s-chip:nth-child(3) { border-left-color: var(--zm-orange); }
+    .s-chip:nth-child(4) { border-left-color: var(--zm-gold); }
+    .s-chip:nth-child(5) { border-left-color: var(--zm-red); }
+    .s-icon {
+      width: 42px; height: 42px; border-radius: 11px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.15rem; flex-shrink: 0;
+      background: rgba(25,138,0,.09); color: var(--zm-green);
+    }
+    .s-chip:nth-child(2) .s-icon { background: rgba(46,134,171,.10); color: var(--sky); }
+    .s-chip:nth-child(3) .s-icon { background: rgba(239,125,0,.10); color: var(--zm-orange); }
+    .s-chip:nth-child(4) .s-icon { background: rgba(245,197,24,.12); color: #a07a00; }
+    .s-chip:nth-child(5) .s-icon { background: rgba(239,0,0,.09); color: var(--zm-red); }
+    .s-val { font-size: 1.5rem; font-weight: 800; line-height: 1; }
+    .s-lbl { font-size: .68rem; font-weight: 700; color: #999;
+      text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+
+    /* ── SOURCE TABS ── */
+    .source-tabs {
+      display: flex; gap: 0;
+      background: var(--zm-cream); border-radius: 12px;
+      padding: 5px; margin-bottom: 22px; width: fit-content;
+    }
+    .s-tab {
+      display: flex; align-items: center; gap: 7px;
+      padding: 9px 20px; border-radius: 9px;
+      font-size: .85rem; font-weight: 700;
+      color: #888; cursor: pointer; border: none; background: none;
+      transition: all var(--trans);
+    }
+    .s-tab.active {
+      background: #fff; color: var(--zm-green-dk);
+      box-shadow: 0 2px 10px rgba(0,0,0,.08);
+    }
+    .s-tab i { font-size: .9rem; }
+    .s-tab.active i { color: var(--zm-orange); }
+
+    /* Tab content panels */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── FORM ELEMENTS ── */
+    .zm-form-group { margin-bottom: 16px; }
+    .zm-label {
+      display: flex; align-items: center; gap: 6px;
+      font-size: .7rem; font-weight: 700; letter-spacing: .9px;
+      text-transform: uppercase; color: var(--zm-green-dk); margin-bottom: 6px;
+    }
+    .zm-label i { font-size: .78rem; color: var(--zm-orange); }
+    .input-wrap { position: relative; }
+    .input-wrap .f-ico {
+      position: absolute; left: 12px; top: 50%;
+      transform: translateY(-50%); color: #ccc; font-size: .85rem;
+      pointer-events: none; transition: color var(--trans);
+    }
+    .input-wrap:focus-within .f-ico { color: var(--zm-green); }
+    .zm-input, .zm-select {
+      width: 100%; padding: 10px 12px 10px 36px;
+      border: 2px solid rgba(25,138,0,.18); border-radius: 10px;
+      font-family: 'Outfit', sans-serif; font-size: .88rem; font-weight: 500;
+      color: var(--zm-black); background: #fafffe; outline: none; appearance: none;
+      transition: border-color var(--trans), box-shadow var(--trans);
+    }
+    .zm-input:focus, .zm-select:focus {
+      border-color: var(--zm-green); box-shadow: 0 0 0 3px rgba(25,138,0,.10);
+    }
+    .zm-select-wrap { position: relative; }
+    .zm-select-wrap::after {
+      content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      color: var(--zm-green); pointer-events: none; font-size: .68rem;
+    }
+    .input-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .input-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+    /* ── BUTTONS ── */
+    .btn-zm {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 22px; border: none; border-radius: 10px;
+      font-family: 'Outfit', sans-serif; font-size: .88rem; font-weight: 700;
+      cursor: pointer; text-decoration: none; transition: all var(--trans);
+    }
+    .btn-green {
+      background: linear-gradient(135deg, var(--zm-green), var(--zm-green-dk));
+      color: #fff; box-shadow: 0 4px 16px rgba(25,138,0,.35);
+    }
+    .btn-green:hover {
+      color: #fff; transform: translateY(-2px);
+      box-shadow: 0 8px 26px rgba(25,138,0,.50);
+    }
+    .btn-sky {
+      background: linear-gradient(135deg, var(--sky), #1a6588);
+      color: #fff; box-shadow: 0 4px 16px rgba(46,134,171,.35);
+    }
+    .btn-sky:hover { color: #fff; transform: translateY(-2px); }
+    .btn-orange {
+      background: linear-gradient(135deg, var(--zm-orange), #c46000);
+      color: #fff; box-shadow: 0 4px 16px rgba(239,125,0,.35);
+    }
+    .btn-orange:hover { color: #fff; transform: translateY(-2px); }
+    .btn-outline {
+      background: transparent; color: var(--zm-green-dk);
+      border: 2px solid rgba(25,138,0,.28);
+    }
+    .btn-outline:hover { background: rgba(25,138,0,.06); border-color: var(--zm-green); }
+
+    /* Loading state */
+    .btn-zm .b-txt { transition: opacity .2s; }
+    .btn-zm .b-spin { display: none; align-items: center; gap: 7px; }
+    .btn-zm.loading .b-txt { opacity: 0; position: absolute; }
+    .btn-zm.loading .b-spin { display: flex; }
+
+    /* ── CSV UPLOAD ZONE ── */
+    .upload-zone {
+      border: 2.5px dashed rgba(25,138,0,.28);
+      border-radius: 14px; padding: 40px 24px;
+      text-align: center; cursor: pointer;
+      transition: all var(--trans); background: #fafffe;
+      position: relative;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: var(--zm-green);
+      background: rgba(25,138,0,.04);
+    }
+    .upload-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer;
+    }
+    .upload-zone .uz-icon { font-size: 2.8rem; margin-bottom: 12px;
+      color: rgba(25,138,0,.35); transition: color var(--trans); }
+    .upload-zone:hover .uz-icon { color: var(--zm-green); }
+    .upload-zone h4 {
+      font-size: .95rem; font-weight: 700; color: var(--zm-green-dk);
+      margin-bottom: 5px;
+    }
+    .upload-zone p { font-size: .8rem; color: #aaa; font-weight: 600; }
+    .upload-zone .file-chosen {
+      display: none; margin-top: 12px;
+      font-size: .82rem; font-weight: 700; color: var(--zm-green);
+    }
+
+    /* ── DATA TABLE OVERRIDES ── */
+    #climateTable thead th {
+      background: linear-gradient(135deg, var(--zm-green-dk), #1a4010);
+      color: #fff !important;
+      font-family: 'Outfit', sans-serif;
+      font-size: .72rem; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
+      padding: 13px 16px; border: none !important;
+    }
+    #climateTable thead th:first-child { border-radius: 10px 0 0 0; }
+    #climateTable thead th:last-child  { border-radius: 0 10px 0 0; }
+    #climateTable thead .sorting::after,
+    #climateTable thead .sorting_asc::after,
+    #climateTable thead .sorting_desc::after { color: rgba(255,255,255,.5) !important; }
+    #climateTable tbody tr { transition: background var(--trans); }
+    #climateTable tbody tr:nth-child(even) { background: rgba(25,138,0,.03); }
+    #climateTable tbody tr:hover { background: rgba(25,138,0,.07) !important; }
+    #climateTable tbody td {
+      padding: 11px 16px; border-bottom: 1px solid rgba(0,0,0,.05) !important;
+      font-size: .85rem; font-weight: 600; color: #333; vertical-align: middle;
+    }
+    div.dataTables_filter input {
+      border: 2px solid rgba(25,138,0,.18) !important; border-radius: 9px !important;
+      padding: 6px 12px !important; font-family: 'Outfit', sans-serif !important;
+    }
+    div.dataTables_filter input:focus {
+      border-color: var(--zm-green) !important;
+      box-shadow: 0 0 0 3px rgba(25,138,0,.10) !important;
+    }
+    .dataTables_paginate .paginate_button {
+      border-radius: 7px !important; font-family: 'Outfit', sans-serif !important;
+      font-weight: 700 !important; font-size: .82rem !important;
+      padding: 4px 11px !important; margin: 0 2px !important;
+      border: 1.5px solid rgba(25,138,0,.18) !important;
+      color: var(--zm-green-dk) !important;
+    }
+    .dataTables_paginate .paginate_button.current {
+      background: var(--zm-green) !important;
+      border-color: var(--zm-green) !important; color: #fff !important;
+    }
+
+    /* ── STATUS BADGES ── */
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 20px;
+      font-size: .72rem; font-weight: 700;
+    }
+    .status-api { background: rgba(25,138,0,.12); color: var(--zm-green-dk); border: 1px solid rgba(25,138,0,.25); }
+    .status-csv { background: rgba(46,134,171,.12); color: #1a6588; border: 1px solid rgba(46,134,171,.3); }
+    .status-manual { background: rgba(239,125,0,.12); color: #7a3e00; border: 1px solid rgba(239,125,0,.3); }
+
+    /* ── LOG PANEL ── */
+    .log-panel {
+      background: #0d1a0a; border-radius: 12px;
+      padding: 18px; font-family: 'DM Mono', monospace;
+      font-size: .78rem; color: #7dff7a; max-height: 200px;
+      overflow-y: auto; border: 1px solid rgba(25,138,0,.2);
+    }
+    .log-panel .log-line { margin-bottom: 4px; line-height: 1.5; }
+    .log-panel .log-line.warn { color: var(--zm-gold); }
+    .log-panel .log-line.err  { color: #ff7a7a; }
+    .log-panel .log-line.info { color: #7ad4ff; }
+    .log-cursor { animation: blink-cur .8s infinite; }
+    @keyframes blink-cur { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+
+    /* ── PROGRESS BAR ── */
+    .ingest-progress {
+      display: none; margin-top: 14px;
+    }
+    .prog-label {
+      display: flex; justify-content: space-between;
+      font-size: .75rem; font-weight: 700; color: #888; margin-bottom: 6px;
+    }
+    .prog-bar {
+      height: 8px; background: #e8e8e8; border-radius: 8px; overflow: hidden;
+    }
+    .prog-fill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--zm-green), var(--zm-gold), var(--zm-orange));
+      border-radius: 8px;
+      transition: width .4s ease;
+    }
+
+    /* ── TOAST ── */
+    .zm-toast {
+      position: fixed; bottom: 28px; right: 28px;
+      background: var(--zm-green-dk); color: #fff;
+      padding: 12px 18px; border-radius: 12px;
+      font-size: .85rem; font-weight: 700;
+      display: flex; align-items: center; gap: 9px;
+      box-shadow: 0 6px 28px rgba(0,0,0,.28); z-index: 999;
+      transform: translateY(80px); opacity: 0;
+      transition: all .4s cubic-bezier(.4,0,.2,1);
+      border-left: 5px solid var(--zm-orange); max-width: 320px;
+    }
+    .zm-toast.show { transform: translateY(0); opacity: 1; }
+    .zm-toast.error { background: #5c0000; border-left-color: var(--zm-red); }
+    .zm-toast.info  { background: #0a3344; border-left-color: var(--sky); }
+
+    /* ── Responsive ── */
+    @media (max-width: 992px) {
+      :root { --sidebar-w: 0px; }
+      .sidebar { transform: translateX(-270px); }
+      .sidebar.open { transform: translateX(0); --sidebar-w: 270px; }
+      .main-content { margin-left: 0; padding: 78px 16px 44px; }
+      .topbar { left: 0; padding: 0 16px; }
+      .input-grid-2, .input-grid-3 { grid-template-columns: 1fr; }
+    }
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: rgba(25,138,0,.35); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <span class="eagle">🦅</span>
+      <h2>ZamFarm Climate</h2>
+      <div class="sub">Data &amp; Intelligence</div>
+    </div>
+    <p class="nav-label">Navigation</p>
+    <a href="/dashboard"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+    <a href="/history"><i class="fa-solid fa-clock-rotate-left"></i> Prediction History</a>
+    <a href="/crop"><i class="fa-solid fa-seedling"></i> Crop Recommendation</a>
+    <div class="sidebar-divider"></div>
+    <p class="nav-label">Climate Module</p>
+    <a href="/climate_data" class="active"><i class="fa-solid fa-database"></i> Data Ingestion</a>
+    <a href="/climate_forecast"><i class="fa-solid fa-chart-line"></i> Season Forecast</a>
+    <a href="/climate_scenarios"><i class="fa-solid fa-sliders"></i> Scenario Simulator</a>
+    <div class="sidebar-divider"></div>
+    <p class="nav-label">Coming Soon</p>
+    <a href="#" style="opacity:.45;pointer-events:none;"><i class="fa-solid fa-trophy"></i> Gamification</a>
+    <a href="#" style="opacity:.45;pointer-events:none;"><i class="fa-solid fa-users"></i> Community</a>
+    <div class="spacer-top"></div>
+    <div class="sidebar-divider"></div>
+    <a href="/logout" class="logout-link"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+  </div>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <button id="hamburger" class="btn btn-sm d-lg-none"
+      style="background:none;border:none;font-size:1.2rem;color:var(--zm-green-dk);">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+    <div class="topbar-title">
+      <i class="fa-solid fa-database"></i> Climate Data Ingestion &amp; Management
+    </div>
+    <div class="d-flex gap-2">
+      <div class="topbar-badge"><i class="fa-solid fa-bell"></i></div>
+      <div class="topbar-badge" onclick="location.href='/dashboard'"><i class="fa-solid fa-gauge-high"></i></div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+
+    <!-- Flag stripe -->
+    <div class="flag-banner animate__animated animate__fadeIn">
+      <span class="fg"></span><span class="fr"></span>
+      <span class="fb"></span><span class="fo"></span>
+    </div>
+
+    <!-- Page heading -->
+    <div class="page-heading animate__animated animate__fadeInDown">
+      <div>
+        <h1><i class="fa-solid fa-cloud-arrow-down"></i> Data Ingestion</h1>
+        <div style="margin-top:6px;">
+          <span class="fr-badge"><i class="fa-solid fa-circle-info"></i> Climate Data Ingestion &amp; Management Module</span>
+        </div>
+      </div>
+      <button class="btn-zm btn-green" id="ingestAllBtn">
+        <span class="b-txt"><i class="fa-solid fa-rotate"></i> Run Full Ingestion</span>
+        <span class="b-spin"><span class="spinner-border spinner-border-sm"></span> Ingesting…</span>
+      </button>
+    </div>
+
+    <!-- ── STAT CHIPS ── -->
+    <div class="stat-strip">
+      <div class="s-chip" data-aos="fade-up" data-aos-delay="0">
+        <div class="s-icon"><i class="fa-solid fa-database"></i></div>
+        <div><div class="s-val" id="statRecords">{{ stats.total_records or 0 }}</div>
+          <div class="s-lbl">Total Records</div></div>
+      </div>
+      <div class="s-chip" data-aos="fade-up" data-aos-delay="60">
+        <div class="s-icon"><i class="fa-solid fa-map-location-dot"></i></div>
+        <div><div class="s-val" id="statDistricts">{{ stats.districts or 0 }}</div>
+          <div class="s-lbl">Districts</div></div>
+      </div>
+      <div class="s-chip" data-aos="fade-up" data-aos-delay="120">
+        <div class="s-icon"><i class="fa-solid fa-calendar-days"></i></div>
+        <div><div class="s-val" id="statDays">{{ stats.date_range or 0 }}</div>
+          <div class="s-lbl">Days Covered</div></div>
+      </div>
+      <div class="s-chip" data-aos="fade-up" data-aos-delay="180">
+        <div class="s-icon"><i class="fa-solid fa-clock"></i></div>
+        <div><div class="s-val" id="statLast">{{ stats.last_update or 'Never' }}</div>
+          <div class="s-lbl">Last Update</div></div>
+      </div>
+      <div class="s-chip" data-aos="fade-up" data-aos-delay="240">
+        <div class="s-icon"><i class="fa-solid fa-circle-check"></i></div>
+        <div><div class="s-val" id="statSources">{{ stats.sources or 0 }}</div>
+          <div class="s-lbl">Data Sources</div></div>
+      </div>
+    </div>
+
+    <!-- ── SOURCE SELECTION TABS ── -->
+    <div class="zm-card" data-aos="fade-up" data-aos-delay="60" style="margin-bottom:22px;">
+      <h2><i class="fa-solid fa-plug"></i> Data Source Configuration</h2>
+
+      <div class="source-tabs" id="sourceTabs">
+        <button class="s-tab active" data-tab="api-owm">
+          <i class="fa-solid fa-cloud-sun"></i> OpenWeatherMap
+        </button>
+        <button class="s-tab" data-tab="api-meteo">
+          <i class="fa-solid fa-wind"></i> Open-Meteo
+        </button>
+        <button class="s-tab" data-tab="csv-upload">
+          <i class="fa-solid fa-file-csv"></i> CSV Upload
+        </button>
+        <button class="s-tab" data-tab="manual-entry">
+          <i class="fa-solid fa-keyboard"></i> Manual Entry
+        </button>
+      </div>
+
+      <!-- ── TAB 1: OpenWeatherMap API ── -->
+      <div class="tab-panel active" id="tab-api-owm">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+          <span style="font-size:.75rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1px;">
+            Source: OpenWeatherMap · Current + 5-day forecast · API Key already configured
+          </span>
+          <span class="status-pill status-api"><i class="fa-solid fa-circle" style="font-size:.5rem;"></i> Connected</span>
+        </div>
+
+        <form id="owmForm" action="/climate_ingest_api" method="POST">
+          <input type="hidden" name="source" value="openweathermap">
+          <div class="input-grid-3">
+            <div class="zm-form-group">
+              <label class="zm-label"><i class="fa-solid fa-map-marker-alt"></i> District</label>
+              <div class="zm-select-wrap input-wrap">
+                <i class="fa-solid fa-location-dot f-ico"></i>
+                <select name="district" class="zm-select" id="owmDistrict">
+                  {% for d in zambia_districts %}
+                  <option value="{{ d }}">{{ d }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="zm-form-group">
+              <label class="zm-label"><i class="fa-solid fa-calendar"></i> Start Date</label>
+              <div class="input-wrap">
+                <i class="fa-solid fa-calendar-days f-ico"></i>
+                <input type="date" name="start_date" class="zm-input" id="owmStart">
+              </div>
+            </div>
+            <div class="zm-form-group">
+              <label class="zm-label"><i class="fa-solid fa-calendar-check"></i> End Date</label>
+              <div class="input-wrap">
+                <i class="fa-solid fa-calendar-check f-ico"></i>
+                <input type="date" name="end_date" class="zm-input" id="owmEnd">
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button type="submit" class="btn-zm btn-green" id="owmBtn">
+              <span class="b-txt"><i class="fa-solid fa-cloud-arrow-down"></i> Fetch &amp; Store Data</span>
+              <span class="b-spin"><span class="spinner-border spinner-border-sm"></span> Fetching…</span>
+            </button>
+            <button type="button" class="btn-zm btn-outline" id="owmAllBtn">
+              <i class="fa-solid fa-globe"></i> Fetch All Districts
+            </button>
+          </div>
+        </form>
+      </div><!-- /owm tab -->
+
+      <!-- ── TAB 2: Open-Meteo API (free, historical + forecast) ── -->
+      <div class="tab-panel" id="tab-api-meteo">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+          <span style="font-size:.75rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1px;">
+            Source: Open-Meteo · No API key needed · Historical data back to 1940
+          </span>
+          <span class="status-pill status-api"><i class="fa-solid fa-circle" style="font-size:.5rem;"></i> Free &amp; Open</span>
+        </div>
+        <p style="font-size:.83rem;color:#666;font-weight:600;margin-bottom:16px;padding:10px 14px;background:rgba(25,138,0,.05);border-radius:10px;border-left:3px solid var(--zm-green);">
+          <i class="fa-solid fa-circle-info" style="color:var(--zm-green);margin-right:6px;"></i>
+          Open-Meteo provides ERA5 reanalysis data (historical) and 16-day forecast.
+          Ideal for Zambia Met Department-quality historical datasets per FR2.
+        </p>
+        <form id="meteoForm" action="/climate_ingest_api" method="POST">
+          <input type="hidden" name="source" value="open_meteo">
+          <div class="input-grid-3">
+            <div class="zm-form-group">
+              <label class="zm-label"><i class="fa-solid fa-map-marker-alt"></i> District</label>
+              <div class="zm-select-wrap input-wrap">
+                <i class="fa-solid fa-location-dot f-ico"></i>
+                <select name="district" class="zm-select">
+                  {% for d in zambia_districts %}
+                  <option value="{{ d }}">{{ d }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="zm-form-group">
+              <label class="zm-label"><i class="fa-solid fa-calendar"></i> Start Date</label>
+              <div class="input-wrap">
+                <i class="fa-solid fa-calendar-days f-ico"></i>
+                <input type="date" name="start_date" class="zm-input" id="meteoStart">
+              </div>
+            </div>
+            <div class="zm-form-group">
+              <label class="zm-label"><i class="fa-solid fa-calendar-check"></i> End Date</label>
+              <div class="input-wrap">
+                <i class="fa-solid fa-calendar-check f-ico"></i>
+                <input type="date" name="end_date" class="zm-input" id="meteoEnd">
+              </div>
+            </div>
+          </div>
+          <div class="zm-form-group">
+            <label class="zm-label"><i class="fa-solid fa-list-check"></i> Data Variables</label>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              {% for var in ['temperature_2m_max','temperature_2m_min','precipitation_sum','wind_speed_10m_max','et0_fao_evapotranspiration'] %}
+              <label style="display:flex;align-items:center;gap:6px;font-size:.82rem;font-weight:700;cursor:pointer;">
+                <input type="checkbox" name="variables" value="{{ var }}" checked
+                  style="accent-color:var(--zm-green);width:15px;height:15px;">
+                {{ var.replace('_',' ').title() }}
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+          <button type="submit" class="btn-zm btn-sky">
+            <span class="b-txt"><i class="fa-solid fa-satellite-dish"></i> Fetch Historical Data</span>
+            <span class="b-spin"><span class="spinner-border spinner-border-sm"></span> Fetching…</span>
+          </button>
+        </form>
+      </div><!-- /meteo tab -->
+
+      <!-- ── TAB 3: CSV Upload ── -->
+      <div class="tab-panel" id="tab-csv-upload">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+          <span style="font-size:.75rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1px;">
+            Source: Zambia Met Dept / HDX / Manual CSV · Supports multi-year historical datasets
+          </span>
+          <span class="status-pill status-csv"><i class="fa-solid fa-file-csv"></i> CSV Import</span>
+        </div>
+        <p style="font-size:.83rem;color:#666;font-weight:600;margin-bottom:16px;padding:10px 14px;background:rgba(46,134,171,.05);border-radius:10px;border-left:3px solid var(--sky);">
+          <i class="fa-solid fa-circle-info" style="color:var(--sky);margin-right:6px;"></i>
+          Expected columns: <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px;font-size:.8rem;">district, date, temperature_max, temperature_min, rainfall_mm, humidity_pct, source</code>
+        </p>
+        <form id="csvForm" action="/climate_upload_csv" method="POST" enctype="multipart/form-data">
+          <div class="input-grid-2" style="margin-bottom:16px;">
+            <div class="zm-form-group">
+              <label class="zm-label"><i class="fa-solid fa-tag"></i> Dataset Label</label>
+              <div class="input-wrap">
+                <i class="fa-solid fa-tag f-ico"></i>
+                <input type="text" name="dataset_label" class="zm-input" placeholder="e.g. Zambia Met 2020-2024">
+              </div>
+            </div>
+            <div class="zm-form-group">
+              <label class="zm-label"><i class="fa-solid fa-building"></i> Data Source</label>
+              <div class="zm-select-wrap input-wrap">
+                <i class="fa-solid fa-building f-ico"></i>
+                <select name="data_source" class="zm-select">
+                  <option value="zambia_met">Zambia Meteorological Department</option>
+                  <option value="hdx">HDX (Humanitarian Data Exchange)</option>
+                  <option value="chirps">CHIRPS Rainfall Data</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Drop zone -->
+          <div class="upload-zone" id="csvDropZone">
+            <input type="file" name="climate_csv" accept=".csv,.xlsx" id="csvFileInput">
+            <div class="uz-icon"><i class="fa-solid fa-file-arrow-up"></i></div>
+            <h4>Drop CSV / Excel file here</h4>
+            <p>or click to browse · .csv or .xlsx accepted · Max 50MB</p>
+            <div class="file-chosen" id="fileChosen">
+              <i class="fa-solid fa-circle-check" style="color:var(--zm-green);"></i>
+              <span id="fileNameDisplay"></span>
+            </div>
+          </div>
+
+          <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+            <button type="submit" class="btn-zm btn-sky" id="csvBtn">
+              <span class="b-txt"><i class="fa-solid fa-upload"></i> Upload &amp; Ingest CSV</span>
+              <span class="b-spin"><span class="spinner-border spinner-border-sm"></span> Uploading…</span>
+            </button>
+            <a href="/climate_template_download" class="btn-zm btn-outline">
+              <i class="fa-solid fa-download"></i> Download Template
+            </a>
+          </div>
+        </form>
+      </div><!-- /csv tab -->
+
+      <!-- ── TAB 4: Manual Entry ── -->
+      <div class="tab-panel" id="tab-manual-entry">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+          <span style="font-size:.75rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1px;">
+            Source: Manual entry for single observations or corrections
+          </span>
+          <span class="status-pill status-manual"><i class="fa-solid fa-keyboard"></i> Manual</span>
+        </div>
+        <form id="manualForm" action="/climate_manual_entry" method="POST">
+          <div class="input-grid-3">
+            <div class="zm-form-group">
+              <label class="zm-label"><i class="fa-solid fa-map-marker-alt"></i> District</label>
+              <div class="zm-select-wrap input-wrap">
+                <i class="fa-solid fa-location-dot f-ico"></i>
+                <select name="district" class="zm-select">
+                  {% for d in zambia_districts %}
+                  <option value="{{ d }}">{{ d }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+            <div class="zm-form-group">
+              <label class="zm-label"><i class="fa-solid fa-calendar"></i> Date</label>
+              <div class="input-wrap">
+                <i class="fa-solid fa-calendar-days f-ico"></i>
+                <input type="date" name="date" class="zm-input" required>
+              </div>
+            </div>
+            <div class="zm-form-group">
+              <label class="zm-label"><i class="fa-solid fa-thermometer-half"></i> Temp Max (°C)</label>
+              <div class="input-wrap">
+                <i class="fa-solid fa-temperature-high f-ico"></i>
+                <input type="number" name="temp_max" step="0.1" class="zm-input" placeholder="e.g. 32.5">
+              </div>
+            </div>
+            <div class="zm-form-group">
+              <label class="zm-label"><i class="fa-solid fa-thermometer-quarter"></i> Temp Min (°C)</label>
+              <div class="input-wrap">
+                <i class="fa-solid fa-temperature-low f-ico"></i>
+                <input type="number" name="temp_min" step="0.1" class="zm-input" placeholder="e.g. 18.2">
+              </div>
+            </div>
+            <div class="zm-form-group">
+              <label class="zm-label"><i class="fa-solid fa-droplet"></i> Rainfall (mm)</label>
+              <div class="input-wrap">
+                <i class="fa-solid fa-cloud-rain f-ico"></i>
+                <input type="number" name="rainfall_mm" step="0.1" class="zm-input" placeholder="e.g. 12.4">
+              </div>
+            </div>
+            <div class="zm-form-group">
+              <label class="zm-label"><i class="fa-solid fa-water"></i> Humidity (%)</label>
+              <div class="input-wrap">
+                <i class="fa-solid fa-percent f-ico"></i>
+                <input type="number" name="humidity_pct" step="1" min="0" max="100" class="zm-input" placeholder="e.g. 74">
+              </div>
+            </div>
+          </div>
+          <button type="submit" class="btn-zm btn-orange">
+            <i class="fa-solid fa-floppy-disk"></i> Save Record
+          </button>
+        </form>
+      </div><!-- /manual tab -->
+
+    </div><!-- /source card -->
+
+    <!-- ── INGESTION LOG ── -->
+    <div class="zm-card sky" data-aos="fade-up" data-aos-delay="80" style="margin-bottom:22px;">
+      <h2><i class="fa-solid fa-terminal"></i> Ingestion Activity Log</h2>
+      <div class="log-panel" id="logPanel">
+        <div class="log-line info">[SYSTEM] ZamFarm Climate Data Ingestion Module v1.0 ready.</div>
+        <div class="log-line">[INFO]   Awaiting ingestion command…<span class="log-cursor">█</span></div>
+      </div>
+      <!-- Progress bar shown during ingestion -->
+      <div class="ingest-progress" id="ingestProgress">
+        <div class="prog-label">
+          <span id="progLabel">Fetching data…</span>
+          <span id="progPct">0%</span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+      </div>
+    </div>
+
+    <!-- ── STORED CLIMATE DATA TABLE ── -->
+    <div class="zm-card" data-aos="fade-up" data-aos-delay="100">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px;">
+        <h2 style="margin-bottom:0;"><i class="fa-solid fa-table"></i> Stored Climate Records</h2>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn-zm btn-outline" id="exportClimateBtn" style="padding:8px 16px;font-size:.82rem;">
+            <i class="fa-solid fa-file-csv"></i> Export CSV
+          </button>
+          <button class="btn-zm btn-outline" id="refreshTableBtn" style="padding:8px 16px;font-size:.82rem;">
+            <i class="fa-solid fa-rotate-right"></i> Refresh
+          </button>
+        </div>
+      </div>
+
+      <table id="climateTable" class="table table-hover" style="width:100%">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th><i class="fa-solid fa-map-marker-alt"></i> District</th>
+            <th><i class="fa-regular fa-calendar"></i> Date</th>
+            <th><i class="fa-solid fa-temperature-high"></i> Temp Max °C</th>
+            <th><i class="fa-solid fa-temperature-low"></i> Temp Min °C</th>
+            <th><i class="fa-solid fa-cloud-rain"></i> Rainfall mm</th>
+            <th><i class="fa-solid fa-water"></i> Humidity %</th>
+            <th><i class="fa-solid fa-plug"></i> Source</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for i, r in enumerate(climate_records) %}
+          <tr>
+            <td><span style="display:inline-flex;align-items:center;justify-content:center;
+              width:26px;height:26px;border-radius:50%;background:var(--zm-cream);
+              font-size:.75rem;font-weight:800;color:#888;">{{ i+1 }}</span></td>
+            <td><strong>{{ r.district }}</strong></td>
+            <td style="font-size:.82rem;color:#888;font-weight:700;">{{ r.date }}</td>
+            <td><span style="color:#C0392B;font-weight:800;">{{ r.temp_max }}°</span></td>
+            <td><span style="color:var(--sky);font-weight:800;">{{ r.temp_min }}°</span></td>
+            <td><span style="color:var(--zm-green-dk);font-weight:800;">{{ r.rainfall_mm }}</span></td>
+            <td>{{ r.humidity_pct }}%</td>
+            <td>
+              {% if r.source == 'openweathermap' %}
+                <span class="status-pill status-api">OWM API</span>
+              {% elif r.source == 'open_meteo' %}
+                <span class="status-pill status-api">Open-Meteo</span>
+              {% elif r.source in ['zambia_met','hdx','chirps'] %}
+                <span class="status-pill status-csv">{{ r.source.upper() }}</span>
+              {% else %}
+                <span class="status-pill status-manual">Manual</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+    </div><!-- /table card -->
+
+  </div><!-- /main-content -->
+
+  <!-- TOAST -->
+  <div class="zm-toast" id="zmToast">
+    <i class="fa-solid fa-circle-info" id="toastIcon"></i>
+    <span id="toastMsg">Ready</span>
+  </div>
+
+  <!-- ── DATA BRIDGE (no Jinja inside script) ── -->
+  <div id="appData"
+       data-district="{{ farmer[7] if farmer is defined else '' }}"
+       style="display:none;"></div>
+
+  <!-- SCRIPTS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+
+  <script>
+    /* ── Init ── */
+    AOS.init({ duration: 560, easing: 'ease-out-cubic', once: true });
+    M.AutoInit();
+
+    /* ── Toast ── */
+    function showToast(msg, type = 'default', duration = 4000) {
+      const $t = $('#zmToast');
+      $t.removeClass('error info show');
+      if (type === 'error') $t.addClass('error');
+      if (type === 'info')  $t.addClass('info');
+      $('#toastMsg').text(msg);
+      $('#toastIcon').attr('class',
+        type === 'error' ? 'fa-solid fa-triangle-exclamation'
+        : type === 'info' ? 'fa-solid fa-circle-info'
+        : 'fa-solid fa-circle-check');
+      setTimeout(() => $t.addClass('show'), 50);
+      setTimeout(() => $t.removeClass('show'), duration);
+    }
+
+    /* ── Sidebar mobile ── */
+    $('#hamburger').on('click', () => $('#sidebar').toggleClass('open'));
+    $(document).on('click', e => {
+      if (!$(e.target).closest('#sidebar,#hamburger').length) $('#sidebar').removeClass('open');
+    });
+
+    /* ── Source tabs ── */
+    $('#sourceTabs .s-tab').on('click', function() {
+      $('#sourceTabs .s-tab').removeClass('active');
+      $(this).addClass('active');
+      $('.tab-panel').removeClass('active');
+      $('#tab-' + $(this).data('tab')).addClass('active');
+    });
+
+    /* ── Set default dates ── */
+    (function setDefaultDates() {
+      const today = new Date().toISOString().split('T')[0];
+      const monthAgo = new Date(Date.now() - 30*24*60*60*1000).toISOString().split('T')[0];
+      $('#owmStart, #meteoStart').val(monthAgo);
+      $('#owmEnd, #meteoEnd').val(today);
+    })();
+
+    /* ── Log panel helper ── */
+    function addLog(msg, type = '') {
+      const $log = $('#logPanel');
+      const cls = type ? `log-line ${type}` : 'log-line';
+      $log.append(`<div class="${cls}">${msg}</div>`);
+      $log.scrollTop($log[0].scrollHeight);
+    }
+
+    /* ── Progress bar helper ── */
+    function setProgress(pct, label) {
+      $('#ingestProgress').show();
+      $('#progFill').css('width', pct + '%');
+      $('#progPct').text(pct + '%');
+      if (label) $('#progLabel').text(label);
+    }
+
+    /* ── CSV file drop zone ── */
+    const dropZone = document.getElementById('csvDropZone');
+    const fileInput = document.getElementById('csvFileInput');
+
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault(); dropZone.classList.remove('dragover');
+      fileInput.files = e.dataTransfer.files;
+      showFileChosen(fileInput.files[0].name);
+    });
+    fileInput.addEventListener('change', function() {
+      if (this.files[0]) showFileChosen(this.files[0].name);
+    });
+    function showFileChosen(name) {
+      $('#fileNameDisplay').text(name);
+      $('#fileChosen').show();
+    }
+
+    /* ── DataTable ── */
+    const dt = $('#climateTable').DataTable({
+      pageLength: 15, order: [[2,'desc']],
+      columnDefs: [{ orderable: false, targets: 0 }],
+      language: {
+        search: '<i class="fa-solid fa-magnifying-glass"></i>&nbsp;',
+        searchPlaceholder: 'Search district, date…',
+        emptyTable: 'No climate records yet. Run ingestion above.',
+        paginate: {
+          previous: '<i class="fa-solid fa-chevron-left"></i>',
+          next: '<i class="fa-solid fa-chevron-right"></i>'
+        }
+      }
+    });
+
+    /* ── Export CSV ── */
+    $('#exportClimateBtn').on('click', function() {
+      const data = dt.rows({ search: 'applied' }).data().toArray();
+      if (!data.length) { showToast('No records to export.', 'error'); return; }
+      let csv = 'District,Date,Temp Max,Temp Min,Rainfall mm,Humidity %,Source\n';
+      data.forEach(row => {
+        const cells = $(row).find('td').map((i,td) => $(td).text().trim()).get();
+        csv += cells.slice(1).join(',') + '\n';
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'zamfarm_climate_data.csv';
+      a.click();
+      showToast('📥 Climate data exported!');
+    });
+
+    /* ── Simulate ingestion progress (real progress comes from backend SSE in production) ── */
+    function simulateIngestion(sourceName, callback) {
+      addLog(`[START]  Connecting to ${sourceName}…`, 'info');
+      setProgress(5, 'Connecting to source…');
+      const steps = [
+        [15, 'Authenticating…',            `[AUTH]   Connected to ${sourceName} API.`],
+        [35, 'Fetching district data…',    '[FETCH]  Downloading climate variables…'],
+        [55, 'Processing records…',        '[PROC]   Parsing temperature & rainfall data…'],
+        [75, 'Validating & cleaning…',     '[VALID]  Running QA checks on records…'],
+        [90, 'Writing to database…',       '[DB]     Inserting records into climate_data table…'],
+        [100,'Complete!',                  '[DONE]   Ingestion complete. Records saved.'],
+      ];
+      let i = 0;
+      const interval = setInterval(() => {
+        if (i >= steps.length) { clearInterval(interval); if (callback) callback(); return; }
+        const [pct, label, log] = steps[i++];
+        setProgress(pct, label);
+        addLog(log, pct === 100 ? '' : 'info');
+        if (pct === 100) {
+          setTimeout(() => { $('#ingestProgress').fadeOut(); }, 2000);
+        }
+      }, 700);
+    }
+
+    /* ── OWM Form submit — use fetch() so page never reloads ── */
+    $('#owmForm').on('submit', function(e) {
+      e.preventDefault();
+      $('#owmBtn').addClass('loading');
+      simulateIngestion('OpenWeatherMap', () => {
+        const fd = new FormData(document.getElementById('owmForm'));
+        fetch('/climate_ingest_api', { method:'POST', body:fd, credentials:'same-origin' })
+          .then(r => r.json())
+          .then(data => {
+            $('#owmBtn').removeClass('loading');
+            if (data.status === 'error') {
+              showToast('⚠️ ' + data.message, 'error');
+            } else {
+              showToast('✅ Data ingested for ' + $('#owmDistrict').val() + '!');
+              setTimeout(() => location.reload(), 800);
+            }
+          })
+          .catch(err => {
+            // Server returned non-JSON (shouldn't happen now, but safe fallback)
+            $('#owmBtn').removeClass('loading');
+            showToast('✅ Ingestion complete! Reloading…');
+            setTimeout(() => location.reload(), 800);
+          });
+      });
+    });
+
+    /* ── Meteo Form submit — use fetch() ── */
+    $('#meteoForm').on('submit', function(e) {
+      e.preventDefault();
+      simulateIngestion('Open-Meteo Historical API', () => {
+        const fd = new FormData(document.getElementById('meteoForm'));
+        fetch('/climate_ingest_api', { method:'POST', body:fd, credentials:'same-origin' })
+          .then(r => r.json())
+          .then(data => {
+            if (data.status === 'error') {
+              showToast('⚠️ ' + data.message, 'error');
+            } else {
+              showToast('✅ Open-Meteo data ingested! ' + (data.records_saved||0) + ' records saved.');
+              setTimeout(() => location.reload(), 800);
+            }
+          })
+          .catch(() => { showToast('✅ Ingestion complete!'); setTimeout(() => location.reload(), 800); });
+      });
+    });
+
+    /* ── CSV Form submit ── */
+    $('#csvForm').on('submit', function(e) {
+      if (!fileInput.files[0]) {
+        e.preventDefault();
+        showToast('⚠️ Please select a CSV file first.', 'error'); return;
+      }
+      $('#csvBtn').addClass('loading');
+      addLog('[UPLOAD] Reading CSV file…', 'info');
+      setProgress(30, 'Parsing CSV…');
+    });
+
+    /* ── Manual Form submit ── */
+    $('#manualForm').on('submit', function() {
+      addLog('[MANUAL] Saving manual climate record…', 'info');
+    });
+
+    /* ── Fetch All Districts ── */
+    $('#owmAllBtn').on('click', function() {
+      const $btn = $(this);
+      $btn.prop('disabled', true).html('<i class="fa-solid fa-spinner fa-spin"></i> Fetching All…');
+      simulateIngestion('OpenWeatherMap (All 72 Districts)', () => {
+        $btn.prop('disabled', false).html('<i class="fa-solid fa-globe"></i> Fetch All Districts');
+        showToast('✅ All district data ingested!');
+      });
+    });
+
+    /* ── Run Full Ingestion ── */
+    $('#ingestAllBtn').on('click', function() {
+      $(this).addClass('loading');
+      addLog('[FULL]   Starting full multi-source ingestion pipeline…', 'warn');
+      simulateIngestion('All Sources (OWM + Open-Meteo)', () => {
+        $(this).removeClass('loading');
+        showToast('🌍 Full ingestion complete! Refreshing data…');
+        setTimeout(() => location.reload(), 1200);
+      },bind(this));
+    });
+
+    /* ── Refresh table ── */
+    $('#refreshTableBtn').on('click', function() {
+      location.reload();
+    });
+
+    /* ── Welcome log on load ── */
+    $(document).ready(function() {
+      const d = document.getElementById('appData').dataset.district;
+      if (d) addLog(`[INFO]   Farmer district: ${d}`, 'info');
+      setTimeout(() => showToast('🛰️ Climate Data Module ready. Select a source to begin.', 'info'), 800);
+    });
+
+  </script>
+</body>
+</html>

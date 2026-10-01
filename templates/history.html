@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prediction History | ZamFarm Climate</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700;900&family=Outfit:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <style>
+    :root {
+      --g:#198A00;--gl:#23b800;--gd:#0f5c00;--r:#EF0000;
+      --o:#EF7D00;--gold:#F5C518;--blk:#141414;--sky:#2E86AB;
+      --bg:#F4F9F0;--surface:#fff;--surface2:#f0f5ec;
+      --border:rgba(25,138,0,.14);--text:#141414;--text2:#666;--text3:#999;
+      --sw:270px;--sw-col:68px;--cr:16px;
+      --tr:0.32s cubic-bezier(.4,0,.2,1);
+    }
+    [data-theme="dark"]{--bg:#0d1a0a;--surface:#132010;--surface2:#1a2e14;--border:rgba(35,184,0,.15);--text:#e8f5e3;--text2:#9ab890;--text3:#5a7a55;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+    .sidebar{position:fixed;top:0;left:0;width:var(--sw);height:100vh;background:linear-gradient(175deg,var(--blk) 0%,#1a2e0a 55%,#0f1f06 100%);z-index:200;box-shadow:4px 0 28px rgba(0,0,0,.35);overflow-y:auto;transition:width var(--tr),transform var(--tr);}
+    .sidebar::-webkit-scrollbar{display:none;}
+    .sidebar.collapsed{width:var(--sw-col);}
+    .sb-head{background:linear-gradient(135deg,var(--g),var(--gd));padding:22px 20px 18px;display:flex;align-items:center;gap:12px;position:relative;}
+    .sb-head::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:5px;background:linear-gradient(90deg,var(--blk),var(--r),var(--o),var(--g));}
+    .sb-eagle{font-size:1.7rem;}
+    .sb-title{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;color:#fff;}
+    .sb-subtitle{font-family:'DM Mono',monospace;font-size:.58rem;color:rgba(255,255,255,.45);letter-spacing:2px;text-transform:uppercase;}
+    .sidebar.collapsed .sb-title,.sidebar.collapsed .sb-subtitle{display:none;}
+    .sidebar.collapsed .sidebar-link span{display:none;}
+    .sidebar.collapsed .sidebar-link{justify-content:center;padding:12px 0;}
+    .nav-section-lbl{font-family:'DM Mono',monospace;font-size:.58rem;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.28);padding:14px 20px 4px;}
+    .sidebar.collapsed .nav-section-lbl{display:none;}
+    .sidebar-link{display:flex;align-items:center;gap:12px;color:rgba(255,255,255,.72);text-decoration:none;padding:11px 20px;font-size:.88rem;font-weight:600;border-left:3px solid transparent;transition:all var(--tr);white-space:nowrap;}
+    .sidebar-link i{font-size:1rem;min-width:20px;text-align:center;}
+    .sidebar-link:hover,.sidebar-link.active{color:#fff;background:rgba(25,138,0,.18);border-left-color:var(--o);}
+    .sidebar-link:hover i,.sidebar-link.active i{color:var(--o);}
+    .sidebar-link.logout-link{color:rgba(239,0,0,.75);}
+    .sidebar-link.logout-link:hover{background:rgba(239,0,0,.12);border-left-color:var(--r);color:var(--r);}
+
+    .topbar{position:fixed;top:0;left:var(--sw);right:0;height:64px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;z-index:190;box-shadow:0 2px 14px rgba(0,0,0,.06);transition:left var(--tr);}
+    .tb-mobile-toggle{display:none;background:none;border:none;font-size:1.2rem;color:var(--gd);cursor:pointer;padding:8px;min-width:44px;min-height:44px;}
+    .tb-title{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;color:var(--gd);display:flex;align-items:center;gap:8px;}
+    .tb-title i{color:var(--o);}
+    .tb-right{display:flex;align-items:center;gap:10px;}
+    .tb-icon-btn{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--surface2);border:none;cursor:pointer;color:var(--text);transition:background var(--tr);}
+    .tb-icon-btn:hover{background:rgba(25,138,0,.12);}
+    .tb-avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2.5px solid var(--g);}
+
+    .main{margin-left:var(--sw);padding:80px 28px 48px;min-height:100vh;transition:margin-left var(--tr);}
+
+    .flag-bar{display:flex;height:4px;border-radius:3px;overflow:hidden;margin-bottom:20px;}
+    .flag-bar span{flex:1;}
+    .fb-g{background:var(--g);}.fb-r{background:var(--r);}.fb-b{background:var(--blk);}.fb-o{background:var(--o);}
+
+    .zm-card{background:var(--surface);border-radius:var(--cr);padding:22px;box-shadow:0 4px 18px rgba(0,0,0,.07);position:relative;overflow:hidden;margin-bottom:18px;}
+    .zm-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--g),var(--gold),var(--o));}
+    .zm-card h2{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:700;color:var(--gd);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+    .zm-card h2 i{color:var(--o);}
+
+    .page-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
+    .page-title{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:700;color:var(--gd);display:flex;align-items:center;gap:10px;}
+    .page-title i{color:var(--o);}
+    .page-actions{display:flex;gap:10px;flex-wrap:wrap;}
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border:none;border-radius:10px;font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:800;cursor:pointer;text-decoration:none;transition:all var(--tr);min-height:40px;}
+    .btn-orange{background:linear-gradient(135deg,var(--o),#c46000);color:#fff;box-shadow:0 4px 14px rgba(239,125,0,.35);}
+    .btn-orange:hover{transform:translateY(-2px);color:#fff;box-shadow:0 8px 22px rgba(239,125,0,.5);}
+    .btn-green{background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;box-shadow:0 4px 14px rgba(25,138,0,.35);}
+    .btn-green:hover{transform:translateY(-2px);color:#fff;}
+
+    .stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+    .s-chip{background:var(--surface);border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 12px rgba(0,0,0,.06);border-left:4px solid var(--g);}
+    .s-chip:nth-child(2){border-left-color:var(--o);}
+    .s-chip:nth-child(3){border-left-color:var(--gold);}
+    .s-chip:nth-child(4){border-left-color:var(--r);}
+    .s-ico{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0;background:rgba(25,138,0,.09);color:var(--g);}
+    .s-chip:nth-child(2) .s-ico{background:rgba(239,125,0,.09);color:var(--o);}
+    .s-chip:nth-child(3) .s-ico{background:rgba(245,197,24,.12);color:#7a5c00;}
+    .s-chip:nth-child(4) .s-ico{background:rgba(239,0,0,.08);color:var(--r);}
+    .s-val{font-size:1.5rem;font-weight:800;line-height:1;color:var(--text);}
+    .s-lbl{font-size:.65rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+
+    .charts-grid{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-bottom:18px;}
+
+    .pred-table{width:100%;border-collapse:separate;border-spacing:0;font-size:.85rem;}
+    .pred-table thead th{background:linear-gradient(135deg,var(--gd),#1a4010);color:#fff!important;padding:11px 14px;font-size:.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;border:none!important;}
+    .pred-table tbody tr:nth-child(even){background:rgba(25,138,0,.03);}
+    .pred-table tbody tr:hover{background:rgba(25,138,0,.07);}
+    .pred-table tbody td{padding:10px 14px;border-bottom:1px solid var(--border);font-weight:600;color:var(--text);}
+    .crop-tag{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:800;}
+    .ct-Maize{background:rgba(245,197,24,.15);color:#7a5c00;}
+    .ct-Soyabeans{background:rgba(25,138,0,.12);color:var(--gd);}
+    .ct-Groundnuts{background:rgba(239,125,0,.12);color:#7a3e00;}
+    .ct-Cassava{background:rgba(239,0,0,.09);color:#7a0000;}
+    .ct-Sorghum{background:rgba(46,134,171,.12);color:#1a5578;}
+    .ct-Millet{background:rgba(139,47,201,.10);color:#5c0080;}
+    .ct-Sunflower{background:rgba(245,197,24,.18);color:#7a5c00;}
+    .ct-Potatoes{background:rgba(160,82,45,.15);color:#6e3010;}
+    .yield-val{font-weight:800;color:var(--g);}
+
+    .no-data{text-align:center;padding:48px 24px;color:var(--text3);}
+    .no-data .emoji{font-size:3rem;display:block;margin-bottom:14px;}
+    .no-data a{color:var(--g);font-weight:800;text-decoration:none;}
+
+    .zm-toast{position:fixed;bottom:28px;right:28px;background:var(--gd);color:#fff;padding:12px 18px;border-radius:12px;font-size:.85rem;font-weight:700;box-shadow:0 6px 28px rgba(0,0,0,.28);z-index:999;transform:translateY(80px);opacity:0;transition:all .4s;border-left:5px solid var(--o);}
+    .zm-toast.show{transform:translateY(0);opacity:1;}
+    .zm-toast.error{background:#a30000;border-left-color:var(--r);}
+
+    @media(max-width:1100px){.stat-strip{grid-template-columns:repeat(2,1fr);}.charts-grid{grid-template-columns:1fr;}}
+    @media(max-width:900px){
+      :root{--sw:0px;}
+      .sidebar{width:280px!important;transform:translateX(-100%);}
+      .sidebar.mobile-open{transform:translateX(0);}
+      .sidebar.collapsed{width:280px!important;transform:translateX(-100%);}
+      .topbar{left:0!important;}
+      .main{margin-left:0!important;padding:76px 14px 40px;}
+      .tb-mobile-toggle{display:flex;align-items:center;justify-content:center;}
+    }
+    @media(max-width:500px){.stat-strip{grid-template-columns:1fr 1fr;}.page-actions{flex-direction:column;width:100%;}.page-actions .btn{width:100%;justify-content:center;}}
+  </style>
+</head>
+<body>
+
+  <!-- DATA BRIDGE — Jinja values stored as DOM attributes (zero Jinja in JS) -->
+  <div id="appData"
+    data-records="{{ records | tojson | safe }}"
+    data-farmer-name="{{ farmer[1] if farmer is defined and farmer else '' }}"
+    data-profile-pic="{{ farmer[8] if farmer is defined and farmer and farmer[8] else 'default.png' }}"
+    style="display:none;"></div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sb-head">
+      <span class="sb-eagle">🦅</span>
+      <div>
+        <div class="sb-title">ZamFarm Climate</div>
+        <div class="sb-subtitle">Prediction History</div>
+      </div>
+    </div>
+    <p class="nav-section-lbl">Main Menu</p>
+    <a href="/dashboard" class="sidebar-link"><i class="fa-solid fa-gauge-high"></i><span>Dashboard</span></a>
+    <a href="/predict_yield" class="sidebar-link"><i class="fa-solid fa-brain"></i><span>Yield Prediction</span></a>
+    <a href="/history" class="sidebar-link active"><i class="fa-solid fa-clock-rotate-left"></i><span>Prediction History</span></a>
+    <a href="/recommend_crop" class="sidebar-link"><i class="fa-solid fa-seedling"></i><span>Crop Recommendation</span></a>
+    <p class="nav-section-lbl">Gamification</p>
+    <a href="/simulator" class="sidebar-link"><i class="fa-solid fa-flask"></i><span>Investment Simulator</span></a>
+    <a href="/gamification" class="sidebar-link"><i class="fa-solid fa-trophy"></i><span>My Progress</span></a>
+    <a href="/leaderboard" class="sidebar-link"><i class="fa-solid fa-ranking-star"></i><span>Leaderboard</span></a>
+    <p class="nav-section-lbl">Climate</p>
+    <a href="/climate_data" class="sidebar-link"><i class="fa-solid fa-database"></i><span>Data Ingestion</span></a>
+    <a href="/climate_forecast" class="sidebar-link"><i class="fa-solid fa-chart-line"></i><span>Season Forecast</span></a>
+    <a href="/logout" class="sidebar-link logout-link" style="margin-top:16px;"><i class="fa-solid fa-right-from-bracket"></i><span>Logout</span></a>
+  </div>
+
+  <!-- TOPBAR -->
+  <div class="topbar" id="topbar">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <button class="tb-mobile-toggle" id="mobileToggle" type="button"><i class="fa-solid fa-bars"></i></button>
+      <div class="tb-title"><i class="fa-solid fa-clock-rotate-left"></i> Prediction History</div>
+    </div>
+    <div class="tb-right">
+      <button class="btn btn-orange" id="exportBtnTop" type="button" style="padding:8px 16px;font-size:.75rem;">
+        <i class="fa-solid fa-file-csv"></i> Download CSV
+      </button>
+      <a href="/dashboard" class="tb-icon-btn" title="Back to Dashboard">
+        <i class="fa-solid fa-arrow-left"></i>
+      </a>
+      <img src="{{ url_for('static', filename='uploads/' + (farmer[8] if farmer is defined and farmer and farmer[8] else 'default.png')) }}" class="tb-avatar" alt="Profile">
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main" id="mainContent">
+    <div class="flag-bar">
+      <span class="fb-g"></span><span class="fb-r"></span><span class="fb-b"></span><span class="fb-o"></span>
+    </div>
+
+    <div class="page-head">
+      <div class="page-title"><i class="fa-solid fa-clock-rotate-left"></i> Prediction History</div>
+      <div class="page-actions">
+        <a href="/dashboard" class="btn btn-green">
+          <i class="fa-solid fa-arrow-left"></i> Dashboard
+        </a>
+      </div>
+    </div>
+
+    <!-- Stat chips -->
+    <div class="stat-strip">
+      <div class="s-chip">
+        <div class="s-ico"><i class="fa-solid fa-list-check"></i></div>
+        <div>
+          <div class="s-val" id="statTotal">0</div>
+          <div class="s-lbl">Total Predictions</div>
+        </div>
+      </div>
+      <div class="s-chip">
+        <div class="s-ico"><i class="fa-solid fa-trophy"></i></div>
+        <div>
+          <div class="s-val" id="statBest">0</div>
+          <div class="s-lbl">Best Yield (T)</div>
+        </div>
+      </div>
+      <div class="s-chip">
+        <div class="s-ico"><i class="fa-solid fa-calculator"></i></div>
+        <div>
+          <div class="s-val" id="statAvg">0</div>
+          <div class="s-lbl">Avg Yield (T)</div>
+        </div>
+      </div>
+      <div class="s-chip">
+        <div class="s-ico"><i class="fa-solid fa-seedling"></i></div>
+        <div>
+          <div class="s-val" id="statCrops">0</div>
+          <div class="s-lbl">Unique Crops</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-grid">
+      <div class="zm-card" style="margin:0;">
+        <h2><i class="fa-solid fa-chart-line"></i> Yield Trend Over Time</h2>
+        <div id="trendWrap" style="position:relative;height:260px;">
+          <canvas id="trendChart"></canvas>
+        </div>
+        <div id="trendNoData" class="no-data" style="display:none;">
+          <span class="emoji">📈</span>
+          No trend yet — <a href="/predict_yield">make your first prediction →</a>
+        </div>
+      </div>
+      <div class="zm-card" style="margin:0;">
+        <h2><i class="fa-solid fa-chart-pie"></i> Crop Distribution</h2>
+        <div id="cropWrap" style="position:relative;height:260px;">
+          <canvas id="cropChart"></canvas>
+        </div>
+        <div id="cropNoData" class="no-data" style="display:none;">
+          <span class="emoji">🥧</span>
+          No data yet.
+        </div>
+      </div>
+    </div>
+
+    <!-- All Predictions Table -->
+    <div class="zm-card">
+      <h2><i class="fa-solid fa-table"></i> All Predictions</h2>
+      <div style="overflow-x:auto;">
+        <table class="pred-table" id="histTable">
+          <thead>
+            <tr>
+              <th style="width:60px;">#</th>
+              <th><i class="fa-solid fa-seedling"></i> Crop</th>
+              <th><i class="fa-solid fa-ruler-combined"></i> Hectares</th>
+              <th><i class="fa-solid fa-weight-scale"></i> Predicted Yield (T)</th>
+              <th><i class="fa-solid fa-mountain"></i> Soil</th>
+              <th><i class="fa-regular fa-calendar"></i> Date</th>
+            </tr>
+          </thead>
+          <tbody id="histTableBody">
+            <tr><td colspan="6" class="no-data">
+              <i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem;color:var(--g);display:block;margin-bottom:10px;"></i>
+              Loading predictions…
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="zm-toast" id="zmToast">
+    <i class="fa-solid fa-circle-check"></i>
+    <span id="toastMsg">Done</span>
+  </div>
+
+  <!-- ============================================================
+       SCRIPT — single clean block, no Jinja, defensive
+  ============================================================ -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+
+  <script>
+  (function() {
+    'use strict';
+
+    // ── 1. Setup ────────────────────────────────────────────────
+    var CROP_EMOJI = {Maize:'🌽',Soyabeans:'🌱',Groundnuts:'🥜',Cassava:'🍠',Sorghum:'🌾',Millet:'🌿',Sunflower:'🌻',Potatoes:'🥔'};
+    var records = [];
+    var trendChart = null;
+    var cropChart  = null;
+    var dataTable  = null;
+
+    // ── 2. Read template records from data attribute ────────────
+    try {
+      var ad = document.getElementById('appData');
+      if (ad && ad.dataset.records) {
+        var raw = ad.dataset.records;
+        records = JSON.parse(raw);
+        if (!Array.isArray(records)) records = [];
+      }
+    } catch (e) {
+      console.error('[History] Could not parse template records:', e);
+      records = [];
+    }
+    console.log('[History] Records from template:', records.length);
+
+    // ── 3. Helpers ──────────────────────────────────────────────
+    function showToast(msg, isError) {
+      var t = document.getElementById('zmToast');
+      var m = document.getElementById('toastMsg');
+      if (!t || !m) return;
+      m.textContent = msg;
+      t.classList.toggle('error', !!isError);
+      t.classList.add('show');
+      setTimeout(function() { t.classList.remove('show'); }, 3000);
+    }
+
+    function setText(id, val) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = val;
+    }
+
+    // ── 4. Update stat chips ────────────────────────────────────
+    function updateStats(recs) {
+      if (!recs || recs.length === 0) {
+        setText('statTotal', '0');
+        setText('statBest',  '0');
+        setText('statAvg',   '0');
+        setText('statCrops', '0');
+        return;
+      }
+      var yields = recs.map(function(r) { return parseFloat(r[2]) || 0; });
+      var best   = Math.max.apply(null, yields);
+      var sum    = yields.reduce(function(a,b) { return a+b; }, 0);
+      var avg    = sum / yields.length;
+      var crops  = {};
+      recs.forEach(function(r) { crops[r[0]] = true; });
+      var uniqueCrops = Object.keys(crops).length;
+
+      setText('statTotal', recs.length);
+      setText('statBest',  best.toFixed(2));
+      setText('statAvg',   avg.toFixed(2));
+      setText('statCrops', uniqueCrops);
+    }
+
+    // ── 5. Build trend line chart ───────────────────────────────
+    function buildTrendChart(recs) {
+      var canvas = document.getElementById('trendChart');
+      var noData = document.getElementById('trendNoData');
+      var wrap   = document.getElementById('trendWrap');
+      if (!canvas) return;
+
+      if (!recs || recs.length === 0) {
+        if (wrap)   wrap.style.display = 'none';
+        if (noData) noData.style.display = 'block';
+        return;
+      }
+      if (wrap)   wrap.style.display = 'block';
+      if (noData) noData.style.display = 'none';
+
+      // Destroy previous chart if any
+      if (trendChart) { trendChart.destroy(); trendChart = null; }
+
+      var sorted = recs.slice().reverse(); // oldest → newest
+      var labels = sorted.map(function(r) { return String(r[3]).substring(0,10); });
+      var values = sorted.map(function(r) { return parseFloat(r[2]) || 0; });
+
+      var ctx  = canvas.getContext('2d');
+      var grad = ctx.createLinearGradient(0,0,0,260);
+      grad.addColorStop(0, 'rgba(25,138,0,0.28)');
+      grad.addColorStop(1, 'rgba(25,138,0,0)');
+
+      trendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Yield (T)',
+            data: values,
+            borderColor: '#198A00',
+            borderWidth: 2.5,
+            pointBackgroundColor: '#EF7D00',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 5,
+            fill: true,
+            backgroundColor: grad,
+            tension: 0.42
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false }},
+          scales: {
+            x: { grid: { display: false }, ticks: { font: { family: 'Outfit', weight: '700' }, maxRotation: 30, maxTicksLimit: 8 }},
+            y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { callback: function(v) { return v + 'T'; }}, beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    // ── 6. Build crop distribution doughnut ─────────────────────
+    function buildCropChart(recs) {
+      var canvas = document.getElementById('cropChart');
+      var noData = document.getElementById('cropNoData');
+      var wrap   = document.getElementById('cropWrap');
+      if (!canvas) return;
+
+      if (!recs || recs.length === 0) {
+        if (wrap)   wrap.style.display = 'none';
+        if (noData) noData.style.display = 'block';
+        return;
+      }
+      if (wrap)   wrap.style.display = 'block';
+      if (noData) noData.style.display = 'none';
+
+      if (cropChart) { cropChart.destroy(); cropChart = null; }
+
+      var counts = {};
+      recs.forEach(function(r) { counts[r[0]] = (counts[r[0]] || 0) + 1; });
+
+      var labels = Object.keys(counts).map(function(c) { return (CROP_EMOJI[c]||'🌱') + ' ' + c; });
+      var values = Object.values(counts);
+      var colors = ['rgba(25,138,0,0.75)','rgba(239,125,0,0.75)','rgba(245,197,24,0.80)','rgba(239,0,0,0.70)','rgba(46,134,171,0.75)','rgba(139,47,201,0.75)','rgba(218,165,32,0.75)','rgba(160,82,45,0.75)'];
+
+      cropChart = new Chart(canvas.getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: colors,
+            borderWidth: 3,
+            borderColor: '#fff'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '60%',
+          plugins: {
+            legend: { position: 'bottom', labels: { font: { family: 'Outfit', weight: '700' }, padding: 10, boxWidth: 12 }}
+          }
+        }
+      });
+    }
+
+    // ── 7. Build DataTable ──────────────────────────────────────
+    function buildTable(recs) {
+      var tbody = document.getElementById('histTableBody');
+      if (!tbody) return;
+
+      // Destroy existing DataTable
+      if (dataTable) {
+        dataTable.destroy();
+        dataTable = null;
+      }
+
+      if (!recs || recs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="no-data">' +
+          '<span class="emoji">🌾</span>' +
+          'No predictions yet. <a href="/predict_yield">Make your first prediction →</a>' +
+          '</td></tr>';
+        return;
+      }
+
+      var rowsHtml = recs.map(function(r, i) {
+        var crop  = r[0];
+        var ha    = r[1];
+        var yld   = r[2];
+        var date  = String(r[3]).substring(0, 16);
+        var soil  = r[4] || 'Loamy';
+        var emoji = CROP_EMOJI[crop] || '🌱';
+        var soilIcon = soil === 'Sandy' ? '🟡' : soil === 'Clay' ? '🔵' : '🟤';
+        return '<tr>' +
+          '<td style="color:var(--text3);font-weight:800;">' + (i + 1) + '</td>' +
+          '<td><span class="crop-tag ct-' + crop + '">' + emoji + ' ' + crop + '</span></td>' +
+          '<td>' + ha + ' ha</td>' +
+          '<td><span class="yield-val">' + yld + ' T</span></td>' +
+          '<td style="font-size:.82rem;font-weight:700;color:var(--text2);">' + soilIcon + ' ' + soil + '</td>' +
+          '<td style="font-size:.78rem;color:var(--text3);font-weight:700;">' +
+            '<i class="fa-regular fa-clock" style="color:var(--o);margin-right:4px;"></i>' + date +
+          '</td>' +
+        '</tr>';
+      }).join('');
+
+      tbody.innerHTML = rowsHtml;
+
+      // Initialize DataTable
+      try {
+        dataTable = $('#histTable').DataTable({
+          pageLength: 10,
+          order: [[5, 'desc']],
+          columnDefs: [{ orderable: false, targets: 0 }],
+          language: {
+            search: '<i class="fa-solid fa-magnifying-glass"></i>&nbsp;',
+            searchPlaceholder: 'Search crop or date…',
+            paginate: {
+              previous: '<i class="fa-solid fa-chevron-left"></i>',
+              next: '<i class="fa-solid fa-chevron-right"></i>'
+            },
+            info: 'Showing _START_ to _END_ of _TOTAL_ predictions',
+            lengthMenu: 'Show _MENU_ per page'
+          }
+        });
+      } catch (e) {
+        console.error('[History] DataTable init error:', e);
+      }
+    }
+
+    // ── 8. Render everything ────────────────────────────────────
+    function renderAll(recs) {
+      console.log('[History] Rendering', recs.length, 'records');
+      updateStats(recs);
+      buildTrendChart(recs);
+      buildCropChart(recs);
+      buildTable(recs);
+    }
+
+    // ── 9. CSV Export ───────────────────────────────────────────
+    function downloadCSV() {
+      if (!records || records.length === 0) {
+        showToast('No predictions to export yet.', true);
+        return;
+      }
+      var bom = '\uFEFF';
+      var lines = [bom + '"#","Crop","Hectares (ha)","Predicted Yield (T)","Soil Type","Date"'];
+      records.forEach(function(r, i) {
+        // Date: prefix with tab so Excel treats as text, not a date serial number
+        // This prevents the ###### overflow in narrow date columns.
+        var rawDate = String(r[3] || '').substring(0, 16).replace('T', ' ');
+        var row = [
+          (i + 1),
+          '"' + String(r[0]).replace(/"/g, '""') + '"',
+          parseFloat(r[1]) || 0,
+          parseFloat(r[2]) || 0,
+          '"' + String(r[4] || 'Loamy') + '"',
+          '"\t' + rawDate + '"'
+        ];
+        lines.push(row.join(','));
+      });
+      var csv  = lines.join('\n');
+      var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      var url  = URL.createObjectURL(blob);
+      var a    = document.createElement('a');
+      var date = new Date().toISOString().substring(0, 10);
+      a.href     = url;
+      a.download = 'ZamFarm_Predictions_' + date + '.csv';
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function() {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 200);
+      showToast('Downloaded ' + records.length + ' prediction' + (records.length !== 1 ? 's' : ''));
+    }
+
+    // ── 10. Init on DOM ready ───────────────────────────────────
+    function init() {
+      try {
+        // Apply preferences from localStorage
+        if (localStorage.getItem('zf_dark') === 'true') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+        if (localStorage.getItem('zf_compact') === 'true') {
+          var sb = document.getElementById('sidebar');
+          var tb = document.getElementById('topbar');
+          var mc = document.getElementById('mainContent');
+          if (sb) sb.classList.add('collapsed');
+          if (window.innerWidth > 900) {
+            if (tb) tb.style.left = '68px';
+            if (mc) mc.style.marginLeft = '68px';
+          }
+        }
+
+        // Mobile menu toggle
+        var mt = document.getElementById('mobileToggle');
+        if (mt) {
+          mt.addEventListener('click', function() {
+            var sb = document.getElementById('sidebar');
+            if (sb) sb.classList.toggle('mobile-open');
+          });
+        }
+
+        // Export buttons
+        var ebt = document.getElementById('exportBtnTop');
+        var ebp = document.getElementById('exportBtnPage');
+        if (ebt) ebt.addEventListener('click', downloadCSV);
+        if (ebp) ebp.addEventListener('click', downloadCSV);
+
+        // RENDER WITH TEMPLATE DATA FIRST
+        renderAll(records);
+
+        // VERIFY WITH API (catches any template serialization edge case)
+        fetch('/api/my_predictions', { credentials: 'same-origin' })
+          .then(function(r) { return r.ok ? r.json() : { records: [] }; })
+          .then(function(data) {
+            var apiRecs = (data && data.records) ? data.records : [];
+            console.log('[History] Records from API:', apiRecs.length);
+            // Use API records if they differ in count (more authoritative)
+            if (apiRecs.length !== records.length) {
+              console.log('[History] Template/API mismatch — using API records');
+              records = apiRecs;
+              renderAll(records);
+            }
+          })
+          .catch(function(err) {
+            console.warn('[History] API fetch failed (using template data):', err);
+          });
+
+      } catch (err) {
+        console.error('[History] Init error:', err);
+        showToast('Could not load history. Check console.', true);
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+  })();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Market Prices | ZamFarm Admin</title>
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700;900&family=Outfit:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
+  <style>
+    :root{--g:#198A00;--gl:#23b800;--gd:#0f5c00;--r:#EF0000;--o:#EF7D00;--gold:#F5C518;--sky:#2E86AB;--blk:#141414;--bg:#F4F9F0;--surface:#fff;--surface2:#f0f5ec;--border:rgba(25,138,0,.14);--text:#141414;--text2:#555;--text3:#999;}
+    [data-theme="dark"]{--bg:#0d1a0a;--surface:#132010;--surface2:#1a2e14;--border:rgba(35,184,0,.15);--text:#e8f5e3;--text2:#9ab890;--text3:#5a7a55;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+    .topbar{background:linear-gradient(135deg,#1a003a,#2d0062,#141414);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,0,0,.4);}
+    .tb-left{display:flex;align-items:center;gap:14px;}
+    .tb-brand{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:700;color:#fff;}
+    .tb-brand span{color:var(--gold);}
+    .back-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);color:#fff;padding:7px 14px;border-radius:9px;font-size:.8rem;font-weight:700;text-decoration:none;transition:background .2s;}
+    .back-btn:hover{background:rgba(255,255,255,.18);color:#fff;}
+
+    .main{max-width:1100px;margin:0 auto;padding:26px 20px 60px;}
+    .flag-bar{display:flex;height:4px;border-radius:3px;overflow:hidden;margin-bottom:24px;}
+    .flag-bar span{flex:1;}
+    .fb-g{background:var(--g);}.fb-r{background:var(--r);}.fb-b{background:var(--blk);}.fb-o{background:var(--o);}
+
+    .page-title{font-family:'Cormorant Garamond',serif;font-size:1.7rem;font-weight:700;color:#4a00a0;display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+    [data-theme="dark"] .page-title{color:#c084fc;}
+    .page-title i{color:var(--o);}
+    .page-sub{font-size:.85rem;color:var(--text3);font-weight:600;margin-bottom:22px;line-height:1.7;}
+
+    /* Status cards */
+    .status-row{display:flex;gap:14px;margin-bottom:22px;flex-wrap:wrap;}
+    .stat-card{background:var(--surface);border-radius:14px;padding:14px 20px;flex:1;min-width:200px;box-shadow:0 2px 12px rgba(0,0,0,.07);border-top:4px solid var(--g);}
+    .stat-card:nth-child(2){border-top-color:var(--sky);}
+    .stat-card:nth-child(3){border-top-color:var(--gold);}
+    .stat-card:nth-child(4){border-top-color:var(--o);}
+    .sc-label{font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);margin-bottom:4px;}
+    .sc-val{font-family:'DM Mono',monospace;font-size:1.1rem;font-weight:700;color:var(--text);}
+
+    /* Live fetch banner */
+    .fetch-banner{background:linear-gradient(140deg,#0a001a,#1a0040);border-radius:16px;padding:20px 24px;margin-bottom:22px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+    .fb-text h3{font-family:'Cormorant Garamond',serif;font-size:1.2rem;color:#fff;margin-bottom:5px;}
+    .fb-text p{font-size:.8rem;color:rgba(255,255,255,.45);font-weight:600;line-height:1.6;max-width:500px;}
+    .fb-text .source-chips{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+    .source-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:800;background:rgba(255,255,255,.08);color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.12);}
+    .source-chip.live{background:rgba(25,138,0,.25);color:#5ddb2c;border-color:rgba(25,138,0,.4);}
+    .btn-fetch{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;border:none;border-radius:11px;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:800;cursor:pointer;box-shadow:0 4px 16px rgba(25,138,0,.4);transition:all .2s;text-decoration:none;}
+    .btn-fetch:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(25,138,0,.55);}
+    .fetch-note{font-size:.7rem;color:rgba(255,255,255,.35);font-weight:600;margin-top:6px;text-align:center;}
+
+    /* Price table */
+    .card{background:var(--surface);border-radius:16px;padding:22px 24px;box-shadow:0 4px 18px rgba(0,0,0,.07);margin-bottom:20px;overflow:hidden;position:relative;}
+    .card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#4a00a0,var(--gold),var(--o));}
+    .card-title{font-size:1rem;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px;margin-bottom:16px;}
+    .card-title i{color:var(--o);}
+
+    .price-table{width:100%;border-collapse:collapse;}
+    .price-table th{background:linear-gradient(135deg,#0a001a,#1a0040);color:#fff;padding:10px 14px;text-align:left;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.7px;}
+    .price-table td{padding:11px 14px;border-bottom:1px solid var(--border);font-size:.88rem;font-weight:600;}
+    .price-table tr:hover td{background:rgba(74,0,160,.03);}
+    .price-val{font-family:'DM Mono',monospace;font-weight:800;color:var(--g);font-size:.95rem;}
+    .source-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:.65rem;font-weight:800;}
+    .sb-auto{background:rgba(25,138,0,.12);color:var(--gd);}
+    .sb-manual{background:rgba(46,134,171,.12);color:var(--sky);}
+    .sb-default{background:rgba(150,150,150,.12);color:var(--text3);}
+    .edit-btn{background:rgba(74,0,160,.1);color:#6b21a8;border:1.5px solid rgba(74,0,160,.2);border-radius:8px;padding:6px 12px;font-size:.74rem;font-weight:800;cursor:pointer;font-family:'Outfit',sans-serif;display:inline-flex;align-items:center;gap:5px;transition:all .2s;}
+    .edit-btn:hover{background:rgba(74,0,160,.18);}
+    .stale-warn{font-size:.65rem;color:var(--r);font-weight:700;display:block;margin-top:2px;}
+
+    /* Edit modal */
+    .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:400;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+    .modal-box{background:var(--surface);border-radius:18px;width:min(480px,95vw);box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;}
+    .modal-head{background:linear-gradient(135deg,#1a003a,#141414);padding:18px 22px;display:flex;align-items:center;justify-content:space-between;}
+    .modal-head h3{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:#fff;font-weight:700;display:flex;align-items:center;gap:8px;}
+    .modal-head h3 i{color:var(--gold);}
+    .modal-close{background:none;border:none;color:rgba(255,255,255,.5);cursor:pointer;font-size:1.1rem;}
+    .modal-close:hover{color:#fff;}
+    .modal-body{padding:22px;}
+    .mf-group{margin-bottom:14px;}
+    .mf-label{display:block;font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#4a00a0;margin-bottom:6px;}
+    [data-theme="dark"] .mf-label{color:#c084fc;}
+    .mf-input{width:100%;padding:10px 12px;border:2px solid var(--border);border-radius:9px;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:600;color:var(--text);background:var(--surface2);outline:none;transition:border-color .2s;}
+    .mf-input:focus{border-color:#4a00a0;}
+    .mf-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .mf-hint{font-size:.7rem;color:var(--text3);font-weight:600;margin-top:4px;}
+    .btn-save{width:100%;padding:12px;background:linear-gradient(135deg,#4a00a0,#2d0062);color:#fff;border:none;border-radius:10px;font-family:'Outfit',sans-serif;font-weight:800;cursor:pointer;font-size:.92rem;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .2s;}
+    .btn-save:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(74,0,160,.4);}
+
+    /* History table */
+    .history-table{width:100%;border-collapse:collapse;font-size:.82rem;}
+    .history-table th{background:var(--surface2);color:var(--text3);padding:8px 12px;font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.6px;text-align:left;}
+    .history-table td{padding:8px 12px;border-bottom:1px solid var(--border);font-weight:600;}
+    .history-table tr:hover td{background:var(--surface2);}
+    .price-up{color:var(--g);font-weight:800;}
+    .price-down{color:var(--r);font-weight:800;}
+
+    /* Flash */
+    .flash{padding:12px 16px;border-radius:10px;margin-bottom:16px;font-size:.85rem;font-weight:700;display:flex;align-items:center;gap:10px;}
+    .flash-success{background:rgba(25,138,0,.1);color:var(--gd);border:1px solid rgba(25,138,0,.2);}
+    .flash-warning{background:rgba(239,125,0,.09);color:#7a3e00;border:1px solid rgba(239,125,0,.2);}
+    .flash-error{background:rgba(239,0,0,.08);color:var(--r);border:1px solid rgba(239,0,0,.15);}
+
+    @media(max-width:700px){.status-row{display:grid;grid-template-columns:1fr 1fr;}.price-table{font-size:.78rem;}.mf-grid{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="tb-left">
+      <a href="/admin" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Admin</a>
+      <div class="tb-brand">💰 ZamFarm <span>Market Prices</span></div>
+    </div>
+    <span style="font-size:.78rem;color:rgba(255,255,255,.4);font-weight:600;">
+      <i class="fa-solid fa-shield-halved" style="color:var(--gold);margin-right:4px;"></i> Admin Only
+    </span>
+  </div>
+
+  <!-- Edit modal -->
+  <div class="modal-bg" id="editModal" onclick="if(event.target===this)closeModal()">
+    <div class="modal-box">
+      <div class="modal-head">
+        <h3><i class="fa-solid fa-pen-to-square"></i> Edit Price: <span id="modalCropName">—</span></h3>
+        <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <form method="POST" action="/admin/market_prices">
+          <input type="hidden" name="action" value="update">
+          <input type="hidden" name="crop_name" id="modalCropInput">
+          <div class="mf-grid">
+            <div class="mf-group">
+              <label class="mf-label">Market Price (ZMW / tonne)</label>
+              <input type="number" name="market_price" id="modalPrice" class="mf-input"
+                     step="0.01" min="1" required placeholder="e.g. 950.00">
+              <div class="mf-hint">Current selling price per metric tonne</div>
+            </div>
+            <div class="mf-group">
+              <label class="mf-label">Input Cost (ZMW / hectare)</label>
+              <input type="number" name="input_cost_ha" id="modalCost" class="mf-input"
+                     step="0.01" min="0" placeholder="e.g. 1200.00">
+              <div class="mf-hint">Leave blank to keep current value</div>
+            </div>
+          </div>
+          <div class="mf-group">
+            <label class="mf-label">Notes (optional)</label>
+            <input type="text" name="notes" id="modalNotes" class="mf-input"
+                   placeholder="e.g. FRA depot price, Lusaka, 2026-06-01">
+          </div>
+          <button type="submit" class="btn-save">
+            <i class="fa-solid fa-floppy-disk"></i> Save Price
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="flag-bar"><span class="fb-g"></span><span class="fb-r"></span><span class="fb-b"></span><span class="fb-o"></span></div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+      <div class="flash flash-{{ cat }}"><i class="fa-solid fa-circle-check"></i> {{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <div class="page-title"><i class="fa-solid fa-chart-line"></i> Zambia Commodity Market Prices</div>
+    <div class="page-sub">
+      Prices flow into yield prediction financial calculations in real time.<br>
+      <strong>Two sources:</strong> (1) Automatic weekly scrape from ZNFU market page &nbsp;·&nbsp;
+      (2) Manual entry by admin based on FRA depot / local market prices.
+      Manual entries always override auto-fetched prices.
+    </div>
+
+    <!-- Status cards -->
+    <div class="status-row">
+      <div class="stat-card">
+        <div class="sc-label">Crops Tracked</div>
+        <div class="sc-val">{{ crops | length }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Last Auto Fetch</div>
+        <div class="sc-val" style="font-size:.82rem;">
+          {% if last_fetch %}{{ (last_fetch | string)[:16] }}{% else %}Never{% endif %}
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Price Updates (30d)</div>
+        <div class="sc-val">{{ history | length }}</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Auto-fetched Prices</div>
+        <div class="sc-val">{{ crops | selectattr(4,'in',['znfu_auto','admin_fetch','znfu_scrape']) | list | length }}</div>
+      </div>
+    </div>
+
+    <!-- Live fetch trigger -->
+    <div class="fetch-banner">
+      <div class="fb-text">
+        <h3>🌐 Live Price Fetch</h3>
+        <p>ZamFarm automatically scrapes commodity prices from ZNFU every 24 hours.
+           Click below to trigger an immediate fetch right now.
+           If the website layout has changed, use the manual editor in the table below.</p>
+        <div class="source-chips">
+          <span class="source-chip live"><i class="fa-solid fa-satellite-dish"></i> ZNFU — znfu.org.zm</span>
+          <span class="source-chip"><i class="fa-solid fa-building-columns"></i> FRA — frazambia.com (manual)</span>
+          <span class="source-chip"><i class="fa-solid fa-clock-rotate-left"></i> Every 24 hours automatically</span>
+        </div>
+      </div>
+      <div style="text-align:center;">
+        <form method="POST" action="/admin/market_prices">
+          <input type="hidden" name="action" value="fetch_now">
+          <button type="submit" class="btn-fetch">
+            <i class="fa-solid fa-rotate"></i> Fetch Live Now
+          </button>
+        </form>
+        <div class="fetch-note">Last fetch: {% if last_fetch %}{{ (last_fetch | string)[:16] }}{% else %}Not yet run{% endif %}</div>
+      </div>
+    </div>
+
+    <!-- Current prices table -->
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-table"></i> Current Prices</div>
+      <div style="overflow-x:auto;">
+        <table class="price-table">
+          <thead>
+            <tr>
+              <th>Crop</th>
+              <th>Market Price (ZMW/T)</th>
+              <th>Input Cost (ZMW/ha)</th>
+              <th>Break-even Yield</th>
+              <th>Source</th>
+              <th>Last Updated</th>
+              <th>Edit</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in crops %}
+            {# c: 0=crop_name 1=emoji 2=market_price 3=input_cost 4=source 5=updated #}
+            {% set breakeven = (c[3] / c[2]) if c[2] and c[2] > 0 else 0 %}
+            <tr>
+              <td><strong>{{ c[1] }} {{ c[0] }}</strong></td>
+              <td><span class="price-val">ZMW {{ "{:,.2f}".format(c[2]) if c[2] else '—' }}</span></td>
+              <td><span style="font-family:'DM Mono',monospace;font-weight:700;">ZMW {{ "{:,.0f}".format(c[3]) if c[3] else '—' }}</span></td>
+              <td>
+                {% if breakeven > 0 %}
+                <span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--sky);">
+                  {{ "%.2f"|format(breakeven) }} T/ha
+                </span>
+                <span style="font-size:.65rem;color:var(--text3);display:block;font-weight:600;">minimum to cover inputs</span>
+                {% else %}—{% endif %}
+              </td>
+              <td>
+                {% if 'auto' in (c[4] or '') or 'fetch' in (c[4] or '') or 'znfu' in (c[4] or '') %}
+                <span class="source-badge sb-auto">🤖 Auto</span>
+                {% elif 'manual' in (c[4] or '') %}
+                <span class="source-badge sb-manual">✏️ Manual</span>
+                {% else %}
+                <span class="source-badge sb-default">📋 Default</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if c[5] %}
+                <span style="font-size:.75rem;font-weight:600;font-family:'DM Mono',monospace;">{{ (c[5] | string)[:10] }}</span>
+                {% else %}<span style="color:var(--text3);font-size:.75rem;">Never updated</span>{% endif %}
+              </td>
+              <td>
+                <button class="edit-btn edit-price-btn"
+                        data-name="{{ c[0] }}"
+                        data-price="{{ c[2] or '' }}"
+                        data-cost="{{ c[3] or '' }}">
+                  <i class="fa-solid fa-pen"></i> Edit
+                </button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div style="font-size:.72rem;color:var(--text3);font-weight:600;margin-top:12px;padding:10px;background:var(--surface2);border-radius:8px;line-height:1.7;">
+        <i class="fa-solid fa-circle-info" style="color:var(--sky);margin-right:5px;"></i>
+        <strong>Break-even yield</strong> = Input Cost ÷ Market Price. The minimum T/ha a farmer must harvest to recover input costs before making profit.
+        Price sources: <strong>Auto</strong> = scraped from ZNFU · <strong>Manual</strong> = set by admin · <strong>Default</strong> = hardcoded Zambia average.
+      </div>
+    </div>
+
+    <!-- Price history -->
+    {% if history %}
+    <div class="card">
+      <div class="card-title"><i class="fa-solid fa-clock-rotate-left"></i> Price Change History (last 40 records)</div>
+      <div style="overflow-x:auto;max-height:400px;overflow-y:auto;">
+        <table class="history-table">
+          <thead>
+            <tr><th>Crop</th><th>Price (ZMW/T)</th><th>Source</th><th>Notes</th><th>Recorded</th></tr>
+          </thead>
+          <tbody>
+            {% for h in history %}
+            {# h: 0=crop_name 1=price 2=source 3=notes 4=recorded_at #}
+            <tr>
+              <td><strong>{{ h[0] }}</strong></td>
+              <td class="price-up">ZMW {{ "{:,.2f}".format(h[1]) if h[1] else '—' }}</td>
+              <td>
+                {% if 'auto' in (h[2] or '') or 'znfu' in (h[2] or '') %}
+                <span class="source-badge sb-auto">🤖 {{ h[2] }}</span>
+                {% else %}
+                <span class="source-badge sb-manual">✏️ {{ h[2] }}</span>
+                {% endif %}
+              </td>
+              <td style="color:var(--text2);font-size:.78rem;">{{ h[3] or '—' }}</td>
+              <td style="font-family:'DM Mono',monospace;font-size:.75rem;color:var(--text3);">{{ (h[4] | string)[:16] }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <script>
+    // Edit modal — reads from data attributes, no Jinja in JS
+    document.querySelectorAll('.edit-price-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var name  = this.dataset.name;
+        var price = this.dataset.price;
+        var cost  = this.dataset.cost;
+        document.getElementById('modalCropName').textContent  = name;
+        document.getElementById('modalCropInput').value = name;
+        document.getElementById('modalPrice').value  = price;
+        document.getElementById('modalCost').value   = cost;
+        document.getElementById('modalNotes').value  = '';
+        document.getElementById('editModal').style.display = 'flex';
+        document.getElementById('modalPrice').focus();
+      });
+    });
+
+    function closeModal() {
+      document.getElementById('editModal').style.display = 'none';
+    }
+
+    // Spinner on fetch button
+    document.querySelectorAll('form').forEach(function(form) {
+      form.addEventListener('submit', function() {
+        var btn = this.querySelector('.btn-fetch');
+        if (btn) {
+          btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Fetching…';
+          btn.disabled = true;
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

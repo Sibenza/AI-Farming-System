@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Listings | ZamFarm Marketplace</title>
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700;900&family=Outfit:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    :root{--g:#198A00;--gl:#23b800;--gd:#0f5c00;--r:#EF0000;--o:#EF7D00;--gold:#F5C518;--sky:#2E86AB;--blk:#141414;--bg:#F4F9F0;--surface:#fff;--surface2:#f0f5ec;--border:rgba(25,138,0,.14);--text:#141414;--text2:#555;--text3:#999;}
+    [data-theme="dark"]{--bg:#0d1a0a;--surface:#132010;--surface2:#1a2e14;--border:rgba(35,184,0,.15);--text:#e8f5e3;--text2:#9ab890;--text3:#5a7a55;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+    .topbar{background:linear-gradient(135deg,var(--blk),#1a2e0a);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,0,0,.35);}
+    .tb-left{display:flex;align-items:center;gap:12px;}
+    .tb-brand{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:700;color:#fff;}
+    .tb-brand span{color:var(--gold);}
+    .back-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);color:#fff;padding:7px 14px;border-radius:9px;font-size:.8rem;font-weight:700;text-decoration:none;}
+    .back-btn:hover{background:rgba(255,255,255,.16);color:#fff;}
+    .btn-post{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;border:none;border-radius:10px;font-size:.85rem;font-weight:800;cursor:pointer;text-decoration:none;box-shadow:0 4px 14px rgba(25,138,0,.4);}
+    .btn-post:hover{transform:translateY(-2px);color:#fff;}
+
+    .main{max-width:1000px;margin:0 auto;padding:24px 18px 48px;}
+    .flag-bar{display:flex;height:4px;border-radius:3px;overflow:hidden;margin-bottom:22px;}
+    .flag-bar span{flex:1;}
+    .fb-g{background:var(--g);}.fb-r{background:var(--r);}.fb-b{background:var(--blk);}.fb-o{background:var(--o);}
+
+    .page-title{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:700;color:var(--gd);display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+    [data-theme="dark"] .page-title{color:var(--gl);}
+    .page-title i{color:var(--o);}
+    .page-sub{font-size:.85rem;color:var(--text3);font-weight:600;margin-bottom:22px;}
+
+    .stats-row{display:flex;gap:12px;margin-bottom:22px;flex-wrap:wrap;}
+    .stat{background:var(--surface);border-radius:12px;padding:14px 20px;box-shadow:0 2px 10px rgba(0,0,0,.06);border-top:3px solid var(--g);flex:1;min-width:120px;}
+    .stat:nth-child(2){border-top-color:var(--o);}
+    .stat:nth-child(3){border-top-color:var(--gold);}
+    .stat-v{font-family:'DM Mono',monospace;font-size:1.5rem;font-weight:700;color:var(--text);}
+    .stat-l{font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);margin-top:2px;}
+
+    .listing-row{background:var(--surface);border-radius:14px;padding:16px;margin-bottom:14px;box-shadow:0 3px 14px rgba(0,0,0,.07);display:flex;gap:16px;align-items:center;flex-wrap:wrap;}
+    .lr-thumb{width:80px;height:80px;border-radius:10px;object-fit:cover;background:linear-gradient(145deg,#041000,#0a2200);display:flex;align-items:center;justify-content:center;font-size:2.4rem;flex-shrink:0;}
+    .lr-body{flex:1;min-width:180px;}
+    .lr-title{font-size:1rem;font-weight:800;color:var(--text);margin-bottom:4px;}
+    .lr-meta{font-size:.78rem;color:var(--text3);font-weight:600;display:flex;gap:12px;flex-wrap:wrap;}
+    .lr-meta span{display:inline-flex;align-items:center;gap:4px;}
+    .lr-meta i{color:var(--o);}
+    .status-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:800;margin-top:6px;}
+    .sc-available{background:rgba(25,138,0,.12);color:var(--gd);}
+    .sc-low_stock{background:rgba(239,125,0,.12);color:#7a3e00;}
+    .sc-sold_out{background:rgba(239,0,0,.1);color:#7a0000;}
+    .lr-actions{display:flex;gap:8px;flex-wrap:wrap;}
+    .act{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border-radius:9px;font-size:.78rem;font-weight:800;text-decoration:none;border:none;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;}
+    .act-view{background:rgba(46,134,171,.1);color:var(--sky);border:1px solid rgba(46,134,171,.2);}
+    .act-edit{background:rgba(25,138,0,.1);color:var(--gd);border:1px solid rgba(25,138,0,.2);}
+    .act-del{background:rgba(239,0,0,.08);color:var(--r);border:1px solid rgba(239,0,0,.18);}
+    .act:hover{filter:brightness(.95);}
+    .inq-pill{background:rgba(245,197,24,.15);color:#7a5c00;border-radius:20px;padding:3px 10px;font-size:.72rem;font-weight:800;}
+
+    .empty{text-align:center;padding:60px 24px;color:var(--text3);}
+    .empty i{font-size:3rem;display:block;margin-bottom:14px;color:var(--border);}
+    .empty a{color:var(--g);font-weight:800;text-decoration:none;}
+
+    .flash{padding:12px 16px;border-radius:10px;margin-bottom:16px;font-size:.85rem;font-weight:700;display:flex;align-items:center;gap:10px;}
+    .flash-success{background:rgba(25,138,0,.1);color:var(--gd);border:1px solid rgba(25,138,0,.2);}
+    .flash-error{background:rgba(239,0,0,.08);color:var(--r);border:1px solid rgba(239,0,0,.15);}
+
+    @media(max-width:600px){.listing-row{flex-direction:column;align-items:flex-start;}.lr-actions{width:100%;}}
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="tb-left">
+      <a href="/marketplace" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Marketplace</a>
+      <div class="tb-brand">🏪 ZamFarm <span>My Listings</span></div>
+    </div>
+    <a href="/marketplace/post" class="btn-post"><i class="fa-solid fa-plus"></i> Post New</a>
+  </div>
+
+  <div class="main">
+    <div class="flag-bar"><span class="fb-g"></span><span class="fb-r"></span><span class="fb-b"></span><span class="fb-o"></span></div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+      <div class="flash flash-{{ cat }}"><i class="fa-solid fa-circle-check"></i> {{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <div class="page-title"><i class="fa-solid fa-store"></i> My Listings</div>
+    <div class="page-sub">Manage everything you're selling — edit details, update stock status, or remove listings.</div>
+
+    {% if listings %}
+    {% set total_inq = listings | map(attribute=9) | sum %}
+    <div class="stats-row">
+      <div class="stat"><div class="stat-v">{{ listings | length }}</div><div class="stat-l">Active Listings</div></div>
+      <div class="stat"><div class="stat-v">{{ total_inq }}</div><div class="stat-l">Total Inquiries</div></div>
+      <div class="stat"><div class="stat-v">{{ listings | selectattr(5,'equalto','available') | list | length }}</div><div class="stat-l">Available Now</div></div>
+    </div>
+
+    {% set CROP_EMOJI = {'Maize':'🌽','Soyabeans':'🌱','Groundnuts':'🥜','Cassava':'🍠','Sorghum':'🌾','Millet':'🌿','Sunflower':'🌻','Potatoes':'🥔'} %}
+    {% for l in listings %}
+    {# l: 0=id 1=title 2=crop 3=qty 4=price 5=status 6=created 7=district 8=thumb 9=inqs #}
+    <div class="listing-row">
+      <div class="lr-thumb">
+        {% if l[8] %}
+        <img src="{{ url_for('static', filename='uploads/market/' ~ l[8]) }}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;" alt="">
+        {% else %}{{ CROP_EMOJI.get(l[2], '🌾') }}{% endif %}
+      </div>
+      <div class="lr-body">
+        <div class="lr-title">{{ l[1] }}</div>
+        <div class="lr-meta">
+          <span><i class="fa-solid fa-wheat-awn"></i> {{ l[2] }}</span>
+          <span><i class="fa-solid fa-weight-hanging"></i> {{ "%.0f"|format(l[3]) }} units</span>
+          <span><i class="fa-solid fa-tag"></i> ZMW {{ "%.2f"|format(l[4]) }}</span>
+          {% if l[7] %}<span><i class="fa-solid fa-location-dot"></i> {{ l[7] }}</span>{% endif %}
+        </div>
+        <span class="status-chip sc-{{ l[5] or 'available' }}">
+          {% if l[5] == 'sold_out' %}⛔ Sold Out{% elif l[5] == 'low_stock' %}⚠️ Low Stock{% else %}✅ Available{% endif %}
+        </span>
+        {% if l[9] %}<span class="inq-pill" style="margin-left:8px;">💬 {{ l[9] }} {{ 'inquiry' if l[9] == 1 else 'inquiries' }}</span>{% endif %}
+      </div>
+      <div class="lr-actions">
+        <a href="/marketplace/listing/{{ l[0] }}" class="act act-view"><i class="fa-solid fa-eye"></i> View</a>
+        <a href="/marketplace/edit/{{ l[0] }}" class="act act-edit"><i class="fa-solid fa-pen"></i> Edit</a>
+        <form method="POST" action="/marketplace/delete/{{ l[0] }}" style="display:inline;"
+              onsubmit="return confirm('Delete this listing permanently?')">
+          <button type="submit" class="act act-del"><i class="fa-solid fa-trash"></i> Delete</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+
+    {% else %}
+    <div class="empty">
+      <i class="fa-solid fa-store-slash"></i>
+      <p>You haven't posted any listings yet.<br><a href="/marketplace/post">Post your first listing →</a></p>
+    </div>
+    {% endif %}
+  </div>
+
+</body>
+</html>

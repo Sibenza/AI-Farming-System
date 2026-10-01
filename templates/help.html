@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
+  <meta name="theme-color" content="#198A00">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Help & Support | ZamFarm Climate</title>
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700;900&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    :root{--g:#198A00;--gd:#0f5c00;--r:#EF0000;--o:#EF7D00;--gold:#F5C518;--sky:#2E86AB;--bg:#F4F9F0;--surface:#fff;--surface2:#f0f5ec;--border:rgba(25,138,0,.14);--text:#141414;--text2:#555;--text3:#999;--tr:.3s ease;}
+    [data-theme="dark"]{--bg:#0d1a0a;--surface:#132010;--surface2:#1a2e14;--border:rgba(35,184,0,.15);--text:#e8f5e3;--text2:#9ab890;--text3:#5a7a55;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+    .top{background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px;}
+    .top a{color:#fff;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-decoration:none;background:rgba(255,255,255,.12);}
+    .top h1{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700;}
+    .wrap{max-width:860px;margin:0 auto;padding:22px 16px 60px;}
+    .card{background:var(--surface);border-radius:16px;padding:22px;box-shadow:0 4px 18px rgba(0,0,0,.06);margin-bottom:20px;position:relative;overflow:hidden;}
+    .card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--g),var(--gold),var(--o));}
+    .card h2{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;color:var(--g);margin-bottom:12px;display:flex;align-items:center;gap:9px;}
+    .card h2 i{color:var(--o);}
+
+    /* ── Video-style guided tour ── */
+    .tour{background:linear-gradient(145deg,#0a2200,#0a1a2e);border-radius:14px;color:#fff;overflow:hidden;position:relative;}
+    .tour-stage{min-height:330px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:34px 28px 26px;position:relative;}
+    .tour-emoji{font-size:4.2rem;margin-bottom:14px;animation:float 3s ease-in-out infinite;}
+    @keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-9px);}}
+    .tour-step-no{font-size:.62rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+    .tour-title{font-family:'Cormorant Garamond',serif;font-size:1.7rem;font-weight:900;margin-bottom:10px;}
+    .tour-desc{font-size:.92rem;line-height:1.6;color:rgba(255,255,255,.82);max-width:560px;font-weight:500;}
+    .tour-tips{margin-top:14px;display:flex;flex-direction:column;gap:6px;max-width:520px;width:100%;}
+    .tour-tip{display:flex;align-items:flex-start;gap:9px;background:rgba(255,255,255,.07);border-radius:9px;padding:8px 12px;font-size:.8rem;text-align:left;font-weight:600;}
+    .tour-tip i{color:var(--gold);margin-top:2px;flex-shrink:0;}
+    .tour-fade{animation:slideIn .45s ease both;}
+    @keyframes slideIn{from{opacity:0;transform:translateX(26px);}to{opacity:1;transform:translateX(0);}}
+
+    .tour-bar{height:5px;background:rgba(255,255,255,.12);position:relative;}
+    .tour-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--o));width:0%;transition:width .25s linear;}
+    .tour-controls{display:flex;align-items:center;gap:8px;padding:12px 16px;background:rgba(0,0,0,.25);}
+    .tc-btn{width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.12);color:#fff;font-size:.95rem;cursor:pointer;transition:background var(--tr);flex-shrink:0;}
+    .tc-btn:hover{background:rgba(255,255,255,.22);}
+    .tc-btn.play{background:linear-gradient(135deg,var(--gold),var(--o));color:#141414;width:48px;height:48px;font-size:1.1rem;}
+    .tc-btn.voice-on{background:linear-gradient(135deg,var(--sky),#1c5f80); color:#fff;}
+    .tour-counter{font-size:.78rem;font-weight:800;color:rgba(255,255,255,.6);margin-left:auto;}
+    .tour-dots{display:flex;gap:5px;justify-content:center;padding:0 16px 14px;background:rgba(0,0,0,.25);flex-wrap:wrap;}
+    .tour-dot{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.22);cursor:pointer;transition:all var(--tr);border:none;padding:0;}
+    .tour-dot.on{background:var(--gold);transform:scale(1.25);}
+
+    /* FAQ */
+    .faq{border:1px solid var(--border);border-radius:11px;margin-bottom:9px;overflow:hidden;}
+    .faq-q{width:100%;text-align:left;background:var(--surface2);border:none;padding:13px 16px;font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:800;color:var(--text);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+    .faq-q i{color:var(--g);transition:transform var(--tr);}
+    .faq.open .faq-q i{transform:rotate(180deg);}
+    .faq-a{max-height:0;overflow:hidden;transition:max-height .35s ease;font-size:.85rem;color:var(--text2);line-height:1.6;font-weight:500;}
+    .faq.open .faq-a{max-height:300px;}
+    .faq-a-inner{padding:13px 16px;}
+
+    /* Contact */
+    .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+    @media(max-width:560px){.contact-grid{grid-template-columns:1fr;}}
+    .contact-card{display:flex;align-items:center;gap:13px;background:var(--surface2);border:1.5px solid var(--border);border-radius:13px;padding:15px;text-decoration:none;color:var(--text);transition:all var(--tr);}
+    .contact-card:hover{border-color:var(--g);transform:translateY(-2px);}
+    .cc-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#fff;flex-shrink:0;}
+    .cc-lbl{font-size:.7rem;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
+    .cc-val{font-size:.93rem;font-weight:800;color:var(--text);}
+
+    /* Support form + tickets */
+    .hs-input{width:100%;padding:11px 14px;border:2px solid var(--border);border-radius:10px;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:600;background:var(--surface2);color:var(--text);outline:none;margin-bottom:11px;transition:border-color var(--tr);}
+    .hs-input:focus{border-color:var(--g);}
+    textarea.hs-input{min-height:100px;resize:vertical;}
+    .hs-send{padding:12px 24px;border:none;border-radius:11px;background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;font-family:'Outfit',sans-serif;font-weight:800;font-size:.88rem;cursor:pointer;box-shadow:0 4px 14px rgba(25,138,0,.3);}
+    .ticket{border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:11px;}
+    .tk-subject{font-size:.9rem;font-weight:800;color:var(--text);}
+    .tk-meta{font-size:.68rem;color:var(--text3);font-weight:700;margin:3px 0 8px;}
+    .tk-msg{font-size:.84rem;color:var(--text2);font-weight:500;line-height:1.5;}
+    .tk-reply{margin-top:10px;background:rgba(25,138,0,.07);border-left:3px solid var(--g);border-radius:0 9px 9px 0;padding:10px 13px;font-size:.84rem;color:var(--text2);font-weight:500;line-height:1.5;}
+    .tk-reply b{color:var(--g);font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;}
+    .tk-wait{margin-top:8px;font-size:.74rem;color:var(--o);font-weight:800;}
+  </style>
+</head>
+<body>
+  <div class="top">
+    <a href="/dashboard"><i class="fa-solid fa-arrow-left"></i></a>
+    <h1>⚙️ Help & Support</h1>
+  </div>
+
+  <div class="wrap">
+
+    <!-- ════ VIDEO-STYLE GUIDED TOUR ════ -->
+    <div class="card">
+      <h2><i class="fa-solid fa-circle-play"></i> Video Guide — How to Use ZamFarm</h2>
+      <p style="font-size:.82rem;color:var(--text3);font-weight:600;margin-bottom:14px;">
+        Press play and the guide walks you through every feature, step by step. You can also tap the dots or arrows to jump around.
+      </p>
+      <div class="tour">
+        <div class="tour-stage" id="tourStage"></div>
+        <div class="tour-bar"><div class="tour-bar-fill" id="tourBar"></div></div>
+        <div class="tour-controls">
+          <button class="tc-btn" id="tourVoice" title="Read Aloud (Voiceover)"><i class="fa-solid fa-volume-xmark" id="tourVoiceIcon"></i></button>
+          <button class="tc-btn" id="tourPrev" title="Previous"><i class="fa-solid fa-backward-step"></i></button>
+          <button class="tc-btn play" id="tourPlay" title="Play / Pause"><i class="fa-solid fa-play" id="tourPlayIcon"></i></button>
+          <button class="tc-btn" id="tourNext" title="Next"><i class="fa-solid fa-forward-step"></i></button>
+          <span class="tour-counter"><span id="tourNow">1</span> / <span id="tourTotal">12</span></span>
+        </div>
+        <div class="tour-dots" id="tourDots"></div>
+      </div>
+    </div>
+
+    <!-- ════ FAQ ════ -->
+    <div class="card">
+      <h2><i class="fa-solid fa-circle-question"></i> Quick Answers</h2>
+      <div class="faq"><button class="faq-q" type="button">How do I earn points? <i class="fa-solid fa-chevron-down"></i></button>
+        <div class="faq-a"><div class="faq-a-inner">You earn <strong>10 points</strong> each day you log in and <strong>50 points</strong> for every simulation you run. Points add up and move you through 5 levels — from Climate Novice 🌱 to Climate Master 👑 — unlocking badges along the way.</div></div></div>
+      <div class="faq"><button class="faq-q" type="button">Why is my predicted yield labelled "Agronomic Estimate"? <i class="fa-solid fa-chevron-down"></i></button>
+        <div class="faq-a"><div class="faq-a-inner">When the AI model is unavailable, the system uses a reliable agronomic calculation instead, and tells you honestly which one was used. Both give useful guidance — the AI badge 🤖 means the machine-learning model produced the figure.</div></div></div>
+      <div class="faq"><button class="faq-q" type="button">How do voice notes work in the Marketplace chat? <i class="fa-solid fa-chevron-down"></i></button>
+        <div class="faq-a"><div class="faq-a-inner">Open any conversation, tap the blue microphone 🎤, allow microphone access, speak, then tap send. The other farmer can play it right inside the chat. Voice notes can be up to 2 minutes long.</div></div></div>
+      <div class="faq"><button class="faq-q" type="button">How do I change my profile photo or details? <i class="fa-solid fa-chevron-down"></i></button>
+        <div class="faq-a"><div class="faq-a-inner">Tap your profile photo at the top of the dashboard, then tap <strong>Edit Profile</strong>. You can change your photo, name, phone, district, village, and farm size.</div></div></div>
+      <div class="faq"><button class="faq-q" type="button">Which crops should I plant this season? <i class="fa-solid fa-chevron-down"></i></button>
+        <div class="faq-a"><div class="faq-a-inner">Use <strong>Crop Recommendation</strong> for advice based on your exact conditions, and check the <strong>Season Forecast</strong> page's Rainfall Outlook — it estimates the coming season's rainfall and ranks the best crops for it.</div></div></div>
+    </div>
+
+    <!-- ════ CONTACT TECHNICAL TEAM ════ -->
+    <div class="card">
+      <h2><i class="fa-solid fa-headset"></i> Contact the Technical Team</h2>
+      <div class="contact-grid">
+        <a href="tel:{{ support_phone }}" class="contact-card">
+          <div class="cc-icon" style="background:linear-gradient(135deg,var(--g),var(--gd));"><i class="fa-solid fa-phone"></i></div>
+          <div><div class="cc-lbl">Call or WhatsApp</div><div class="cc-val">{{ support_phone }}</div></div>
+        </a>
+        <a href="mailto:{{ support_email }}" class="contact-card">
+          <div class="cc-icon" style="background:linear-gradient(135deg,var(--sky),#1c5f80);"><i class="fa-solid fa-envelope"></i></div>
+          <div><div class="cc-lbl">Email</div><div class="cc-val">{{ support_email }}</div></div>
+        </a>
+      </div>
+
+      <h2 style="font-size:1.05rem;"><i class="fa-solid fa-paper-plane"></i> Or Send Us a Message Here</h2>
+      <p style="font-size:.8rem;color:var(--text3);font-weight:600;margin-bottom:12px;">
+        Describe your problem or question — the technical team will reply right here and you'll get a notification 🔔.
+      </p>
+      <form method="POST" action="/help/send">
+        <input class="hs-input" type="text" name="subject" placeholder="Subject — e.g. I can't upload my produce photo" required>
+        <textarea class="hs-input" name="message" placeholder="Describe your problem or question in detail…" required></textarea>
+        <button type="submit" class="hs-send"><i class="fa-solid fa-paper-plane"></i> Send to Technical Team</button>
+      </form>
+    </div>
+
+    <!-- ════ MY SUPPORT TICKETS ════ -->
+    <div class="card">
+      <h2><i class="fa-solid fa-ticket"></i> My Support Messages</h2>
+      {% if tickets %}
+        {% for t in tickets %}
+        {# t: 0=id 1=subject 2=message 3=reply 4=replied_at 5=created_at #}
+        <div class="ticket">
+          <div class="tk-subject">{{ t[1] }}</div>
+          <div class="tk-meta"><i class="fa-regular fa-clock"></i> Sent {{ (t[5]|string)[:16] }}</div>
+          <div class="tk-msg">{{ t[2] }}</div>
+          {% if t[3] %}
+          <div class="tk-reply">
+            <b><i class="fa-solid fa-headset"></i> Technical Team replied {{ (t[4]|string)[:16] if t[4] }}</b>
+            {{ t[3] }}
+          </div>
+          {% else %}
+          <div class="tk-wait"><i class="fa-regular fa-hourglass-half"></i> Awaiting reply from the technical team</div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      {% else %}
+      <p style="font-size:.85rem;color:var(--text3);font-weight:600;text-align:center;padding:18px;">
+        You haven't sent any support messages yet.
+      </p>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <script>
+  (function(){
+    'use strict';
+    var $ = function(id){ return document.getElementById(id); };
+
+    /* ════ Guided tour slides — the "video" ════ */
+    var SLIDES = [
+      { e:'👋', t:'Welcome to ZamFarm Climate', d:'Your farming companion for smarter, climate-aware decisions. This short guide shows you everything the app can do — sit back, or tap through at your own pace.', tips:[] },
+      { e:'🏠', t:'Your Dashboard', d:'Everything starts here: live weather for your district, your points and level, charts of your past yields, and quick buttons to every tool.', tips:['Tap the ☰ icon to open or collapse the side menu','The 🔔 bell shows messages, replies and alerts'] },
+      { e:'📈', t:'Predict Yield', d:'Tell the app your crop, field size, soil type and what you spent on inputs — it forecasts your harvest in tonnes and your expected profit in Kwacha.', tips:['Enter your real input costs for accurate profit figures','Tap "Use estimate" if you are unsure of typical costs','Read the Smart Advisory below your result for action steps'] },
+      { e:'🌱', t:'Crop Recommendation', d:'Not sure what to plant? The app compares all 8 crops against your rainfall, temperature and soil, then explains exactly why the winner suits your farm.', tips:['Check the comparison table to see how every crop scored'] },
+      { e:'🎮', t:'Investment Simulator', d:'Test a season before you spend a single Kwacha. Pick a crop and a scenario — normal rain, drought, or heavy rain — and see the yield, costs, profit and risk level.', tips:['Every simulation earns you +50 points','Try the drought scenario to stress-test your plan'] },
+      { e:'🌦️', t:'Season Forecast & Rainfall Outlook', d:'See the estimated rainfall for the coming season in your district, with a ranked list of the crops best suited to it — drought-hardy crops rise to the top in dry years.', tips:['The multi-scenario table shows how each crop behaves in 5 climates'] },
+      { e:'🛒', t:'Marketplace', d:'Buy and sell produce directly with other farmers — no middlemen. Post listings with photos, browse by crop or district, and message sellers inside the app.', tips:['Tap "Sell Your Produce" to post a listing in under a minute'] },
+      { e:'💬', t:'Chat & Voice Notes', d:'Every marketplace inquiry becomes a live conversation, just like WhatsApp. Type messages or hold the microphone to send a voice note.', tips:['Tap 🎤 to record, then the green button to send','Voice notes can be up to 2 minutes'] },
+      { e:'🤖', t:'Farm Assistant', d:'Ask anything — weather, prices, pests, diseases, when to plant. The assistant answers in simple language and suggests helpful videos and trusted links.', tips:['Tap "New Chat" to start fresh; old chats stay in History'] },
+      { e:'🏆', t:'Points, Levels & Badges', d:'Logging in daily earns 10 points; each simulation earns 50. Climb from Climate Novice 🌱 to Climate Master 👑 and collect badges like Drought Survivor and Bumper Harvest.', tips:['Keep a daily streak 🔥 for steady points','Check the Leaderboard to see top farmers in your district'] },
+      { e:'👤', t:'Your Profile & Notifications', d:'Tap your photo to edit your details or picture. The 🔔 bell collects everything: buyer messages, officer advisories, support replies, and yield alerts.', tips:['A red badge on Marketplace means a buyer is waiting'] },
+      { e:'🤝', t:'Need More Help?', d:'Scroll down on this page: call or email the technical team, or send a message right here in the app — the team replies inside ZamFarm and you get a notification.', tips:['Phone: keeps you connected even with slow internet'] },
+    ];
+
+    var idx = 0, playing = false, timer = null, progress = 0;
+    var SLIDE_MS = 9000, TICK = 150;
+    
+    // Voice Over Variables
+    var synth = window.speechSynthesis;
+    var voiceOn = false;
+
+    function renderSlide(){
+      var s = SLIDES[idx];
+      var tips = '';
+      
+      // Calculate dynamic slide duration based on word count (approx 130 words per minute ~2.2 words/sec)
+      var fullText = s.t + ". " + s.d + " " + s.tips.join(" ");
+      var words = fullText.split(' ').length;
+      SLIDE_MS = Math.max(9000, (words / 2.2) * 1000 + 2000); // Minimum 9 seconds, scales up for long text
+      
+      if (s.tips.length){
+        tips = '<div class="tour-tips">';
+        s.tips.forEach(function(t){ tips += '<div class="tour-tip"><i class="fa-solid fa-circle-check"></i><span>'+t+'</span></div>'; });
+        tips += '</div>';
+      }
+      $('tourStage').innerHTML =
+        '<div class="tour-fade" style="display:flex;flex-direction:column;align-items:center;width:100%;">' +
+          '<div class="tour-emoji">'+s.e+'</div>' +
+          '<div class="tour-step-no">Step '+(idx+1)+' of '+SLIDES.length+'</div>' +
+          '<div class="tour-title">'+s.t+'</div>' +
+          '<div class="tour-desc">'+s.d+'</div>' + tips +
+        '</div>';
+      $('tourNow').textContent = idx+1;
+      progress = 0; updateBar();
+      
+      var dots = $('tourDots').children;
+      for (var i=0;i<dots.length;i++){ dots[i].classList.toggle('on', i===idx); }
+      
+      // Trigger Voice Cover if enabled
+      if (synth) {
+          synth.cancel(); // Stop any currently playing voice
+          if (voiceOn) {
+              var textToSpeak = s.t + ". " + s.d;
+              if (s.tips.length) {
+                  textToSpeak += ". Tip: " + s.tips.join(". Tip: ");
+              }
+              var utterance = new SpeechSynthesisUtterance(textToSpeak);
+              utterance.rate = 0.95; // Slightly slower for better clarity
+              synth.speak(utterance);
+          }
+      }
+    }
+
+    function updateBar(){ $('tourBar').style.width = (progress/SLIDE_MS*100) + '%'; }
+
+    function tick(){
+      progress += TICK;
+      if (progress >= SLIDE_MS){
+        if (idx < SLIDES.length-1){ idx++; renderSlide(); }
+        else { setPlaying(false); progress = SLIDE_MS; updateBar(); }
+      } else { updateBar(); }
+    }
+
+    function setPlaying(on){
+      playing = on;
+      $('tourPlayIcon').className = on ? 'fa-solid fa-pause' : 'fa-solid fa-play';
+      if (timer){ clearInterval(timer); timer = null; }
+      if (on){ timer = setInterval(tick, TICK); }
+      else if (synth) { synth.cancel(); } // Cancel voice if paused
+    }
+
+    // Voice Toggle Control
+    $('tourVoice').addEventListener('click', function(){
+      voiceOn = !voiceOn;
+      $('tourVoiceIcon').className = voiceOn ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark';
+      $('tourVoice').classList.toggle('voice-on', voiceOn);
+      if(voiceOn) {
+          renderSlide(); // Re-render to start speaking the current slide instantly
+      } else {
+          if (synth) synth.cancel();
+      }
+    });
+
+    $('tourPlay').addEventListener('click', function(){
+      if (!playing && idx === SLIDES.length-1 && progress >= SLIDE_MS){ idx = 0; renderSlide(); }
+      setPlaying(!playing);
+    });
+    $('tourNext').addEventListener('click', function(){ if(idx<SLIDES.length-1){ idx++; renderSlide(); } });
+    $('tourPrev').addEventListener('click', function(){ if(idx>0){ idx--; renderSlide(); } });
+
+    // dots
+    var dotsHtml = '';
+    SLIDES.forEach(function(_, i){ dotsHtml += '<button class="tour-dot" type="button" data-i="'+i+'" aria-label="Step '+(i+1)+'"></button>'; });
+    $('tourDots').innerHTML = dotsHtml;
+    $('tourDots').addEventListener('click', function(e){
+      var b = e.target.closest('.tour-dot');
+      if (b){ idx = parseInt(b.dataset.i, 10); renderSlide(); }
+    });
+
+    $('tourTotal').textContent = SLIDES.length;
+    renderSlide();
+
+    /* ════ FAQ accordion ════ */
+    document.querySelectorAll('.faq-q').forEach(function(q){
+      q.addEventListener('click', function(){ q.parentElement.classList.toggle('open'); });
+    });
+  })();
+  </script>
+</body>
+</html>

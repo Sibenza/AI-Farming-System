@@ -1,0 +1,1835 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlRoot" data-theme="light">
+<head>
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.svg') }}">
+  <meta name="theme-color" content="#198A00">
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZamFarm Climate | Dashboard</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700;900&family=Outfit:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <style>
+    :root {
+      --g:#198A00;--gl:#23b800;--gd:#0f5c00;--r:#EF0000;
+      --o:#EF7D00;--gold:#F5C518;--blk:#141414;--sky:#2E86AB;
+      --bg:#F4F9F0;--surface:#fff;--surface2:#f0f5ec;
+      --border:rgba(25,138,0,.14);--text:#141414;--text2:#666;--text3:#aaa;
+      --sw:270px;--sw-col:68px;--cr:16px;
+      --tr:0.32s cubic-bezier(.4,0,.2,1);
+    }
+    [data-theme="dark"]{--bg:#0d1a0a;--surface:#132010;--surface2:#1a2e14;--border:rgba(35,184,0,.15);--text:#e8f5e3;--text2:#9ab890;--text3:#5a7a55;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;transition:background var(--tr),color var(--tr);}
+
+    /* ── SIDEBAR ── */
+    .sidebar{position:fixed;top:0;left:0;width:var(--sw);height:100vh;background:linear-gradient(175deg,var(--blk) 0%,#1a2e0a 55%,#0f1f06 100%);display:flex;flex-direction:column;z-index:200;box-shadow:4px 0 28px rgba(0,0,0,.35);overflow:hidden;overflow-y:auto;transition:width var(--tr),transform var(--tr);}
+    .sidebar::-webkit-scrollbar{display:none;}
+    .sidebar.collapsed{width:var(--sw-col);}
+    .sidebar.collapsed .sb-title,.sidebar.collapsed .sb-subtitle,.sidebar.collapsed .nav-section-lbl,.sidebar.collapsed .sidebar-link span,.sidebar.collapsed .sb-avatar-wrap{opacity:0;width:0;height:0;overflow:hidden;white-space:nowrap;margin:0;padding:0;}
+    .sidebar.collapsed .sidebar-link{justify-content:center;padding:12px 0;}
+    .sidebar.collapsed .sb-head{padding:16px 0;justify-content:center;}
+
+    .sb-head{background:linear-gradient(135deg,var(--g),var(--gd));padding:22px 20px 18px;position:relative;overflow:hidden;flex-shrink:0;display:flex;align-items:center;gap:12px;transition:padding var(--tr);}
+    .sb-head::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:5px;background:linear-gradient(90deg,var(--blk),var(--r),var(--o),var(--g));}
+    .sb-eagle{font-size:1.7rem;flex-shrink:0;animation:floatE 3s ease-in-out infinite;}
+    @keyframes floatE{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+    .sb-title{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;color:#fff;white-space:nowrap;transition:opacity var(--tr);}
+    .sb-subtitle{font-family:'DM Mono',monospace;font-size:.58rem;color:rgba(255,255,255,.45);letter-spacing:2px;text-transform:uppercase;white-space:nowrap;}
+
+    .sb-toggle{position:absolute;right:-12px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:50%;background:var(--o);border:2px solid #fff;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:210;box-shadow:0 2px 8px rgba(0,0,0,.25);transition:background var(--tr);}
+    .sb-toggle:hover{background:var(--r);}
+    .sb-toggle i{font-size:.7rem;color:#fff;transition:transform var(--tr);}
+    .sidebar.collapsed .sb-toggle i{transform:rotate(180deg);}
+
+    .sb-avatar-wrap{margin:14px 16px 6px;background:rgba(255,255,255,.06);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;border:1px solid rgba(255,255,255,.08);flex-shrink:0;transition:opacity var(--tr);}
+    .sb-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);flex-shrink:0;}
+    .sb-farmer-name{font-size:.85rem;font-weight:800;color:#fff;white-space:nowrap;}
+    .sb-farmer-level{font-size:.65rem;font-weight:700;color:var(--gold);}
+    .sb-pts-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(245,197,24,.15);border:1px solid rgba(245,197,24,.3);border-radius:20px;padding:2px 8px;font-family:'DM Mono',monospace;font-size:.65rem;font-weight:500;color:var(--gold);margin-left:auto;flex-shrink:0;}
+
+    .nav-section-lbl{font-family:'DM Mono',monospace;font-size:.58rem;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.28);padding:14px 20px 4px;white-space:nowrap;transition:opacity var(--tr);}
+
+    .sidebar-link{display:flex;align-items:center;gap:12px;color:rgba(255,255,255,.72);text-decoration:none;padding:11px 20px;font-size:.88rem;font-weight:600;border-left:3px solid transparent;transition:all var(--tr);white-space:nowrap;position:relative;}
+    .sidebar-link i{font-size:1rem;min-width:20px;text-align:center;flex-shrink:0;}
+    .sidebar-link:hover,.sidebar-link.active{color:#fff;background:rgba(25,138,0,.18);border-left-color:var(--o);}
+    .sidebar-link:hover i,.sidebar-link.active i{color:var(--o);}
+    .sidebar-link.logout-link{color:rgba(239,0,0,.75);}
+    .sidebar-link.logout-link:hover{background:rgba(239,0,0,.12);border-left-color:var(--r);color:var(--r);}
+    .sb-divider{height:1px;background:rgba(255,255,255,.07);margin:5px 16px;flex-shrink:0;}
+    .sb-spacer{flex:1;min-height:20px;}
+
+    .sidebar.collapsed .sidebar-link:hover::after{content:attr(data-label);position:fixed;left:calc(var(--sw-col) + 8px);background:var(--blk);color:#fff;font-size:.78rem;font-weight:700;padding:6px 12px;border-radius:8px;white-space:nowrap;z-index:999;box-shadow:0 4px 16px rgba(0,0,0,.3);pointer-events:none;}
+
+    /* ── TOPBAR ── */
+    .topbar{position:fixed;top:0;left:var(--sw);right:0;height:64px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;z-index:190;box-shadow:0 2px 14px rgba(0,0,0,.06);transition:left var(--tr),background var(--tr);}
+    .tb-left{display:flex;align-items:center;gap:14px;}
+    .tb-mobile-toggle{display:none;background:none;border:none;font-size:1.2rem;color:var(--gd);cursor:pointer;padding:8px;min-width:44px;min-height:44px;}
+    .tb-welcome{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;color:var(--gd);}
+    .tb-welcome span{color:var(--o);}
+    [data-theme="dark"] .tb-welcome{color:var(--gl);}
+    .tb-right{display:flex;align-items:center;gap:10px;}
+
+    .tb-icon-btn{position:relative;width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--surface2);border:none;cursor:pointer;transition:background var(--tr),transform var(--tr);color:var(--text);}
+    .tb-icon-btn:hover{background:rgba(25,138,0,.12);transform:scale(1.05);}
+    .tb-icon-btn i{font-size:1rem;pointer-events:none;}
+    .notif-dot{position:absolute;top:7px;right:7px;width:9px;height:9px;background:var(--r);border-radius:50%;border:2px solid var(--surface);animation:pulse-r 2s infinite;pointer-events:none;}
+    .notif-count-badge{position:absolute;top:4px;right:4px;min-width:18px;height:18px;background:var(--r);border-radius:9px;border:2px solid var(--surface);font-size:.6rem;font-weight:900;color:#fff;display:flex;align-items:center;justify-content:center;padding:0 3px;pointer-events:none;animation:pulse-r 2s infinite;}
+    .notif-section-hdr{font-family:'DM Mono',monospace;font-size:.62rem;letter-spacing:2px;text-transform:uppercase;color:var(--text3);padding:4px 0 10px;display:flex;align-items:center;gap:8px;}
+    .notif-section-hdr + .notif-section-hdr{padding-top:12px;}
+    .notif-item-new{background:rgba(239,0,0,.04);border-radius:8px;margin:-4px -4px 4px;padding:4px;}
+    .notif-marketplace-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:.65rem;font-weight:800;background:rgba(25,138,0,.12);color:var(--gd);border:1px solid rgba(25,138,0,.2);margin-top:4px;}
+    .notif-alert-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:.65rem;font-weight:800;background:rgba(239,125,0,.12);color:#7a3e00;border:1px solid rgba(239,125,0,.25);margin-top:4px;}
+    @keyframes pulse-r{0%,100%{box-shadow:0 0 0 0 rgba(239,0,0,.5)}50%{box-shadow:0 0 0 5px rgba(239,0,0,0)}}
+
+    .tb-avatar{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2.5px solid var(--g);cursor:pointer;transition:border-color var(--tr),transform var(--tr);}
+    .tb-avatar:hover{border-color:var(--o);transform:scale(1.05);}
+
+    /* ── PANELS ── */
+    .panel-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:299;display:none;backdrop-filter:blur(2px);}
+    .panel-overlay.show{display:block;}
+    .side-panel{position:fixed;top:0;right:-440px;width:min(400px,100vw);height:100vh;background:var(--surface);border-left:1px solid var(--border);z-index:300;transition:right var(--tr);display:flex;flex-direction:column;box-shadow:-8px 0 32px rgba(0,0,0,.15);}
+    .side-panel.open{right:0;}
+    .panel-header{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+    .panel-header h3{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:700;color:var(--gd);display:flex;align-items:center;gap:8px;}
+    [data-theme="dark"] .panel-header h3{color:var(--gl);}
+    .panel-header h3 i{color:var(--o);}
+    .panel-close{background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text3);padding:8px;border-radius:8px;min-width:36px;min-height:36px;}
+    .panel-close:hover{background:var(--surface2);color:var(--text);}
+    .panel-body{flex:1;overflow-y:auto;padding:16px 20px;}
+
+    .notif-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
+    .notif-item:last-child{border-bottom:none;}
+    .notif-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+    .ni-green{background:rgba(25,138,0,.12);}
+    .ni-orange{background:rgba(239,125,0,.12);}
+    .ni-red{background:rgba(239,0,0,.10);}
+    .ni-gold{background:rgba(245,197,24,.12);}
+    .ni-sky{background:rgba(46,134,171,.12);}
+    .notif-title{font-size:.87rem;font-weight:800;color:var(--text);}
+    .notif-body{font-size:.78rem;color:var(--text2);font-weight:600;line-height:1.5;margin-top:2px;}
+    .notif-time{font-size:.68rem;color:var(--text3);font-weight:700;margin-top:4px;font-family:'DM Mono',monospace;}
+    .notif-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:.65rem;font-weight:800;background:rgba(46,134,171,.12);color:var(--sky);border:1px solid rgba(46,134,171,.2);margin-top:4px;}
+
+    .setting-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid var(--border);min-height:52px;}
+    .setting-row:last-child{border-bottom:none;}
+    .setting-label{font-size:.88rem;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;}
+    .setting-label i{color:var(--o);font-size:.9rem;width:18px;text-align:center;}
+    .setting-sub{font-size:.72rem;color:var(--text3);font-weight:600;margin-top:2px;}
+    .toggle-sw{position:relative;width:46px;height:28px;flex-shrink:0;}
+    .toggle-sw input{opacity:0;width:0;height:0;}
+    .toggle-slider{position:absolute;inset:0;background:#ccc;border-radius:28px;cursor:pointer;transition:background var(--tr);}
+    .toggle-slider::before{content:'';position:absolute;width:22px;height:22px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:transform var(--tr);box-shadow:0 2px 4px rgba(0,0,0,.2);}
+    .toggle-sw input:checked + .toggle-slider{background:var(--g);}
+    .toggle-sw input:checked + .toggle-slider::before{transform:translateX(18px);}
+    .setting-select{padding:6px 12px;border-radius:8px;font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:700;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);outline:none;cursor:pointer;min-height:36px;}
+    .settings-section-title{font-family:'DM Mono',monospace;font-size:.62rem;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--text3);padding:12px 0 6px;display:flex;align-items:center;gap:8px;}
+    .settings-section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+    .pe-lbl{display:block;font-size:.72rem;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin:12px 0 5px;}
+    .pe-input{width:100%;padding:10px 13px;border:2px solid var(--border);border-radius:10px;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:600;background:var(--surface2);color:var(--text);outline:none;transition:border-color var(--tr);}
+    .pe-input:focus{border-color:var(--g);}
+
+    /* ── PROFILE POPUP ── */
+    .profile-popup{position:fixed;top:72px;right:16px;width:min(340px,calc(100vw - 32px));background:var(--surface);border-radius:20px;border:1px solid var(--border);z-index:400;box-shadow:0 16px 48px rgba(0,0,0,.18);display:none;overflow:hidden;}
+    .profile-popup.show{display:block;animation:popIn .3s cubic-bezier(.22,1,.36,1);}
+    @keyframes popIn{from{opacity:0;transform:translateY(-12px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+    .pp-hero{background:linear-gradient(145deg,#0a2200,var(--blk));padding:24px 20px 20px;text-align:center;position:relative;}
+    .pp-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--g),var(--gold),var(--o));}
+    .pp-avatar{width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);box-shadow:0 0 0 4px rgba(245,197,24,.2);margin-bottom:10px;}
+    .pp-name{font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:700;color:#fff;margin-bottom:4px;}
+    .pp-level{display:inline-flex;align-items:center;gap:5px;background:rgba(245,197,24,.15);border:1px solid rgba(245,197,24,.3);border-radius:30px;padding:3px 12px;font-size:.72rem;font-weight:800;color:var(--gold);}
+    .pp-body{padding:18px 20px;}
+    .pp-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);}
+    .pp-row:last-of-type{border-bottom:none;}
+    .pp-row i{color:var(--o);font-size:.85rem;width:16px;text-align:center;flex-shrink:0;}
+    .pp-lbl{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);}
+    .pp-val{font-size:.88rem;font-weight:700;color:var(--text);}
+    .pp-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+    .pp-stat{background:var(--surface2);border-radius:10px;padding:10px;text-align:center;}
+    .pp-stat .sv{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:700;color:var(--gold);}
+    .pp-stat .sl{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--text3);margin-top:2px;}
+    .pp-prog{margin-top:12px;}
+    .pp-prog-lbl{display:flex;justify-content:space-between;font-size:.7rem;font-weight:700;color:var(--text3);margin-bottom:5px;}
+    .pp-prog-bar{height:6px;background:var(--surface2);border-radius:6px;overflow:hidden;}
+    .pp-prog-fill{height:100%;background:linear-gradient(90deg,var(--g),var(--gold));border-radius:6px;transition:width 1s cubic-bezier(.4,0,.2,1);}
+    .pp-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 20px;border-top:1px solid var(--border);}
+    .pp-action-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:9px;border-radius:10px;font-family:'Outfit',sans-serif;font-size:.78rem;font-weight:800;text-decoration:none;transition:all var(--tr);}
+    .pp-action-btn.green{background:rgba(25,138,0,.10);color:var(--gd);border:1.5px solid rgba(25,138,0,.2);}
+    .pp-action-btn.green:hover{background:rgba(25,138,0,.18);}
+    .pp-action-btn.red{background:rgba(239,0,0,.08);color:var(--r);border:1.5px solid rgba(239,0,0,.15);}
+    .pp-action-btn.red:hover{background:rgba(239,0,0,.15);}
+
+    /* ── MAIN ── */
+    .main{margin-left:var(--sw);padding:80px 28px 48px;min-height:100vh;transition:margin-left var(--tr);}
+    .flag-bar{display:flex;height:4px;border-radius:3px;overflow:hidden;margin-bottom:20px;}
+    .flag-bar span{flex:1;}
+    .fb-g{background:var(--g);}.fb-r{background:var(--r);}.fb-b{background:var(--blk);}.fb-o{background:var(--o);}
+
+    /* Quick actions */
+    .quick-actions{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;margin-bottom:22px;}
+    .qa-btn{display:flex;flex-direction:column;align-items:center;gap:7px;padding:18px 10px;border-radius:16px;text-decoration:none;border:none;cursor:pointer;transition:transform var(--tr),box-shadow var(--tr);text-align:center;min-height:110px;color:#fff;}
+    .qa-btn:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,.18);color:#fff;}
+    .qa-icon{font-size:1.8rem;}
+    .qa-label{font-size:.8rem;font-weight:800;line-height:1.2;}
+    .qa-sub{font-size:.65rem;color:rgba(255,255,255,.7);font-weight:600;}
+    .qa-simulator{background:linear-gradient(135deg,#0f5c00,var(--g));}
+    .qa-predict{background:linear-gradient(135deg,var(--o),#c46000);}
+    .qa-recommend{background:linear-gradient(135deg,var(--sky),#1a5578);}
+    .qa-history{background:linear-gradient(135deg,#8B2FC9,#3d0066);}
+
+    /* Stat chips */
+    .stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+    .s-chip{background:var(--surface);border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 12px rgba(0,0,0,.06);border-left:4px solid var(--g);transition:transform var(--tr);}
+    .s-chip:hover{transform:translateY(-3px);}
+    .s-chip:nth-child(2){border-left-color:var(--o);}
+    .s-chip:nth-child(3){border-left-color:var(--gold);}
+    .s-chip:nth-child(4){border-left-color:var(--r);}
+    .s-ico{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0;background:rgba(25,138,0,.09);color:var(--g);}
+    .s-chip:nth-child(2) .s-ico{background:rgba(239,125,0,.09);color:var(--o);}
+    .s-chip:nth-child(3) .s-ico{background:rgba(245,197,24,.12);color:#7a5c00;}
+    .s-chip:nth-child(4) .s-ico{background:rgba(239,0,0,.08);color:var(--r);}
+    .s-val{font-size:1.5rem;font-weight:800;line-height:1;color:var(--text);}
+    .s-lbl{font-size:.65rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+
+    /* Card */
+    .zm-card{background:var(--surface);border-radius:var(--cr);padding:22px;box-shadow:0 4px 18px rgba(0,0,0,.07);position:relative;overflow:hidden;margin-bottom:18px;transition:background var(--tr);}
+    .zm-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--g),var(--gold),var(--o));border-radius:var(--cr) var(--cr) 0 0;}
+    .zm-card h2{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:700;color:var(--gd);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+    [data-theme="dark"] .zm-card h2{color:var(--gl);}
+    .zm-card h2 i{color:var(--o);}
+
+    /* Main grid */
+    .main-grid{display:grid;grid-template-columns:290px 1fr;gap:18px;margin-bottom:18px;}
+    .right-col{display:flex;flex-direction:column;gap:18px;}
+
+    /* Profile card */
+    .profile-card{background:linear-gradient(165deg,#0a2200,var(--blk));border-radius:16px;padding:24px;color:#fff;position:relative;overflow:hidden;}
+    .profile-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--o),var(--r));border-radius:16px 16px 0 0;}
+    .pc-avatar-wrap{position:relative;display:inline-block;margin-bottom:12px;}
+    .pc-avatar{width:88px;height:88px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);box-shadow:0 0 0 5px rgba(245,197,24,.2),0 6px 20px rgba(0,0,0,.4);}
+    .pc-online{position:absolute;bottom:4px;right:4px;width:16px;height:16px;background:var(--gl);border-radius:50%;border:2.5px solid #fff;animation:pulse-g 2s infinite;}
+    @keyframes pulse-g{0%,100%{box-shadow:0 0 0 0 rgba(35,184,0,.6)}50%{box-shadow:0 0 0 6px rgba(35,184,0,0)}}
+    .pc-name{font-family:'Cormorant Garamond',serif;font-size:1.25rem;font-weight:700;margin-bottom:4px;}
+    .pc-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(245,197,24,.15);border:1px solid rgba(245,197,24,.35);border-radius:30px;padding:3px 12px;font-size:.72rem;font-weight:800;color:var(--gold);margin-bottom:14px;}
+    .pc-info-row{background:rgba(255,255,255,.06);border-radius:9px;padding:9px 12px;margin-bottom:6px;display:flex;align-items:center;gap:9px;}
+    .pc-info-row i{color:var(--o);font-size:.85rem;min-width:16px;}
+    .pc-info-lbl{font-size:.62rem;font-weight:700;color:rgba(255,255,255,.38);text-transform:uppercase;letter-spacing:.8px;}
+    .pc-info-val{font-size:.85rem;font-weight:700;color:rgba(255,255,255,.88);}
+    .pc-gamif{margin-top:12px;}
+    .pc-gamif-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+    .pc-level{font-size:.72rem;font-weight:800;color:var(--gold);}
+    .pc-pts{font-family:'DM Mono',monospace;font-size:.72rem;color:rgba(255,255,255,.5);}
+    .pc-prog-bar{height:6px;background:rgba(255,255,255,.12);border-radius:6px;overflow:hidden;}
+    .pc-prog-fill{height:100%;background:linear-gradient(90deg,var(--g),var(--gold));border-radius:6px;transition:width 1.4s cubic-bezier(.4,0,.2,1) .5s;}
+
+    /* Weather mini + simulator */
+    .weather-mini{background:linear-gradient(145deg,#0a2200,var(--blk));border-radius:14px;padding:18px;color:#fff;position:relative;overflow:hidden;}
+    .weather-mini::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--sky),var(--g),var(--gold));}
+    .wm-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+    .wm-title{font-size:.75rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.45);}
+    .wm-loc{font-size:.72rem;color:rgba(255,255,255,.35);font-weight:700;display:flex;align-items:center;gap:4px;}
+    .wm-main{display:flex;align-items:center;gap:14px;margin-bottom:10px;}
+    .wm-icon{font-size:2.5rem;animation:floatE 4s ease-in-out infinite;}
+    .wm-temp{font-family:'Cormorant Garamond',serif;font-size:2.5rem;font-weight:700;color:#fff;line-height:1;}
+    .wm-unit{font-size:.9rem;color:var(--gold);}
+    .wm-desc{font-size:.78rem;color:rgba(255,255,255,.55);font-weight:600;margin-top:3px;}
+    .wm-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+    .wm-stat{background:rgba(255,255,255,.07);border-radius:8px;padding:8px;text-align:center;}
+    .wm-stat .sv{font-size:.88rem;font-weight:800;color:#fff;}
+    .wm-stat .sl{font-size:.6rem;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.7px;margin-top:2px;}
+
+    /* Simulator widget */
+    .sim-scenario-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;}
+    .sim-sc{padding:10px 6px;border-radius:10px;text-align:center;cursor:pointer;border:2px solid transparent;background:var(--surface2);transition:all var(--tr);font-size:.78rem;font-weight:800;color:var(--text2);}
+    .sim-sc:hover{border-color:rgba(25,138,0,.3);}
+    .sim-sc.sel-normal{border-color:var(--g);background:rgba(25,138,0,.08);color:var(--gd);}
+    .sim-sc.sel-drought{border-color:var(--r);background:rgba(239,0,0,.07);color:var(--r);}
+    .sim-sc.sel-above{border-color:var(--sky);background:rgba(46,134,171,.08);color:var(--sky);}
+    .sim-sc .sc-em{font-size:1.4rem;display:block;margin-bottom:4px;}
+    .sim-crop-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;}
+    .sim-cr{padding:8px 4px;border-radius:9px;text-align:center;cursor:pointer;border:1.5px solid transparent;background:var(--surface2);font-size:.7rem;font-weight:800;color:var(--text2);transition:all var(--tr);}
+    .sim-cr:hover{border-color:rgba(25,138,0,.25);}
+    .sim-cr.sel{border-color:var(--g);background:rgba(25,138,0,.08);color:var(--gd);}
+    .sim-cr .cr-em{font-size:1.2rem;display:block;margin-bottom:3px;}
+    .btn-sim-go{width:100%;padding:12px;background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;border:none;border-radius:10px;font-family:'Outfit',sans-serif;font-size:.92rem;font-weight:800;cursor:pointer;transition:all var(--tr);box-shadow:0 4px 16px rgba(25,138,0,.35);display:flex;align-items:center;justify-content:center;gap:8px;}
+    .btn-sim-go:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(25,138,0,.5);}
+
+    /* Charts */
+    .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;}
+
+    /* Predictions table */
+    .pred-table{width:100%;border-collapse:separate;border-spacing:0;font-size:.85rem;}
+    .pred-table thead th{background:linear-gradient(135deg,var(--gd),#1a4010);color:#fff!important;padding:11px 14px;font-size:.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;border:none!important;}
+    .pred-table thead th:first-child{border-radius:8px 0 0 0;}
+    .pred-table thead th:last-child{border-radius:0 8px 0 0;}
+    .pred-table tbody tr:nth-child(even){background:rgba(25,138,0,.03);}
+    .pred-table tbody tr:hover{background:rgba(25,138,0,.07);}
+    .pred-table tbody td{padding:10px 14px;border-bottom:1px solid var(--border)!important;font-weight:600;color:var(--text);vertical-align:middle;}
+    .crop-tag{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:800;}
+    .ct-Maize{background:rgba(245,197,24,.15);color:#7a5c00;}
+    .ct-Soyabeans{background:rgba(25,138,0,.12);color:var(--gd);}
+    .ct-Groundnuts{background:rgba(239,125,0,.12);color:#7a3e00;}
+    .ct-Cassava{background:rgba(239,0,0,.09);color:#7a0000;}
+    .ct-Sorghum{background:rgba(46,134,171,.12);color:#1a5578;}
+    .ct-Millet{background:rgba(139,47,201,.10);color:#5c0080;}
+    .ct-Sunflower{background:rgba(245,197,24,.18);color:#7a5c00;}
+    .ct-Potatoes{background:rgba(160,82,45,.15);color:#6e3010;}
+
+    /* Login reward popup */
+    .login-reward-popup{position:fixed;top:80px;right:24px;z-index:500;background:linear-gradient(135deg,var(--gd),#0a2200);border:1px solid rgba(245,197,24,.3);border-radius:16px;padding:16px 20px;color:#fff;box-shadow:0 8px 32px rgba(0,0,0,.35);min-width:220px;display:none;animation:slideInRight .5s cubic-bezier(.22,1,.36,1);}
+    @keyframes slideInRight{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+    .lrp-pts{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:900;color:var(--gold);}
+    .lrp-lbl{font-size:.78rem;color:rgba(255,255,255,.6);font-weight:600;}
+
+    /* Responsive */
+    @media(max-width:1100px){
+      .quick-actions{grid-template-columns:repeat(2,1fr);}
+      .stat-strip{grid-template-columns:repeat(2,1fr);}
+      .main-grid{grid-template-columns:1fr;}
+      .charts-grid{grid-template-columns:1fr;}
+    }
+    @media(max-width:900px){
+      :root{--sw:0px;}
+      .sidebar{width:280px!important;transform:translateX(-100%);}
+      .sidebar.mobile-open{transform:translateX(0);}
+      .sidebar.collapsed{width:280px!important;transform:translateX(-100%);}
+      .topbar{left:0!important;}
+      .main{margin-left:0!important;padding:76px 14px 40px;}
+      .tb-mobile-toggle{display:flex;align-items:center;justify-content:center;}
+      .tb-welcome{font-size:.95rem;}
+    }
+    @media(max-width:500px){
+      .quick-actions{grid-template-columns:1fr 1fr;gap:8px;}
+      .stat-strip{grid-template-columns:1fr 1fr;}
+    }
+    ::-webkit-scrollbar{width:5px;}
+    ::-webkit-scrollbar-thumb{background:rgba(25,138,0,.35);border-radius:3px;}
+
+    /* Officer Contact Panel */
+    .officer-hero{background:linear-gradient(145deg,#0a2200,var(--blk));border-radius:14px;padding:20px;text-align:center;color:#fff;margin-bottom:16px;position:relative;overflow:hidden;}
+    .officer-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--sky),var(--g),var(--gold));}
+    .officer-avatar-wrap{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--g),var(--sky));display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 10px;border:3px solid var(--gold);box-shadow:0 0 0 4px rgba(245,197,24,.2);}
+    .officer-name{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;margin-bottom:4px;}
+    .officer-zone{font-size:.72rem;font-weight:700;color:var(--gold);letter-spacing:1px;text-transform:uppercase;}
+    .contact-btn{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:12px;text-decoration:none;border:none;cursor:pointer;font-family:'Outfit',sans-serif;font-weight:700;font-size:.88rem;transition:all var(--tr);margin-bottom:10px;width:100%;}
+    .contact-btn i{font-size:1.2rem;width:28px;text-align:center;flex-shrink:0;}
+    .contact-btn-call{background:linear-gradient(135deg,rgba(25,138,0,.12),rgba(25,138,0,.06));color:var(--g);border:1.5px solid rgba(25,138,0,.2);}
+    .contact-btn-call:hover{background:rgba(25,138,0,.18);transform:translateY(-2px);}
+    .contact-btn-whatsapp{background:linear-gradient(135deg,rgba(37,211,102,.15),rgba(37,211,102,.07));color:#128C7E;border:1.5px solid rgba(37,211,102,.25);}
+    .contact-btn-whatsapp:hover{background:rgba(37,211,102,.22);transform:translateY(-2px);}
+    .contact-btn-email{background:linear-gradient(135deg,rgba(46,134,171,.12),rgba(46,134,171,.06));color:var(--sky);border:1.5px solid rgba(46,134,171,.2);}
+    .contact-btn-email:hover{background:rgba(46,134,171,.18);transform:translateY(-2px);}
+    .msg-item{background:var(--surface2);border-radius:10px;padding:12px 14px;margin-bottom:10px;border-left:3px solid var(--sky);}
+    .msg-subject{font-size:.85rem;font-weight:800;color:var(--text);margin-bottom:4px;}
+    .msg-body{font-size:.80rem;color:var(--text2);line-height:1.6;margin-bottom:6px;}
+    .msg-meta{font-size:.68rem;color:var(--text3);font-weight:700;display:flex;align-items:center;gap:6px;}
+    .msg-meta i{color:var(--o);}
+    .no-officer{text-align:center;padding:32px 16px;color:var(--text3);}
+    .no-officer i{font-size:2rem;color:var(--text3);display:block;margin-bottom:10px;}
+  </style>
+</head>
+<body>
+
+  <!-- DATA BRIDGE — all server values stored as DOM attributes -->
+  <div id="appData"
+    data-farmer-name="{{ farmer[1] if farmer is defined and farmer else 'Farmer' }}"
+    data-district="{{ farmer[7] if farmer is defined and farmer else '' }}"
+    data-village="{{ farmer[6] if farmer is defined and farmer else '' }}"
+    data-phone="{{ farmer[3] if farmer is defined and farmer else '' }}"
+    data-email="{{ farmer[2] if farmer is defined and farmer else '' }}"
+    data-farm-size="{{ farmer[5] if farmer is defined and farmer else 1 }}"
+    data-profile-pic="{{ farmer[8] if farmer is defined and farmer and farmer[8] else 'default.png' }}"
+    data-points="{{ gamif.points if gamif is defined and gamif else 0 }}"
+    data-level="{{ gamif.level if gamif is defined and gamif else 1 }}"
+    data-level-name="{{ gamif.level_info.name if gamif is defined and gamif and gamif.level_info else 'Climate Novice' }}"
+    data-level-icon="{{ gamif.level_info.icon if gamif is defined and gamif and gamif.level_info else '🌱' }}"
+    data-progress="{{ gamif.progress_pct if gamif is defined and gamif else 0 }}"
+    data-streak="{{ gamif.streak_days if gamif is defined and gamif else 0 }}"
+    data-simulations="{{ gamif.total_simulations if gamif is defined and gamif else 0 }}"
+    data-login-pts="{{ login_reward.points_earned if login_reward is defined and login_reward else 0 }}"
+    data-temperature="{{ temperature if temperature is defined else 25 }}"
+    data-rainfall="{{ rainfall if rainfall is defined else 0 }}"
+    style="display:none;"></div>
+
+  <!-- Chart prices data bridge — Jinja values for JS chart calculations -->
+  <div id="chartPrices"
+    data-prices='{"Maize":{{ CROP_MARKET_PRICES.get("Maize",900) }},"Soyabeans":{{ CROP_MARKET_PRICES.get("Soyabeans",1200) }},"Groundnuts":{{ CROP_MARKET_PRICES.get("Groundnuts",2500) }},"Cassava":{{ CROP_MARKET_PRICES.get("Cassava",600) }},"Sorghum":{{ CROP_MARKET_PRICES.get("Sorghum",950) }},"Millet":{{ CROP_MARKET_PRICES.get("Millet",900) }},"Sunflower":{{ CROP_MARKET_PRICES.get("Sunflower",3500) }},"Potatoes":{{ CROP_MARKET_PRICES.get("Potatoes",2000) }}}'
+    data-costs='{"Maize":{{ CROP_INPUT_COSTS.get("Maize",800) }},"Soyabeans":{{ CROP_INPUT_COSTS.get("Soyabeans",900) }},"Groundnuts":{{ CROP_INPUT_COSTS.get("Groundnuts",850) }},"Cassava":{{ CROP_INPUT_COSTS.get("Cassava",600) }},"Sorghum":{{ CROP_INPUT_COSTS.get("Sorghum",700) }},"Millet":{{ CROP_INPUT_COSTS.get("Millet",650) }},"Sunflower":{{ CROP_INPUT_COSTS.get("Sunflower",950) }},"Potatoes":{{ CROP_INPUT_COSTS.get("Potatoes",1200) }}}'
+    style="display:none;"></div>
+
+  <!-- Panel overlay -->
+  <div class="panel-overlay" id="panelOverlay"></div>
+
+  <!-- Profile popup -->
+  <div class="profile-popup" id="profilePopup">
+    <div class="pp-hero">
+      <img id="ppAvatar" src="" class="pp-avatar" alt="">
+      <div class="pp-name" id="ppName">—</div>
+      <div class="pp-level" id="ppLevel">🌱 Climate Novice</div>
+    </div>
+    <div class="pp-body">
+      <div class="pp-row"><i class="fa-solid fa-map-marker-alt"></i><div><div class="pp-lbl" data-i18n="district">District</div><div class="pp-val" id="ppDistrict">—</div></div></div>
+      <div class="pp-row"><i class="fa-solid fa-tree-city"></i><div><div class="pp-lbl" data-i18n="village">Village</div><div class="pp-val" id="ppVillage">—</div></div></div>
+      <div class="pp-row"><i class="fa-solid fa-phone"></i><div><div class="pp-lbl" data-i18n="phone">Phone</div><div class="pp-val" id="ppPhone">—</div></div></div>
+      <div class="pp-row"><i class="fa-solid fa-envelope"></i><div><div class="pp-lbl" data-i18n="email">Email</div><div class="pp-val" id="ppEmail">—</div></div></div>
+      <div class="pp-row"><i class="fa-solid fa-expand"></i><div><div class="pp-lbl" data-i18n="farmSize">Farm Size</div><div class="pp-val" id="ppFarm">—</div></div></div>
+      <div class="pp-stats">
+        <div class="pp-stat"><div class="sv" id="ppPts">0</div><div class="sl" data-i18n="points">Points</div></div>
+        <div class="pp-stat"><div class="sv" id="ppSims">0</div><div class="sl" data-i18n="sims">Sims</div></div>
+        <div class="pp-stat"><div class="sv" id="ppPreds">0</div><div class="sl" data-i18n="preds">Preds</div></div>
+      </div>
+      <div class="pp-prog">
+        <div class="pp-prog-lbl"><span id="ppLevelName">Level 1</span><span id="ppProgress">0%</span></div>
+        <div class="pp-prog-bar"><div class="pp-prog-fill" id="ppProgFill" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="pp-actions">
+      <button type="button" onclick="openProfileEdit()" class="pp-action-btn green" style="border:none;cursor:pointer;"><i class="fa-solid fa-pen"></i> <span data-i18n="editProfile">Edit Profile</span></button>
+      <a href="/gamification" class="pp-action-btn green"><i class="fa-solid fa-trophy"></i> <span data-i18n="progressWord">Progress</span></a>
+      <a href="/logout" class="pp-action-btn red"><i class="fa-solid fa-right-from-bracket"></i> <span data-i18n="logout">Logout</span></a>
+    </div>
+  </div>
+
+  <!-- Profile Edit modal -->
+  <div class="panel-overlay" id="profileEditOverlay" style="display:none;"></div>
+  <div id="profileEditModal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1200;width:92%;max-width:440px;max-height:88vh;overflow-y:auto;background:var(--surface);border-radius:18px;box-shadow:0 24px 72px rgba(0,0,0,.35);">
+    <div style="padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--surface);border-radius:18px 18px 0 0;">
+      <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;color:var(--g);margin:0;"><i class="fa-solid fa-user-pen"></i> <span data-i18n="editProfile">Edit Profile</span></h3>
+      <button type="button" onclick="closeProfileEdit()" style="background:none;border:none;font-size:1.1rem;color:var(--text3);cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form action="/profile/update" method="POST" enctype="multipart/form-data" style="padding:20px 22px;">
+      <div style="display:flex;flex-direction:column;align-items:center;margin-bottom:18px;">
+        <img id="pePreview" src="" alt="" style="width:88px;height:88px;border-radius:50%;object-fit:cover;border:3px solid var(--g);margin-bottom:10px;">
+        <label style="font-size:.76rem;font-weight:700;color:var(--g);background:rgba(25,138,0,.08);border:1px solid rgba(25,138,0,.25);border-radius:8px;padding:6px 12px;cursor:pointer;">
+          <i class="fa-solid fa-camera"></i> <span data-i18n="changePhoto">Change Photo</span>
+          <input type="file" name="profile_pic" id="peProfilePic" accept="image/*" style="display:none;" onchange="previewProfilePic(this)">
+        </label>
+      </div>
+      <label class="pe-lbl" data-i18n="fullName">Full Name</label>
+      <input type="text" name="fullname" id="peName" class="pe-input" required>
+      <label class="pe-lbl" data-i18n="phone">Phone</label>
+      <input type="text" name="phone" id="pePhone" class="pe-input" required>
+      <label class="pe-lbl" data-i18n="district">District</label>
+      <input type="text" name="district" id="peDistrict" class="pe-input" required>
+      <label class="pe-lbl" data-i18n="village">Village</label>
+      <input type="text" name="village" id="peVillage" class="pe-input">
+      <label class="pe-lbl" data-i18n="farmSize">Farm Size (hectares)</label>
+      <input type="number" name="farm_size" id="peFarmSize" class="pe-input" step="0.1" min="0.1" required>
+      <div style="display:flex;gap:10px;margin-top:18px;">
+        <button type="button" onclick="closeProfileEdit()" style="flex:1;padding:11px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-weight:800;font-size:.85rem;cursor:pointer;" data-i18n="cancel">Cancel</button>
+        <button type="submit" style="flex:2;padding:11px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--g),var(--gd));color:#fff;font-weight:800;font-size:.85rem;cursor:pointer;"><i class="fa-solid fa-floppy-disk"></i> <span data-i18n="saveChanges">Save Changes</span></button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Notifications panel -->
+  <div class="side-panel" id="notifPanel">
+    <div class="panel-header">
+      <h3><i class="fa-solid fa-bell"></i> <span data-i18n="notificationsMessages">Notifications &amp; Messages</span></h3>
+      <button class="panel-close" id="notifClose" type="button"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="panel-body" id="notifBody">
+      <div style="text-align:center;padding:40px;color:var(--text3);">
+        <i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem;color:var(--g);display:block;margin-bottom:10px;"></i>
+        <span data-i18n="loadingNotifs">Loading notifications…</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings panel -->
+  <div class="side-panel" id="settingsPanel">
+    <div class="panel-header">
+      <h3><i class="fa-solid fa-gear"></i> <span data-i18n="settings">Settings</span></h3>
+      <button class="panel-close" id="settingsClose" type="button"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="panel-body">
+      <div class="settings-section-title"><i class="fa-solid fa-paintbrush" style="color:var(--o);"></i> <span data-i18n="appearance">Appearance</span></div>
+      <div class="setting-row">
+        <div><div class="setting-label"><i class="fa-solid fa-moon"></i> <span data-i18n="darkMode">Dark Mode</span></div><div class="setting-sub" data-i18n="darkModeSub">Switch to a darker interface</div></div>
+        <label class="toggle-sw"><input type="checkbox" id="darkModeToggle"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label"><i class="fa-solid fa-list"></i> <span data-i18n="compactSidebar">Compact Sidebar</span></div><div class="setting-sub" data-i18n="compactSub">Show only icons</div></div>
+        <label class="toggle-sw"><input type="checkbox" id="compactToggle"><span class="toggle-slider"></span></label>
+      </div>
+
+      <div class="settings-section-title"><i class="fa-solid fa-language" style="color:var(--o);"></i> <span data-i18n="language">Language</span></div>
+      <div class="setting-row">
+        <div><div class="setting-label"><i class="fa-solid fa-globe"></i> <span data-i18n="interfaceLang">Interface Language</span></div><div class="setting-sub" data-i18n="langSub">English, Nyanja &amp; Bemba</div></div>
+        <select class="setting-select" id="langSelect">
+          <option value="en">🇬🇧 English</option>
+          <option value="ny">🇿🇲 Nyanja / Chewa</option>
+          <option value="bem">🇿🇲 Bemba</option>
+        </select>
+      </div>
+
+      <div class="settings-section-title"><i class="fa-solid fa-bell" style="color:var(--o);"></i> <span data-i18n="notificationsWord">Notifications</span></div>
+      <div class="setting-row">
+        <div><div class="setting-label"><i class="fa-solid fa-envelope"></i> <span data-i18n="officerMessages">Officer Messages</span></div><div class="setting-sub" data-i18n="officerMsgSub">Show messages from your officer</div></div>
+        <label class="toggle-sw"><input type="checkbox" id="msgToggle" checked><span class="toggle-slider"></span></label>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label"><i class="fa-solid fa-award"></i> <span data-i18n="pointsAlerts">Points Alerts</span></div><div class="setting-sub" data-i18n="pointsAlertsSub">Notify when you earn points</div></div>
+        <label class="toggle-sw"><input type="checkbox" id="ptsToggle" checked><span class="toggle-slider"></span></label>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label"><i class="fa-solid fa-cloud-sun"></i> <span data-i18n="weatherAlerts">Weather Alerts</span></div><div class="setting-sub" data-i18n="weatherAlertsSub">District weather updates</div></div>
+        <label class="toggle-sw"><input type="checkbox" id="weatherToggle" checked><span class="toggle-slider"></span></label>
+      </div>
+
+      <div class="settings-section-title"><i class="fa-solid fa-user" style="color:var(--o);"></i> <span data-i18n="account">Account</span></div>
+      <div class="setting-row">
+        <div><div class="setting-label"><i class="fa-solid fa-pen"></i> <span data-i18n="editProfile">Edit Profile</span></div><div class="setting-sub" data-i18n="editProfileSub">Photo, name, phone, location, farm size</div></div>
+        <button type="button" onclick="openProfileEdit()" style="padding:7px 14px;background:rgba(25,138,0,.10);color:var(--g);border:1px solid rgba(25,138,0,.25);border-radius:8px;font-weight:800;font-size:.78rem;cursor:pointer;" data-i18n="editBtn">Edit</button>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label"><i class="fa-solid fa-id-card"></i> <span data-i18n="nameWord">Name</span></div><div class="setting-sub" id="settingsName">—</div></div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label"><i class="fa-solid fa-map-location-dot"></i> <span data-i18n="district">District</span></div><div class="setting-sub" id="settingsDistrict">—</div></div>
+      </div>
+      <div class="setting-row" style="border-bottom:none;">
+        <div><div class="setting-label"><i class="fa-solid fa-right-from-bracket"></i> <span data-i18n="logout">Logout</span></div><div class="setting-sub" data-i18n="logoutSub">Sign out of your account</div></div>
+        <a href="/logout" style="padding:7px 14px;background:rgba(239,0,0,.10);color:var(--r);border:1px solid rgba(239,0,0,.2);border-radius:8px;font-weight:800;font-size:.78rem;text-decoration:none;" data-i18n="logout">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login reward popup -->
+  <div class="login-reward-popup" id="loginRewardPopup">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+      <span style="font-size:1.4rem;">🎉</span>
+      <div>
+        <div class="lrp-pts" id="lrpPts">+10</div>
+        <div class="lrp-lbl" data-i18n="dailyLoginPts">Daily login points earned!</div>
+      </div>
+    </div>
+    <div style="font-size:.72rem;color:rgba(255,255,255,.45);font-weight:600;" data-i18n="comeBackTomorrow">Come back tomorrow for more 🌿</div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sb-toggle" id="sbToggle" title="Toggle sidebar"><i class="fa-solid fa-chevron-left"></i></div>
+    <div class="sb-head">
+      <span class="sb-eagle">🦅</span>
+      <div>
+        <div class="sb-title">ZamFarm Climate</div>
+        <div class="sb-subtitle" data-i18n="smartAgriculture">Smart Agriculture</div>
+      </div>
+    </div>
+    <div class="sb-avatar-wrap">
+      <img src="{{ url_for('static', filename='uploads/' + (farmer[8] if farmer is defined and farmer and farmer[8] else 'default.png')) }}" class="sb-avatar" alt="">
+      <div>
+        <div class="sb-farmer-name">{{ farmer[1] if farmer is defined and farmer else 'Farmer' }}</div>
+        <div class="sb-farmer-level" id="sbFarmerLevel">🌱 Climate Novice</div>
+      </div>
+      <span class="sb-pts-badge" id="sbPts">0 pts</span>
+    </div>
+
+    <p class="nav-section-lbl" data-i18n="mainMenu">Main Menu</p>
+    <a href="/dashboard" class="sidebar-link active" data-label="Dashboard"><i class="fa-solid fa-gauge-high"></i><span data-i18n="dashboard">Dashboard</span></a>
+    <a href="/predict_yield" class="sidebar-link" data-label="Yield Prediction"><i class="fa-solid fa-brain"></i><span data-i18n="yieldPrediction">Yield Prediction</span></a>
+    <a href="/history" class="sidebar-link" data-label="History"><i class="fa-solid fa-clock-rotate-left"></i><span data-i18n="predictionHistory">Prediction History</span></a>
+    <a href="/recommend_crop" class="sidebar-link" data-label="Crop Advice"><i class="fa-solid fa-seedling"></i><span data-i18n="cropRecommendation">Crop Recommendation</span></a>
+
+    <div class="sb-divider"></div>
+    <p class="nav-section-lbl" data-i18n="gamification">Gamification</p>
+    <a href="/simulator" class="sidebar-link" data-label="Simulator"><i class="fa-solid fa-flask"></i><span data-i18n="investmentSimulator">Investment Simulator</span></a>
+    <a href="/gamification" class="sidebar-link" data-label="My Progress"><i class="fa-solid fa-trophy"></i><span data-i18n="myProgress">My Progress</span></a>
+    <a href="/leaderboard" class="sidebar-link" data-label="Leaderboard"><i class="fa-solid fa-ranking-star"></i><span data-i18n="leaderboard">Leaderboard</span></a>
+
+    <div class="sb-divider"></div>
+    <p class="nav-section-lbl" data-i18n="climateTools">Climate Tools</p>
+    <a href="/climate_data" class="sidebar-link" data-label="Data Ingestion"><i class="fa-solid fa-database"></i><span data-i18n="dataIngestion">Data Ingestion</span></a>
+    <a href="/climate_forecast" class="sidebar-link" data-label="Forecast"><i class="fa-solid fa-chart-line"></i><span data-i18n="seasonForecast">Season Forecast</span></a>
+
+    <div class="sb-divider"></div>
+    <p class="nav-section-lbl" data-i18n="discover">Discover</p>
+    <a href="/marketplace" class="sidebar-link" data-label="Marketplace" id="sbMarketplace">
+      <i class="fa-solid fa-store"></i><span data-i18n="marketplace">Marketplace</span>
+      <span class="sb-pts-badge" id="sbMktBadge" style="display:none;background:rgba(239,0,0,.12);color:var(--r);border-color:rgba(239,0,0,.25);">0</span>
+    </a>
+    <a href="/search" class="sidebar-link" data-label="Farm Assistant"><i class="fa-solid fa-robot"></i><span data-i18n="farmAssistant">Farm Assistant</span></a>
+    <a href="/help" class="sidebar-link" data-label="Help & Support"><i class="fa-solid fa-life-ring"></i><span data-i18n="helpSupport">Help &amp; Support</span></a>
+    <a href="/about" class="sidebar-link" data-label="About System"><i class="fa-solid fa-circle-info"></i><span data-i18n="aboutSystem">About System</span></a>
+
+    <div class="sb-spacer"></div>
+    <div class="sb-divider"></div>
+    <a href="/logout" class="sidebar-link logout-link" data-label="Logout"><i class="fa-solid fa-right-from-bracket"></i><span data-i18n="logout">Logout</span></a>
+  </div>
+
+  <!-- TOPBAR -->
+  <div class="topbar" id="topbar">
+    <div class="tb-left">
+      <button class="tb-mobile-toggle" id="mobileToggle" type="button"><i class="fa-solid fa-bars"></i></button>
+      <div class="tb-welcome">
+        <span data-i18n="welcomeBack">Welcome back</span>, <span>{{ farmer[1] if farmer is defined and farmer else 'Farmer' }}</span> 👋
+      </div>
+    </div>
+    <div class="tb-right">
+      <button class="tb-icon-btn" id="notifBtn" title="Notifications" type="button">
+        <i class="fa-solid fa-bell"></i>
+        <span class="notif-dot" id="notifDot" style="display:none;"></span>
+        <span class="notif-count-badge" id="notifCount" style="display:none;">0</span>
+      </button>
+      <button class="tb-icon-btn" id="settingsBtn" title="Settings" type="button">
+        <i class="fa-solid fa-gear"></i>
+      </button>
+      <img src="{{ url_for('static', filename='uploads/' + (farmer[8] if farmer is defined and farmer and farmer[8] else 'default.png')) }}"
+           class="tb-avatar" id="tbAvatar" alt="Profile">
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main" id="mainContent">
+
+    <div class="flag-bar animate__animated animate__fadeIn">
+      <span class="fb-g"></span><span class="fb-r"></span><span class="fb-b"></span><span class="fb-o"></span>
+    </div>
+
+    <!-- Quick Action buttons -->
+    <div class="quick-actions">
+      <a href="/simulator" class="qa-btn qa-simulator">
+        <span class="qa-icon">🌱</span>
+        <div class="qa-label" data-i18n="qaRunSim">Run Simulation</div>
+        <div class="qa-sub" data-i18n="qaEarnPts">Earn +50 pts</div>
+      </a>
+      <a href="/predict_yield" class="qa-btn qa-predict">
+        <span class="qa-icon">🤖</span>
+        <div class="qa-label" data-i18n="qaYieldPred">Yield Prediction</div>
+        <div class="qa-sub" data-i18n="qaAiForecast">AI forecast</div>
+      </a>
+      <a href="/recommend_crop" class="qa-btn qa-recommend">
+        <span class="qa-icon">🌾</span>
+        <div class="qa-label" data-i18n="qaCropAdvice">Crop Advice</div>
+        <div class="qa-sub" data-i18n="qaBestCrop">Best crop for you</div>
+      </a>
+      <a href="/history" class="qa-btn qa-history">
+        <span class="qa-icon">📊</span>
+        <div class="qa-label" data-i18n="qaMyHistory">My History</div>
+        <div class="qa-sub" data-i18n="qaAllPred">All predictions</div>
+      </a>
+      <button type="button" class="qa-btn" id="contactOfficerBtn"
+              style="background:linear-gradient(135deg,#1a5578,var(--sky));border:none;cursor:pointer;">
+        <span class="qa-icon">👨‍💼</span>
+        <div class="qa-label" data-i18n="qaMyOfficer">My Officer</div>
+        <div class="qa-sub" data-i18n="qaGetAdvice">Get advice</div>
+      </button>
+      <a href="/marketplace" class="qa-btn" style="background:linear-gradient(135deg,#6d2e8a,#3d0066);">
+        <span class="qa-icon">🛒</span>
+        <div class="qa-label" data-i18n="qaMarketplace">Marketplace</div>
+        <div class="qa-sub" data-i18n="qaBuySell">Buy &amp; sell</div>
+      </a>
+      <a href="/search" class="qa-btn" style="background:linear-gradient(135deg,#0f5c00,#1a3810);">
+        <span class="qa-icon">👨‍🌾</span>
+        <div class="qa-label" data-i18n="qaFarmAssistant">Farm Assistant</div>
+        <div class="qa-sub" data-i18n="qaAskAnything">Ask anything</div>
+      </a>
+    </div>
+
+
+    <!-- Stat chips -->
+    <div class="stat-strip">
+      <div class="s-chip">
+        <div class="s-ico"><i class="fa-solid fa-ruler-combined"></i></div>
+        <div>
+          <div class="s-val">{{ farmer[5] if farmer is defined and farmer else '—' }}</div>
+          <div class="s-lbl" data-i18n="hectares">Hectares</div>
+        </div>
+      </div>
+      <div class="s-chip">
+        <div class="s-ico"><i class="fa-solid fa-seedling"></i></div>
+        <div>
+          <div class="s-val" id="statSimulations">0</div>
+          <div class="s-lbl" data-i18n="simulations">Simulations</div>
+        </div>
+      </div>
+      <div class="s-chip">
+        <div class="s-ico"><i class="fa-solid fa-trophy"></i></div>
+        <div>
+          <div class="s-val" id="statPoints">0</div>
+          <div class="s-lbl" data-i18n="totalPoints">Total Points</div>
+        </div>
+      </div>
+      <div class="s-chip">
+        <div class="s-ico"><i class="fa-solid fa-fire"></i></div>
+        <div>
+          <div class="s-val" id="statStreak">0🔥</div>
+          <div class="s-lbl" data-i18n="dayStreak">Day Streak</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main grid: profile + right column -->
+    <div class="main-grid">
+
+      <!-- Profile Card -->
+      <div class="profile-card">
+        <div style="text-align:center;position:relative;z-index:1;">
+          <div class="pc-avatar-wrap">
+            <img src="{{ url_for('static', filename='uploads/' + (farmer[8] if farmer is defined and farmer and farmer[8] else 'default.png')) }}" class="pc-avatar" alt="">
+            <span class="pc-online"></span>
+          </div>
+          <div class="pc-name">{{ farmer[1] if farmer is defined and farmer else 'Farmer' }}</div>
+          <div class="pc-badge" id="pcLevelBadge">🌱 Climate Novice</div>
+        </div>
+        <div style="position:relative;z-index:1;">
+          <div class="pc-info-row"><i class="fa-solid fa-map-marker-alt"></i>
+            <div><div class="pc-info-lbl" data-i18n="district">District</div><div class="pc-info-val">{{ farmer[7] if farmer is defined and farmer else '—' }}</div></div>
+          </div>
+          <div class="pc-info-row"><i class="fa-solid fa-tree-city"></i>
+            <div><div class="pc-info-lbl" data-i18n="village">Village</div><div class="pc-info-val">{{ farmer[6] if farmer is defined and farmer else '—' }}</div></div>
+          </div>
+          <div class="pc-info-row"><i class="fa-solid fa-phone"></i>
+            <div><div class="pc-info-lbl" data-i18n="phone">Phone</div><div class="pc-info-val">{{ farmer[3] if farmer is defined and farmer else '—' }}</div></div>
+          </div>
+          <div class="pc-gamif">
+            <div class="pc-gamif-head">
+              <span class="pc-level" id="pcLevel">Level 1 · Climate Novice</span>
+              <span class="pc-pts" id="pcPts">0 pts</span>
+            </div>
+            <div class="pc-prog-bar">
+              <div class="pc-prog-fill" id="pcProgFill" style="width:0%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right column: weather + simulator widget -->
+      <div class="right-col">
+        <div class="zm-card" style="margin:0;">
+          <h2><i class="fa-solid fa-tractor"></i> <span data-i18n="farmInformation">Farm Information</span></h2>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+            <div style="background:var(--surface2);border-radius:10px;padding:12px;border-bottom:3px solid var(--g);">
+              <div style="font-size:.62rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:4px;" data-i18n="farmSize">Farm Size</div>
+              <div style="font-size:.98rem;font-weight:800;color:var(--text);">{{ farmer[5] if farmer is defined and farmer else '—' }} ha</div>
+            </div>
+            <div style="background:var(--surface2);border-radius:10px;padding:12px;border-bottom:3px solid var(--o);">
+              <div style="font-size:.62rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:4px;" data-i18n="email">Email</div>
+              <div style="font-size:.82rem;font-weight:800;color:var(--text);">{{ farmer[2] if farmer is defined and farmer else '—' }}</div>
+            </div>
+            <div style="background:var(--surface2);border-radius:10px;padding:12px;border-bottom:3px solid var(--r);">
+              <div style="font-size:.62rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin-bottom:4px;" data-i18n="phone">Phone</div>
+              <div style="font-size:.98rem;font-weight:800;color:var(--text);">{{ farmer[3] if farmer is defined and farmer else '—' }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+          <!-- Weather -->
+          <div class="weather-mini">
+            <div class="wm-head">
+              <div class="wm-title">☁️ <span data-i18n="liveWeather">Live Weather</span></div>
+              <div class="wm-loc"><i class="fa-solid fa-location-dot" style="color:var(--o);font-size:.65rem;"></i>
+                <span>{{ farmer[7] if farmer is defined and farmer else 'District' }}</span>
+              </div>
+            </div>
+            <div class="wm-main">
+              <div class="wm-icon" id="wmIcon">⛅</div>
+              <div>
+                <div><span class="wm-temp" id="wmTemp">—</span><span class="wm-unit">°C</span></div>
+                <div class="wm-desc" id="wmDesc">Loading…</div>
+              </div>
+            </div>
+            <div class="wm-stats">
+              <div class="wm-stat"><div class="sv" id="wmRain">— mm</div><div class="sl" data-i18n="rain">Rain</div></div>
+              <div class="wm-stat"><div class="sv" id="wmHumid">—%</div><div class="sl" data-i18n="humid">Humid</div></div>
+              <div class="wm-stat"><div class="sv" id="wmWind">—</div><div class="sl" data-i18n="wind">Wind</div></div>
+            </div>
+          </div>
+
+          <!-- Quick Simulator -->
+          <div class="zm-card" style="margin:0;">
+            <h2 style="margin-bottom:10px;"><i class="fa-solid fa-flask"></i> <span data-i18n="quickSimulator">Quick Simulator</span></h2>
+            <div class="sim-scenario-row">
+              <div class="sim-sc sel-normal" data-scenario="normal"><span class="sc-em">☀️</span><span data-i18n="normal">Normal</span></div>
+              <div class="sim-sc" data-scenario="drought"><span class="sc-em">🏜️</span><span data-i18n="drought">Drought</span></div>
+              <div class="sim-sc" data-scenario="abovenormal"><span class="sc-em">⛈️</span><span data-i18n="above">Above</span></div>
+            </div>
+            <div class="sim-crop-row">
+              <div class="sim-cr sel" data-crop="Maize"><span class="cr-em">🌽</span><span data-i18n="maize">Maize</span></div>
+              <div class="sim-cr" data-crop="Soyabeans"><span class="cr-em">🌱</span><span data-i18n="soya">Soya</span></div>
+              <div class="sim-cr" data-crop="Groundnuts"><span class="cr-em">🥜</span><span data-i18n="gnuts">Gnuts</span></div>
+              <div class="sim-cr" data-crop="Cassava"><span class="cr-em">🍠</span><span data-i18n="cassava">Cassava</span></div>
+            </div>
+            <form action="/simulator" method="POST">
+              <input type="hidden" name="scenario" id="qScenario" value="normal">
+              <input type="hidden" name="crop" id="qCrop" value="Maize">
+              <input type="hidden" name="hectares" value="{{ farmer[5] if farmer is defined and farmer else 1 }}">
+              <input type="hidden" name="soil_type" value="1">
+              <button type="submit" class="btn-sim-go">
+                <i class="fa-solid fa-play"></i> <span data-i18n="runAndEarn">Run &amp; Earn +50</span>
+              </button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-grid">
+      <div class="zm-card" style="margin:0;">
+        <h2><i class="fa-solid fa-chart-line"></i> <span data-i18n="yieldTrend">Yield Trend</span></h2>
+        <canvas id="trendChart" height="120"></canvas>
+        <div id="noTrend" style="display:none;text-align:center;padding:32px;color:var(--text3);font-size:.85rem;">
+          <span data-i18n="noPredictionsYet">No predictions yet —</span> <a href="/predict_yield" style="color:var(--g);font-weight:800;"><span data-i18n="makeFirstOne">make your first →</span></a>
+        </div>
+      </div>
+      <div class="zm-card" style="margin:0;">
+        <h2><i class="fa-solid fa-chart-pie"></i> <span data-i18n="cropMix">Crop Mix</span></h2>
+        <canvas id="cropChart" height="120"></canvas>
+        <div id="noCrop" style="display:none;text-align:center;padding:32px;color:var(--text3);font-size:.85rem;" data-i18n="noDataYet">No data yet.</div>
+      </div>
+    </div>
+
+    <!-- Second charts row -->
+    <div class="charts-grid" style="margin-bottom:18px;">
+      <div class="zm-card" style="margin:0;">
+        <h2><i class="fa-solid fa-mountain"></i> <span data-i18n="yieldBySoil">Yield by Soil Type</span></h2>
+        <div style="font-size:.75rem;color:var(--text3);font-weight:600;margin-bottom:10px;" data-i18n="avgYieldPerSoil">Average yield (T/ha) per soil type across all your predictions</div>
+        <canvas id="soilChart" height="140"></canvas>
+        <div id="noSoil" style="display:none;text-align:center;padding:32px;color:var(--text3);font-size:.85rem;" data-i18n="makePredictionsSoil">Make predictions on different soil types to see comparison.</div>
+      </div>
+      <div class="zm-card" style="margin:0;">
+        <h2><i class="fa-solid fa-arrow-trend-up"></i> <span data-i18n="yieldEfficiency">Yield Efficiency (T/ha)</span></h2>
+        <div style="font-size:.75rem;color:var(--text3);font-weight:600;margin-bottom:10px;" data-i18n="yieldPerHaOverTime">Your yield per hectare over time — higher = more efficient farming</div>
+        <canvas id="effChart" height="140"></canvas>
+        <div id="noEff" style="display:none;text-align:center;padding:32px;color:var(--text3);font-size:.85rem;" data-i18n="noEfficiencyYet">No efficiency data yet.</div>
+      </div>
+    </div>
+
+    <!-- Financial performance chart - full width -->
+    <div class="zm-card" style="margin-bottom:18px;">
+      <h2><i class="fa-solid fa-money-bill-trend-up"></i> <span data-i18n="financialPerformance">Financial Performance by Crop</span></h2>
+      <div style="font-size:.75rem;color:var(--text3);font-weight:600;margin-bottom:14px;" data-i18n="financialDesc">Estimated gross revenue vs total cost vs net profit per crop (ZMW) — based on your prediction history</div>
+      <canvas id="finChart" height="90"></canvas>
+      <div id="noFin" style="display:none;text-align:center;padding:32px;color:var(--text3);font-size:.85rem;" data-i18n="noFinancialYet">No financial data yet. Make predictions to see analysis.</div>
+    </div>
+
+    <!-- Recent predictions -->
+    <div class="zm-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px;">
+        <h2 style="margin-bottom:0;"><i class="fa-solid fa-table"></i> <span data-i18n="recentPredictions">Recent Predictions</span></h2>
+        <a href="/history" style="font-size:.78rem;font-weight:700;color:var(--g);text-decoration:none;"><span data-i18n="viewAll">View All</span> <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="pred-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th data-i18n="crop">Crop</th>
+              <th data-i18n="hectares">Hectares</th>
+              <th data-i18n="yield">Yield</th>
+              <th data-i18n="date">Date</th>
+            </tr>
+          </thead>
+          <tbody id="recentBody">
+            <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text3);font-size:.85rem;" data-i18n="loading">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+
+  <!-- ============================================================
+       OFFICER CONTACT PANEL (slide-in from right)
+  ============================================================ -->
+  <div class="side-panel" id="officerPanel">
+    <div class="panel-header">
+      <h3><i class="fa-solid fa-user-tie"></i> <span data-i18n="yourExtensionOfficer">Your Extension Officer</span></h3>
+      <button class="panel-close" id="officerClose" type="button"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="panel-body" id="officerPanelBody">
+      <div style="text-align:center;padding:40px 20px;color:var(--text3);">
+        <i class="fa-solid fa-spinner fa-spin" style="font-size:1.5rem;color:var(--g);display:block;margin-bottom:10px;"></i>
+        <span data-i18n="loadingOfficer">Loading your officer…</span>
+      </div>
+    </div>
+  </div>
+
+  </div><!-- /main -->
+
+  <!-- ============================================================
+       SCRIPTS — placed at end of body, plain JS, defensive
+  ============================================================ -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script>
+  /* ============================================================
+     DASHBOARD JS — wrapped in try/catch so one error doesn't
+     break the rest. No jQuery. Uses native DOM APIs only.
+  ============================================================ */
+  (function() {
+    'use strict';
+
+    // ── Safe element getter ──────────────────────────────────
+    const $ = (id) => document.getElementById(id);
+
+    // ── Data bridge ──────────────────────────────────────────
+    const AD = $('appData');
+    const D = AD ? AD.dataset : {};
+    const FARMER_NAME = D.farmerName  || 'Farmer';
+    const DISTRICT    = D.district    || '';
+    const VILLAGE     = D.village     || '';
+    const PHONE       = D.phone       || '';
+    const EMAIL       = D.email       || '';
+    const FARM_SIZE   = parseFloat(D.farmSize) || 0;
+    const PIC         = D.profilePic  || 'default.png';
+    const POINTS      = parseInt(D.points)    || 0;
+    const LEVEL       = parseInt(D.level)     || 1;
+    const LEVEL_NAME  = D.levelName  || 'Climate Novice';
+    const LEVEL_ICON  = D.levelIcon  || '🌱';
+    const PROGRESS    = parseInt(D.progress)  || 0;
+    const STREAK      = parseInt(D.streak)    || 0;
+    const SIMS        = parseInt(D.simulations) || 0;
+    const LOGIN_PTS   = parseInt(D.loginPts)  || 0;
+    const TEMPERATURE = parseFloat(D.temperature) || 25;
+    const RAINFALL    = parseFloat(D.rainfall)    || 0;
+
+    // ── Profile edit modal ───────────────────────────────────
+    window.openProfileEdit = function() {
+      // Close the profile popup / settings panel if open
+      var pop = $('profilePopup'); if (pop) pop.classList.remove('show');
+      var ov  = $('panelOverlay'); if (ov) ov.classList.remove('show');
+      // Pre-fill fields from current farmer data
+      var set = function(id, val){ var el=$(id); if(el) el.value = val; };
+      set('peName', FARMER_NAME);
+      set('pePhone', PHONE);
+      set('peDistrict', DISTRICT);
+      set('peVillage', VILLAGE);
+      set('peFarmSize', FARM_SIZE);
+      var prev = $('pePreview'); if (prev) prev.src = '/static/uploads/' + PIC;
+      $('profileEditOverlay').style.display = 'block';
+      $('profileEditModal').style.display   = 'block';
+    };
+    window.closeProfileEdit = function() {
+      $('profileEditOverlay').style.display = 'none';
+      $('profileEditModal').style.display   = 'none';
+    };
+    window.previewProfilePic = function(input) {
+      if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          var prev = $('pePreview'); if (prev) prev.src = e.target.result;
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    };
+
+    // ── Preferences ──────────────────────────────────────────
+    const prefs = {
+      dark:    localStorage.getItem('zf_dark')    === 'true',
+      compact: localStorage.getItem('zf_compact') === 'true',
+      lang:    localStorage.getItem('zf_lang')    || 'en',
+    };
+
+    // ── Apply dark mode ─────────────────────────────────────
+    function applyDark(on) {
+      document.documentElement.setAttribute('data-theme', on ? 'dark' : 'light');
+      const t = $('darkModeToggle');
+      if (t) t.checked = on;
+      localStorage.setItem('zf_dark', String(on));
+      prefs.dark = on;
+    }
+    applyDark(prefs.dark);
+
+    // ── Apply compact sidebar ───────────────────────────────
+    function applyCompact(on) {
+      const sb = $('sidebar');
+      const tb = $('topbar');
+      const mc = $('mainContent');
+      if (!sb) return;
+      if (on) sb.classList.add('collapsed');
+      else    sb.classList.remove('collapsed');
+      if (window.innerWidth > 900) {
+        if (tb) tb.style.left       = on ? '68px' : '270px';
+        if (mc) mc.style.marginLeft = on ? '68px' : '270px';
+      }
+      const t = $('compactToggle');
+      if (t) t.checked = on;
+      localStorage.setItem('zf_compact', String(on));
+      prefs.compact = on;
+    }
+
+    // ── Panel helpers ────────────────────────────────────────
+    function closeAllPanels() {
+      const np = $('notifPanel'),   sp = $('settingsPanel'),
+            po = $('panelOverlay'), pp = $('profilePopup');
+      if (np) np.classList.remove('open');
+      if (sp) sp.classList.remove('open');
+      if (po) po.classList.remove('show');
+      if (pp) pp.classList.remove('show');
+    }
+    function openPanel(id) {
+      closeAllPanels();
+      const p = $(id), po = $('panelOverlay');
+      if (p)  p.classList.add('open');
+      if (po) po.classList.add('show');
+    }
+
+    // ── Toast helper (light) ─────────────────────────────────
+    function showLoginReward() {
+      if (LOGIN_PTS <= 0) return;
+      const popup = $('loginRewardPopup'), pts = $('lrpPts');
+      if (!popup) return;
+      if (pts) pts.textContent = '+' + LOGIN_PTS;
+      popup.style.display = 'block';
+      setTimeout(() => { popup.style.display = 'none'; }, 4500);
+    }
+
+    // ── Weather (fallback to server values, then live fetch) ─
+    function setWeather(temp, rain, desc, hum, wind, icon) {
+      const $set = (id, v) => { const e = $(id); if (e) e.textContent = v; };
+      $set('wmTemp', temp.toFixed(1));
+      $set('wmRain', rain.toFixed(1) + ' mm');
+      $set('wmDesc', desc || 'Live · ' + (DISTRICT || 'Your District'));
+      $set('wmHumid', (hum || '—') + '%');
+      $set('wmWind',  wind || '—');
+      $set('wmIcon',  icon || (temp > 32 ? '☀️' : temp > 26 ? '🌤️' : temp > 20 ? '⛅' : '🌦️'));
+    }
+    function fetchLiveWeather() {
+      if (!DISTRICT) return;
+      const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(DISTRICT)},ZM&appid=9a15cce295222fccf0e5cb17f852cfbd&units=metric`;
+      fetch(url)
+        .then(r => r.json())
+        .then(d => {
+          if (!d || !d.main) return;
+          const icons = {2:'⛈️',3:'🌦️',5:'🌧️',6:'❄️',7:'🌫️',8:'☀️'};
+          const ic = icons[String(d.weather[0].id)[0]] || '⛅';
+          setWeather(
+            d.main.temp,
+            d.rain ? (d.rain['1h']||0) : 0,
+            d.weather[0].description,
+            d.main.humidity,
+            (d.wind.speed * 3.6).toFixed(1) + ' km/h',
+            ic
+          );
+        })
+        .catch(() => {});
+    }
+
+    // ── Profile popup ────────────────────────────────────────
+    function loadProfilePopup() {
+      const $set = (id, v) => { const e = $(id); if (e) e.textContent = v; };
+      // Populate from data we already have
+      const av = $('ppAvatar');
+      if (av) av.src = '/static/uploads/' + PIC;
+      $set('ppName',     FARMER_NAME);
+      $set('ppLevel',    LEVEL_ICON + ' ' + LEVEL_NAME);
+      $set('ppDistrict', DISTRICT || '—');
+      $set('ppVillage',  VILLAGE  || '—');
+      $set('ppPhone',    PHONE    || '—');
+      $set('ppEmail',    EMAIL    || '—');
+      $set('ppFarm',     FARM_SIZE ? FARM_SIZE + ' ha' : '—');
+      $set('ppPts',      POINTS);
+      $set('ppSims',     SIMS);
+      $set('ppLevelName','Level ' + LEVEL + ' · ' + LEVEL_NAME);
+      $set('ppProgress', PROGRESS + '%');
+      setTimeout(() => {
+        const f = $('ppProgFill');
+        if (f) f.style.width = PROGRESS + '%';
+      }, 200);
+
+      // Fetch prediction count separately (best-effort)
+      fetch('/api/farmer_profile', { credentials: 'same-origin' })
+        .then(r => r.ok ? r.json() : null)
+        .then(d => {
+          if (d && !d.error && typeof d.predictions !== 'undefined') {
+            $set('ppPreds', d.predictions);
+          }
+        }).catch(() => {});
+    }
+
+    // ── Notifications ────────────────────────────────────────
+    function loadNotifications() {
+      const body = $('notifBody');
+      if (!body) return;
+
+      // ── Type → icon/colour map ─────────────────────────────────────────
+      var TYPE_CFG = {
+        'marketplace_inquiry': { icon:'🛒', cls:'ni-green',  label:'Marketplace' },
+        'marketplace_reply':   { icon:'💬', cls:'ni-sky',    label:'Reply' },
+        'yield_alert':         { icon:'⚠️', cls:'ni-orange', label:'Yield Alert' },
+        'officer_message':     { icon:'📢', cls:'ni-sky',    label:'Officer' },
+        'level_up':            { icon:'🏆', cls:'ni-gold',   label:'Level Up' },
+        'badge_earned':        { icon:'🎖️', cls:'ni-gold',   label:'Badge' },
+        'general':             { icon:'🔔', cls:'ni-green',  label:'System' },
+      };
+
+      fetch('/api/notifications', { credentials: 'same-origin' })
+        .then(function(r) { return r.ok ? r.json() : { notifications: [], unread: 0 }; })
+        .then(function(data) {
+          var notifs  = (data && data.notifications) || [];
+          var unread  = (data && data.unread)        || 0;
+
+          // ── Update bell badge ──────────────────────────────────────────
+          var dot   = $('notifDot');
+          var count = $('notifCount');
+          if (unread > 0) {
+            if (dot)   dot.style.display   = 'block';
+            if (count) { count.style.display = 'flex'; count.textContent = unread > 9 ? '9+' : unread; }
+          } else {
+            if (dot)   dot.style.display   = 'none';
+            if (count) count.style.display = 'none';
+          }
+
+          // ── Update sidebar marketplace badge ──────────────────────────
+          var mktBadge  = $('sbMktBadge');
+          var mktUnread = notifs.filter(function(n) {
+            return n.type === 'marketplace_inquiry' && !n.is_read;
+          }).length;
+          if (mktBadge) {
+            if (mktUnread > 0) {
+              mktBadge.textContent = mktUnread;
+              mktBadge.style.display = 'inline-flex';
+            } else {
+              mktBadge.style.display = 'none';
+            }
+          }
+
+          // ── Mark DB notifications read when panel opens ───────────────
+          fetch('/api/notifications/mark_read', {
+            method: 'POST', credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' }
+          }).catch(function() {});
+
+          // ── Build HTML ────────────────────────────────────────────────
+          var html = '';
+
+          if (notifs.length === 0) {
+            html = '<div style="text-align:center;padding:40px;color:var(--text3);">' +
+                   '<span style="font-size:2.5rem;display:block;margin-bottom:10px;">🔔</span>' +
+                   '<div style="font-weight:700;">All caught up!</div>' +
+                   '<div style="font-size:.78rem;margin-top:4px;">No new notifications.</div></div>';
+            body.innerHTML = html;
+            return;
+          }
+
+          // Group: unread first, then read
+          var unreadNotifs = notifs.filter(function(n) { return !n.is_read; });
+          var readNotifs   = notifs.filter(function(n) { return n.is_read; });
+
+          function renderSection(items, sectionTitle, icon) {
+            if (!items.length) return '';
+            var s = '<div style="font-family:\'DM Mono\',monospace;font-size:.6rem;letter-spacing:2px;text-transform:uppercase;' +
+                    'color:var(--text3);padding:4px 0 10px;display:flex;align-items:center;gap:8px;">' +
+                    '<i class="' + icon + '" style="color:var(--o);"></i> ' + sectionTitle +
+                    '<span style="flex:1;height:1px;background:var(--border);"></span></div>';
+            items.forEach(function(n) {
+              var cfg = TYPE_CFG[n.type] || TYPE_CFG['general'];
+              var itemClass = n.is_read ? 'notif-item' : 'notif-item notif-item-new';
+              var badge = '';
+              if (n.type === 'marketplace_inquiry')
+                badge = '<span class="notif-marketplace-badge"><i class="fa-solid fa-store"></i> Marketplace</span>';
+              else if (n.type === 'marketplace_reply')
+                badge = '<span class="notif-marketplace-badge"><i class="fa-solid fa-reply"></i> Reply</span>';
+              else if (n.type === 'yield_alert')
+                badge = '<span class="notif-alert-badge"><i class="fa-solid fa-triangle-exclamation"></i> Yield Alert</span>';
+              else if (n.type === 'officer_message')
+                badge = '<span class="notif-badge"><i class="fa-solid fa-user-tie"></i> Officer</span>';
+              var linkStart = n.link ? '<a href="' + n.link + '" style="text-decoration:none;color:inherit;">' : '';
+              var linkEnd   = n.link ? '</a>' : '';
+              s += linkStart +
+                   '<div class="' + itemClass + '">' +
+                   '<div class="notif-icon ' + cfg.cls + '">' + cfg.icon + '</div>' +
+                   '<div style="flex:1;min-width:0;">' +
+                   '<div class="notif-title">' + (n.title || '') + '</div>';
+              if (n.body)
+                s += '<div class="notif-body">' + n.body + '</div>';
+              if (badge)
+                s += badge;
+              s += '<div class="notif-time">' + (n.created_at || '') + '</div>' +
+                   '</div></div>' + linkEnd;
+            });
+            return s;
+          }
+
+          if (unreadNotifs.length)
+            html += renderSection(unreadNotifs, 'New (' + unreadNotifs.length + ')', 'fa-solid fa-circle-dot');
+          if (readNotifs.length)
+            html += renderSection(readNotifs, 'Earlier', 'fa-solid fa-clock-rotate-left');
+
+          // ── System contextual cards at bottom ─────────────────────────
+          html += '<div style="font-family:\'DM Mono\',monospace;font-size:.6rem;letter-spacing:2px;text-transform:uppercase;' +
+                  'color:var(--text3);padding:12px 0 8px;display:flex;align-items:center;gap:8px;">' +
+                  '<i class="fa-solid fa-bolt" style="color:var(--o);"></i> Quick Info' +
+                  '<span style="flex:1;height:1px;background:var(--border);"></span></div>';
+          var sys = [
+            { icon:'🌦️', cls:'ni-green',  title:'Weather — ' + (DISTRICT||'Your District'),
+              body:'Current: ' + TEMPERATURE.toFixed(1) + '°C · Rainfall: ' + RAINFALL.toFixed(0) + 'mm' },
+            { icon:'🏆', cls:'ni-gold',   title:'Your Points: ' + POINTS,
+              body:'Level ' + LEVEL + ' — ' + LEVEL_NAME + '. Keep going!' },
+            { icon:'🔥', cls:'ni-red',    title:'Login Streak: ' + STREAK + ' days',
+              body:'Log in daily to maintain your streak and earn bonus points.' },
+          ];
+          sys.forEach(function(n) {
+            html += '<div class="notif-item">' +
+                    '<div class="notif-icon ' + n.cls + '">' + n.icon + '</div>' +
+                    '<div><div class="notif-title">' + n.title + '</div>' +
+                    '<div class="notif-body">' + n.body + '</div></div></div>';
+          });
+
+          body.innerHTML = html;
+        })
+        .catch(function() {
+          body.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text3);">Could not load notifications.</div>';
+        });
+    }
+
+    // ── Charts ───────────────────────────────────────────────
+    function buildCharts(records) {
+      const cropEmoji = {Maize:'🌽',Soyabeans:'🌱',Groundnuts:'🥜',Cassava:'🍠',Sorghum:'🌾',Millet:'🌿',Sunflower:'🌻',Potatoes:'🥔'};
+
+      // Market prices from data bridge (set below in Jinja)
+      const pricesBridge = document.getElementById('chartPrices');
+      const PRICES = pricesBridge ? JSON.parse(pricesBridge.dataset.prices || '{}') : {};
+      const COSTS  = pricesBridge ? JSON.parse(pricesBridge.dataset.costs  || '{}') : {};
+
+      // Soil name map: r[4] = soil name string from API
+      const SOIL_COLORS = {'Loamy':'rgba(25,138,0,.75)', 'Sandy':'rgba(245,197,24,.80)', 'Clay':'rgba(46,134,171,.75)'};
+
+      // Trend chart
+      const trendCanvas = $('trendChart');
+      const cropCanvas  = $('cropChart');
+      const noTrend     = $('noTrend');
+      const noCrop      = $('noCrop');
+
+      if (!records || records.length === 0) {
+        if (trendCanvas) trendCanvas.style.display = 'none';
+        if (cropCanvas)  cropCanvas.style.display = 'none';
+        if (noTrend) noTrend.style.display = 'block';
+        if (noCrop)  noCrop.style.display = 'block';
+        ['soilChart','effChart','finChart'].forEach(id => {
+          var c = $(id); if(c) c.style.display='none';
+        });
+        ['noSoil','noEff','noFin'].forEach(id => {
+          var c = $(id); if(c) c.style.display='block';
+        });
+        return;
+      }
+
+      if (typeof Chart === 'undefined') return;
+
+      const sorted = [...records].reverse();
+      const labels = sorted.map(r => String(r[3]).substring(0,10));
+      const yields = sorted.map(r => parseFloat(r[2]));
+
+      if (trendCanvas) {
+        try {
+          const ctx = trendCanvas.getContext('2d');
+          const grad = ctx.createLinearGradient(0,0,0,200);
+          grad.addColorStop(0,'rgba(25,138,0,.28)');
+          grad.addColorStop(1,'rgba(25,138,0,0)');
+          new Chart(ctx, {
+            type:'line',
+            data:{
+              labels,
+              datasets:[{
+                label:'Yield (T)', data:yields,
+                borderColor:'#198A00', borderWidth:2.5,
+                pointBackgroundColor:'#EF7D00', pointBorderColor:'#fff',
+                pointBorderWidth:2, pointRadius:5,
+                fill:true, backgroundColor:grad, tension:0.42,
+              }]
+            },
+            options:{
+              responsive:true,
+              plugins:{legend:{display:false}},
+              scales:{
+                x:{grid:{display:false},ticks:{font:{family:'Outfit',weight:'700'},color:'#aaa',maxRotation:30,maxTicksLimit:8}},
+                y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{callback:v=>v+'T'},beginAtZero:true}
+              },
+            }
+          });
+        } catch(e) { console.error('Trend chart error:', e); }
+      }
+
+      // Crop distribution doughnut
+      if (cropCanvas) {
+        try {
+          const counts = {};
+          records.forEach(r => { counts[r[0]] = (counts[r[0]]||0)+1; });
+          new Chart(cropCanvas.getContext('2d'), {
+            type:'doughnut',
+            data:{
+              labels: Object.keys(counts).map(c => (cropEmoji[c]||'🌱')+' '+c),
+              datasets:[{
+                data: Object.values(counts),
+                backgroundColor:['rgba(25,138,0,.75)','rgba(239,125,0,.75)','rgba(245,197,24,.80)','rgba(239,0,0,.70)','rgba(46,134,171,.75)','rgba(139,47,201,.75)','rgba(218,165,32,.75)','rgba(160,82,45,.75)'],
+                borderWidth:3, borderColor:'#fff',
+              }]
+            },
+            options:{
+              responsive:true, cutout:'60%',
+              plugins:{legend:{position:'bottom',labels:{font:{family:'Outfit',weight:'700'},color:'#666',padding:10,boxWidth:12}}}
+            }
+          });
+        } catch(e) { console.error('Crop chart error:', e); }
+      }
+
+      // ── NEW CHART 1: Yield by Soil Type (grouped bar) ────────────────
+      const soilCanvas = $('soilChart');
+      const noSoil     = $('noSoil');
+      if (soilCanvas) {
+        try {
+          // Group average yield per ha by soil type
+          const soilGroups = {};
+          records.forEach(r => {
+            const soil  = r[4] || 'Loamy';
+            const ha    = parseFloat(r[1]) || 1;
+            const yld   = parseFloat(r[2]) || 0;
+            const ypha  = ha > 0 ? yld / ha : 0;
+            if (!soilGroups[soil]) soilGroups[soil] = { sum: 0, count: 0 };
+            soilGroups[soil].sum   += ypha;
+            soilGroups[soil].count += 1;
+          });
+          const soilLabels = Object.keys(soilGroups);
+          const soilAvgs   = soilLabels.map(s => parseFloat((soilGroups[s].sum / soilGroups[s].count).toFixed(3)));
+          const soilColors = soilLabels.map(s => SOIL_COLORS[s] || 'rgba(150,150,150,.6)');
+          const soilBorder = soilLabels.map(s => (SOIL_COLORS[s]||'rgba(150,150,150,.6)').replace('.75)',',1)').replace('.80)',',1)'));
+
+          if (soilLabels.length > 0) {
+            new Chart(soilCanvas.getContext('2d'), {
+              type: 'bar',
+              data: {
+                labels: soilLabels.map(s => ({Loamy:'🟤 Loamy', Sandy:'🟡 Sandy', Clay:'🔵 Clay'}[s]||s)),
+                datasets: [{
+                  label: 'Avg Yield (T/ha)',
+                  data: soilAvgs,
+                  backgroundColor: soilColors,
+                  borderColor: soilBorder,
+                  borderWidth: 2,
+                  borderRadius: 8,
+                }]
+              },
+              options: {
+                responsive: true,
+                plugins: {
+                  legend: { display: false },
+                  tooltip: { callbacks: { label: ctx => ctx.parsed.y.toFixed(3) + ' T/ha' } }
+                },
+                scales: {
+                  x: { grid: { display: false }, ticks: { font: { family: 'Outfit', weight: '700' }, color: '#666' } },
+                  y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0,0,0,.05)' },
+                    ticks: { callback: v => v + ' T/ha', font: { family: 'Outfit' } }
+                  }
+                }
+              }
+            });
+          } else {
+            soilCanvas.style.display = 'none';
+            if (noSoil) noSoil.style.display = 'block';
+          }
+        } catch(e) { console.error('Soil chart error:', e); }
+      }
+
+      // ── NEW CHART 2: Yield Efficiency over time (T/ha line) ──────────
+      const effCanvas = $('effChart');
+      const noEff     = $('noEff');
+      if (effCanvas) {
+        try {
+          const effData = sorted.map(r => {
+            const ha  = parseFloat(r[1]) || 1;
+            const yld = parseFloat(r[2]) || 0;
+            return ha > 0 ? parseFloat((yld/ha).toFixed(3)) : 0;
+          });
+          const ctx2   = effCanvas.getContext('2d');
+          const grad2  = ctx2.createLinearGradient(0, 0, 0, 180);
+          grad2.addColorStop(0, 'rgba(46,134,171,.25)');
+          grad2.addColorStop(1, 'rgba(46,134,171,0)');
+          new Chart(ctx2, {
+            type: 'line',
+            data: {
+              labels,
+              datasets: [{
+                label: 'T/ha',
+                data: effData,
+                borderColor: '#2E86AB',
+                borderWidth: 2.5,
+                pointBackgroundColor: '#F5C518',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                pointRadius: 5,
+                fill: true,
+                backgroundColor: grad2,
+                tension: 0.38,
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { grid: { display: false }, ticks: { font: { family: 'Outfit', weight: '700' }, color: '#aaa', maxRotation: 30, maxTicksLimit: 8 } },
+                y: {
+                  beginAtZero: true,
+                  grid: { color: 'rgba(0,0,0,.05)' },
+                  ticks: { callback: v => v + ' T/ha', font: { family: 'Outfit' } }
+                }
+              }
+            }
+          });
+        } catch(e) { console.error('Efficiency chart error:', e); }
+      }
+
+      // ── NEW CHART 3: Financial Performance by Crop (grouped bar) ─────
+      const finCanvas = $('finChart');
+      const noFin     = $('noFin');
+      if (finCanvas) {
+        try {
+          // Aggregate per crop: total revenue, total cost, net profit
+          const finData = {};
+          records.forEach(r => {
+            const crop  = r[0];
+            const yld   = parseFloat(r[2]) || 0;
+            const ha    = parseFloat(r[1]) || 1;
+            const price = PRICES[crop] || 900;
+            const cost  = (COSTS[crop]  || 800) * ha;
+            const rev   = yld * price;
+            const net   = rev - cost;
+            if (!finData[crop]) finData[crop] = { rev: 0, cost: 0, net: 0 };
+            finData[crop].rev  += rev;
+            finData[crop].cost += cost;
+            finData[crop].net  += net;
+          });
+          const crops   = Object.keys(finData);
+          if (crops.length > 0) {
+            new Chart(finCanvas.getContext('2d'), {
+              type: 'bar',
+              data: {
+                labels: crops.map(c => (cropEmoji[c]||'🌾')+' '+c),
+                datasets: [
+                  {
+                    label: 'Gross Revenue (ZMW)',
+                    data: crops.map(c => Math.round(finData[c].rev)),
+                    backgroundColor: 'rgba(25,138,0,.70)',
+                    borderColor: 'rgba(25,138,0,1)',
+                    borderWidth: 1.5,
+                    borderRadius: 6,
+                  },
+                  {
+                    label: 'Total Cost (ZMW)',
+                    data: crops.map(c => Math.round(finData[c].cost)),
+                    backgroundColor: 'rgba(245,197,24,.80)',
+                    borderColor: 'rgba(245,197,24,1)',
+                    borderWidth: 1.5,
+                    borderRadius: 6,
+                  },
+                  {
+                    label: 'Net Profit (ZMW)',
+                    data: crops.map(c => Math.round(finData[c].net)),
+                    backgroundColor: crops.map(c => finData[c].net >= 0 ? 'rgba(46,134,171,.70)' : 'rgba(239,0,0,.60)'),
+                    borderColor:     crops.map(c => finData[c].net >= 0 ? 'rgba(46,134,171,1)' : 'rgba(239,0,0,1)'),
+                    borderWidth: 1.5,
+                    borderRadius: 6,
+                  }
+                ]
+              },
+              options: {
+                responsive: true,
+                plugins: {
+                  legend: { position: 'top', labels: { font: { family: 'Outfit', weight: '700' }, boxWidth: 12, padding: 14 } },
+                  tooltip: {
+                    callbacks: {
+                      label: ctx => ' ZMW ' + ctx.parsed.y.toLocaleString()
+                    }
+                  }
+                },
+                scales: {
+                  x: { grid: { display: false }, ticks: { font: { family: 'Outfit', weight: '700' }, color: '#666' } },
+                  y: {
+                    grid: { color: 'rgba(0,0,0,.04)' },
+                    ticks: { callback: v => 'ZMW ' + (Math.abs(v) >= 1000 ? (v/1000).toFixed(0)+'K' : v), font: { family: 'Outfit' } }
+                  }
+                }
+              }
+            });
+          } else {
+            finCanvas.style.display = 'none';
+            if (noFin) noFin.style.display = 'block';
+          }
+        } catch(e) { console.error('Financial chart error:', e); }
+      }
+    }
+
+    function buildRecentTable(records) {
+      const tbody = $('recentBody');
+      if (!tbody) return;
+      const cropEmoji = {Maize:'🌽',Soyabeans:'🌱',Groundnuts:'🥜',Cassava:'🍠',Sorghum:'🌾',Millet:'🌿',Sunflower:'🌻',Potatoes:'🥔'};
+
+      if (!records || records.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text3);font-size:.85rem;">
+          No predictions yet. <a href="/predict_yield" style="color:var(--g);font-weight:800;">Make your first →</a>
+        </td></tr>`;
+        const ss = $('statSimulations');
+        if (ss) ss.textContent = '0';
+        return;
+      }
+      const ss = $('statSimulations');
+      if (ss) ss.textContent = records.length;
+
+      tbody.innerHTML = records.slice(0,6).map((r,i) => `
+        <tr>
+          <td style="color:var(--text3);font-size:.78rem;font-weight:800;">${i+1}</td>
+          <td><span class="crop-tag ct-${r[0]}">${cropEmoji[r[0]]||'🌱'} ${r[0]}</span></td>
+          <td style="font-weight:700;">${r[1]} ha</td>
+          <td style="font-size:1rem;font-weight:800;color:var(--g);">${r[2]} T</td>
+          <td style="font-size:.78rem;color:var(--text3);font-weight:700;">
+            <i class="fa-regular fa-clock" style="color:var(--o);margin-right:4px;"></i>${String(r[3]).substring(0,10)}
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function loadPredictions() {
+      fetch('/api/my_predictions', { credentials:'same-origin' })
+        .then(r => r.ok ? r.json() : { records: [] })
+        .then(data => {
+          const records = (data && data.records) || [];
+          buildCharts(records);
+          buildRecentTable(records);
+        })
+        .catch(() => {
+          buildCharts([]);
+          buildRecentTable([]);
+        });
+    }
+
+    // ── Quick simulator selectors ────────────────────────────
+    function setupSimulator() {
+      document.querySelectorAll('.sim-sc').forEach(el => {
+        el.addEventListener('click', function() {
+          const v = this.dataset.scenario;
+          document.querySelectorAll('.sim-sc').forEach(x => x.className = 'sim-sc');
+          this.classList.add('sel-' + (v === 'abovenormal' ? 'above' : v));
+          const f = $('qScenario'); if (f) f.value = v;
+        });
+      });
+      document.querySelectorAll('.sim-cr').forEach(el => {
+        el.addEventListener('click', function() {
+          document.querySelectorAll('.sim-cr').forEach(x => x.classList.remove('sel'));
+          this.classList.add('sel');
+          const f = $('qCrop'); if (f) f.value = this.dataset.crop;
+        });
+      });
+    }
+
+    // ── INIT ALL — runs after DOM is ready ────────────────────
+    function init() {
+      try {
+        // Apply preferences AFTER DOM is built
+        applyCompact(prefs.compact);
+        const langSel = $('langSelect');
+        if (langSel) langSel.value = prefs.lang;
+
+        // Update sidebar farmer level
+        const sbLvl = $('sbFarmerLevel');
+        if (sbLvl) sbLvl.textContent = LEVEL_ICON + ' ' + LEVEL_NAME;
+        const sbPts = $('sbPts');
+        if (sbPts) sbPts.textContent = POINTS + ' pts';
+
+        // Update profile card
+        const pcLB = $('pcLevelBadge');
+        if (pcLB) pcLB.textContent = LEVEL_ICON + ' ' + LEVEL_NAME;
+        const pcL = $('pcLevel');
+        if (pcL) pcL.textContent = 'Level ' + LEVEL + ' · ' + LEVEL_NAME;
+        const pcP = $('pcPts');
+        if (pcP) pcP.textContent = POINTS + ' pts';
+        setTimeout(() => {
+          const f = $('pcProgFill');
+          if (f) f.style.width = PROGRESS + '%';
+        }, 600);
+
+        // Update stat chips
+        const sp = $('statPoints'); if (sp) sp.textContent = POINTS;
+        const ss = $('statStreak'); if (ss) ss.textContent = STREAK + '🔥';
+        const sm = $('statSimulations'); if (sm) sm.textContent = SIMS;
+
+        // Settings panel name
+        const sn = $('settingsName'); if (sn) sn.textContent = FARMER_NAME;
+        const sd = $('settingsDistrict'); if (sd) sd.textContent = DISTRICT || '—';
+
+        // Sidebar toggle
+        const sbT = $('sbToggle');
+        if (sbT) sbT.addEventListener('click', function() {
+          applyCompact(!prefs.compact);
+        });
+
+        // Mobile toggle
+        const mT = $('mobileToggle');
+        if (mT) mT.addEventListener('click', function() {
+          const sb = $('sidebar');
+          if (sb) sb.classList.toggle('mobile-open');
+        });
+
+        // Overlay click closes everything
+        const po = $('panelOverlay');
+        if (po) po.addEventListener('click', function() {
+          const sb = $('sidebar');
+          if (sb) sb.classList.remove('mobile-open');
+          closeAllPanels();
+        });
+
+        // Topbar buttons — bell + gear
+        const nb = $('notifBtn');
+        if (nb) nb.addEventListener('click', function(e) {
+          e.stopPropagation();
+          openPanel('notifPanel');
+          loadNotifications();
+        });
+        const gb = $('settingsBtn');
+        if (gb) gb.addEventListener('click', function(e) {
+          e.stopPropagation();
+          openPanel('settingsPanel');
+        });
+
+        // Close buttons
+        const nc = $('notifClose');
+        if (nc) nc.addEventListener('click', closeAllPanels);
+        const sc = $('settingsClose');
+        if (sc) sc.addEventListener('click', closeAllPanels);
+
+        // Avatar profile popup
+        const tba = $('tbAvatar');
+        if (tba) tba.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const pp = $('profilePopup');
+          if (!pp) return;
+          if (pp.classList.contains('show')) {
+            pp.classList.remove('show');
+          } else {
+            closeAllPanels();
+            pp.classList.add('show');
+            loadProfilePopup();
+          }
+        });
+
+        // Click outside profile popup closes it
+        document.addEventListener('click', function(e) {
+          const pp = $('profilePopup');
+          const tba = $('tbAvatar');
+          if (!pp || !pp.classList.contains('show')) return;
+          if (pp.contains(e.target) || (tba && tba.contains(e.target))) return;
+          pp.classList.remove('show');
+        });
+
+        // Settings toggles
+        // Dark mode toggle — handled globally by theme.js
+        // Just keep local prefs in sync
+        const dm = $('darkModeToggle');
+        if (dm) {
+          dm.addEventListener('change', function() { applyDark(this.checked); });
+        }
+        const ct = $('compactToggle');
+        if (ct) {
+          ct.checked = prefs.compact;
+          ct.addEventListener('change', function() { applyCompact(this.checked); });
+        }
+        const ls = $('langSelect');
+        if (ls) ls.addEventListener('change', function() {
+          localStorage.setItem('zf_lang', this.value);
+        });
+
+        // Show login reward
+        showLoginReward();
+
+        // Set initial weather from server values, then fetch live
+        setWeather(TEMPERATURE, RAINFALL);
+        fetchLiveWeather();
+
+        // Setup quick simulator buttons
+        setupSimulator();
+
+        // Load predictions and build charts/table
+        loadPredictions();
+
+        // ── Initial notification badge load + periodic refresh ────────
+        // Fetch unread count silently on page load to show bell badge
+        (function pollNotifCount() {
+          fetch('/api/notifications', { credentials: 'same-origin' })
+            .then(function(r) { return r.ok ? r.json() : { unread: 0 }; })
+            .then(function(d) {
+              var unread = (d && d.unread) || 0;
+              var dot    = $('notifDot');
+              var count  = $('notifCount');
+              if (unread > 0) {
+                if (dot)   dot.style.display   = 'block';
+                if (count) { count.style.display = 'flex'; count.textContent = unread > 9 ? '9+' : unread; }
+              } else {
+                if (dot)   dot.style.display   = 'none';
+                if (count) count.style.display = 'none';
+              }
+              // Sidebar marketplace badge
+              var notifs   = (d && d.notifications) || [];
+              var mktBadge = $('sbMktBadge');
+              var mktCount = notifs.filter(function(n) {
+                return n.type === 'marketplace_inquiry' && !n.is_read;
+              }).length;
+              if (mktBadge) {
+                mktBadge.textContent    = mktCount;
+                mktBadge.style.display  = mktCount > 0 ? 'inline-flex' : 'none';
+              }
+            }).catch(function() {});
+        })();
+
+        // Refresh bell count every 90 seconds while page is open
+        setInterval(function() {
+          fetch('/api/notifications', { credentials: 'same-origin' })
+            .then(function(r) { return r.ok ? r.json() : { unread: 0 }; })
+            .then(function(d) {
+              var unread = (d && d.unread) || 0;
+              var dot    = $('notifDot');
+              var count  = $('notifCount');
+              if (unread > 0) {
+                if (dot)   dot.style.display   = 'block';
+                if (count) { count.style.display = 'flex'; count.textContent = unread > 9 ? '9+' : unread; }
+              } else {
+                if (dot)   dot.style.display = 'none';
+                if (count) count.style.display = 'none';
+              }
+            }).catch(function() {});
+        }, 90000);
+
+        // Officer contact panel
+        const cobBtn = $('contactOfficerBtn');
+        if (cobBtn) cobBtn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          openPanel('officerPanel');
+          loadOfficerPanel();
+        });
+        const oc = $('officerClose');
+        if (oc) oc.addEventListener('click', closeAllPanels);
+
+      } catch(err) {
+        console.error('Dashboard init error:', err);
+      }
+    }
+
+    // ── Officer panel loader ──────────────────────────────────
+    function loadOfficerPanel() {
+      const body = $('officerPanelBody');
+      if (!body) return;
+
+      // Fetch officer info and messages in parallel
+      Promise.all([
+        fetch('/api/my_officer',       { credentials: 'same-origin' }).then(r => r.json()).catch(() => ({})),
+        fetch('/api/farmer_messages',  { credentials: 'same-origin' }).then(r => r.json()).catch(() => ({ messages: [] })),
+      ]).then(function([officerData, msgData]) {
+        const officer  = officerData.officer  || null;
+        const messages = msgData.messages     || [];
+
+        let html = '';
+
+        // ── Officer card ──
+        if (officer) {
+          const phone    = officer.phone   || '';
+          const email    = officer.email   || '';
+          const wa_phone = phone.replace(/[^0-9]/g, ''); // digits only for WhatsApp
+          const wa_msg   = encodeURIComponent(
+            'Hello Officer ' + officer.name + ', I am a ZamFarm farmer in ' +
+            officer.zone + ' zone. I need tailored farming advice. Please assist me.'
+          );
+
+          html += `
+            <div class="officer-hero">
+              <div class="officer-avatar-wrap">👨‍🌾</div>
+              <div class="officer-name">${officer.name}</div>
+              <div class="officer-zone">📍 ${officer.zone} Zone</div>
+            </div>
+
+            <div style="padding:0 2px;margin-bottom:16px;">
+              <div style="font-size:.65rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;">Contact Options</div>
+
+              ${phone ? `
+              <a href="tel:${phone}" class="contact-btn contact-btn-call">
+                <i class="fa-solid fa-phone" style="color:#198A00;"></i>
+                <div>
+                  <div style="font-weight:800;">Call Officer</div>
+                  <div style="font-size:.72rem;color:var(--text3);font-weight:600;">${phone}</div>
+                </div>
+                <i class="fa-solid fa-arrow-right" style="margin-left:auto;font-size:.75rem;color:var(--text3);"></i>
+              </a>
+
+              <a href="https://wa.me/${wa_phone}?text=${wa_msg}" target="_blank"
+                 class="contact-btn contact-btn-whatsapp">
+                <i class="fa-brands fa-whatsapp" style="color:#25D366;font-size:1.4rem;"></i>
+                <div>
+                  <div style="font-weight:800;">WhatsApp</div>
+                  <div style="font-size:.72rem;color:var(--text3);font-weight:600;">Send a message via WhatsApp</div>
+                </div>
+                <i class="fa-solid fa-arrow-right" style="margin-left:auto;font-size:.75rem;color:var(--text3);"></i>
+              </a>` : ''}
+
+              ${email ? `
+              <a href="mailto:${email}?subject=ZamFarm%20Advice%20Request&body=Hello%20Officer%20${encodeURIComponent(officer.name)}%2C%0A%0AI%20need%20advice%20on%20farming%20in%20${encodeURIComponent(officer.zone)}%20zone.%0A%0AThank%20you."
+                 class="contact-btn contact-btn-email">
+                <i class="fa-solid fa-envelope" style="color:var(--sky);"></i>
+                <div>
+                  <div style="font-weight:800;">Email Officer</div>
+                  <div style="font-size:.72rem;color:var(--text3);font-weight:600;">${email}</div>
+                </div>
+                <i class="fa-solid fa-arrow-right" style="margin-left:auto;font-size:.75rem;color:var(--text3);"></i>
+              </a>` : ''}
+
+              ${!phone && !email ? `<div class="no-officer"><i class="fa-solid fa-phone-slash"></i>Contact details not set by officer yet.</div>` : ''}
+            </div>`;
+        } else {
+          html += `<div class="no-officer">
+            <i class="fa-solid fa-user-slash"></i>
+            No officer assigned to your zone yet.<br>
+            <span style="font-size:.78rem;color:var(--text3);">Contact your district agriculture office directly.</span>
+          </div>`;
+        }
+
+        // ── Messages from officer ──
+        html += `<div style="font-size:.65rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin:16px 2px 10px;display:flex;align-items:center;gap:8px;">
+          <i class="fa-solid fa-envelope-open-text" style="color:var(--o);"></i>
+          Messages from Your Officer
+          <span style="flex:1;height:1px;background:var(--border);"></span>
+          <span style="background:var(--o);color:#fff;border-radius:20px;padding:1px 8px;">${messages.length}</span>
+        </div>`;
+
+        if (messages.length === 0) {
+          html += `<div style="text-align:center;padding:24px;color:var(--text3);font-size:.85rem;">
+            <i class="fa-solid fa-inbox" style="font-size:1.5rem;display:block;margin-bottom:8px;color:var(--text3);"></i>
+            No messages from your officer yet.
+          </div>`;
+        } else {
+          messages.forEach(function(m) {
+            html += `<div class="msg-item">
+              <div class="msg-subject">${m.subject}</div>
+              <div class="msg-body">${m.body}</div>
+              <div class="msg-meta">
+                <i class="fa-solid fa-user-tie"></i> ${m.officer_name}
+                &nbsp;·&nbsp;
+                <i class="fa-regular fa-clock"></i> ${m.sent_at}
+              </div>
+            </div>`;
+          });
+        }
+
+        body.innerHTML = html;
+      }).catch(function() {
+        body.innerHTML = '<div class="no-officer"><i class="fa-solid fa-circle-exclamation"></i>Could not load officer information.</div>';
+      });
+    }
+
+    // Run init when DOM is fully parsed
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init);
+    } else {
+      init();
+    }
+
+  })();
+  </script>
+
+</body>
+</html>

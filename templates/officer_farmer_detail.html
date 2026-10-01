@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.svg') }}">
+  <meta name="theme-color" content="#198A00">
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Farmer Profile | ZamFarm Officer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700;900&family=Outfit:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    :root{--g:#198A00;--gl:#23b800;--gd:#0f5c00;--r:#EF0000;--o:#EF7D00;--gold:#F5C518;--sky:#2E86AB;--blk:#141414;--bg:#F4F9F0;--surface:#fff;--surface2:#f0f5ec;--border:rgba(25,138,0,.14);--text:#141414;--text2:#555;--text3:#999;--cr:14px;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+    .topbar{background:linear-gradient(135deg,var(--blk),#1a2e0a);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,0,0,.35);}
+    .topbar-left{display:flex;align-items:center;gap:14px;}
+    .back-btn{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;padding:8px 16px;border-radius:10px;font-size:.82rem;font-weight:700;text-decoration:none;transition:background .2s;}
+    .back-btn:hover{background:rgba(255,255,255,.14);color:#fff;}
+    .topbar-title{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:700;color:#fff;}
+    .topbar-title span{color:var(--gold);}
+    .badge-zone{background:rgba(245,197,24,.15);border:1px solid rgba(245,197,24,.3);border-radius:20px;padding:4px 12px;font-size:.72rem;font-weight:800;color:var(--gold);}
+
+    .main{max-width:1100px;margin:0 auto;padding:28px 20px;}
+
+    /* Profile hero */
+    .profile-hero{background:linear-gradient(160deg,#0a1800,#0d2200,#0a1800);border-radius:20px;padding:28px;margin-bottom:22px;display:flex;align-items:center;gap:24px;position:relative;overflow:hidden;}
+    .profile-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--g),var(--gold),var(--o));}
+    .ph-avatar{width:90px;height:90px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);box-shadow:0 0 0 5px rgba(245,197,24,.18),0 6px 24px rgba(0,0,0,.4);flex-shrink:0;}
+    .ph-info{flex:1;}
+    .ph-name{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:700;color:#fff;margin-bottom:4px;}
+    .ph-sub{font-size:.82rem;color:rgba(255,255,255,.5);font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+    .ph-sub i{color:var(--o);}
+    .ph-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px;}
+    .ph-stat{background:rgba(255,255,255,.06);border-radius:10px;padding:10px 12px;text-align:center;}
+    .ph-stat .sv{font-family:'DM Mono',monospace;font-size:1.25rem;font-weight:700;color:var(--gold);}
+    .ph-stat .sl{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:rgba(255,255,255,.35);margin-top:2px;}
+
+    /* Level badge */
+    .level-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(245,197,24,.14);border:1px solid rgba(245,197,24,.3);border-radius:24px;padding:4px 14px;font-size:.78rem;font-weight:800;color:var(--gold);}
+
+    /* Cards */
+    .zm-card{background:var(--surface);border-radius:var(--cr);padding:22px;box-shadow:0 4px 18px rgba(0,0,0,.07);position:relative;overflow:hidden;margin-bottom:18px;}
+    .zm-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--g),var(--gold),var(--o));}
+    .zm-card h2{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:700;color:var(--gd);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+    .zm-card h2 i{color:var(--o);}
+
+    /* Info grid */
+    .info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+    .info-row{background:var(--surface2);border-radius:10px;padding:12px 14px;border-bottom:3px solid var(--border);}
+    .info-row:nth-child(1){border-bottom-color:var(--g);}
+    .info-row:nth-child(2){border-bottom-color:var(--o);}
+    .info-row:nth-child(3){border-bottom-color:var(--sky);}
+    .info-row:nth-child(4){border-bottom-color:var(--gold);}
+    .info-row:nth-child(5){border-bottom-color:var(--r);}
+    .info-lbl{font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.9px;color:var(--text3);margin-bottom:4px;}
+    .info-val{font-size:.92rem;font-weight:800;color:var(--text);}
+
+    /* Predictions table */
+    .pred-table{width:100%;border-collapse:separate;border-spacing:0;font-size:.85rem;}
+    .pred-table thead th{background:linear-gradient(135deg,var(--gd),#1a4010);color:#fff;padding:10px 14px;font-size:.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+    .pred-table tbody tr:nth-child(even){background:rgba(25,138,0,.03);}
+    .pred-table tbody tr:hover{background:rgba(25,138,0,.07);}
+    .pred-table tbody td{padding:9px 14px;border-bottom:1px solid var(--border);font-weight:600;color:var(--text);}
+    .crop-tag{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:800;}
+    .ct-Maize{background:rgba(245,197,24,.15);color:#7a5c00;}
+    .ct-Soyabeans{background:rgba(25,138,0,.12);color:var(--gd);}
+    .ct-Groundnuts{background:rgba(239,125,0,.12);color:#7a3e00;}
+    .ct-Cassava{background:rgba(239,0,0,.09);color:#7a0000;}
+    .ct-Sorghum{background:rgba(46,134,171,.12);color:#1a5578;}
+    .ct-Millet{background:rgba(139,47,201,.10);color:#5c0080;}
+    .ct-Sunflower{background:rgba(245,197,24,.18);color:#7a5c00;}
+    .ct-Potatoes{background:rgba(160,82,45,.15);color:#6e3010;}
+    .yield-val{font-weight:800;color:var(--g);}
+    .no-data{text-align:center;padding:32px;color:var(--text3);font-size:.88rem;}
+    .no-data i{display:block;font-size:2rem;margin-bottom:8px;color:var(--border);}
+
+    /* Progress bar */
+    .prog-wrap{margin-top:12px;}
+    .prog-label{display:flex;justify-content:space-between;font-size:.72rem;font-weight:700;color:rgba(255,255,255,.45);margin-bottom:5px;}
+    .prog-bar{height:7px;background:rgba(255,255,255,.12);border-radius:7px;overflow:hidden;}
+    .prog-fill{height:100%;background:linear-gradient(90deg,var(--g),var(--gold));border-radius:7px;}
+
+    /* Badges row */
+    .badge-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+    .badge-chip{display:inline-flex;align-items:center;gap:5px;background:rgba(245,197,24,.12);border:1px solid rgba(245,197,24,.25);border-radius:20px;padding:4px 12px;font-size:.72rem;font-weight:800;color:#7a5c00;}
+
+    .flag-bar{display:flex;height:4px;border-radius:3px;overflow:hidden;margin-bottom:22px;}
+    .flag-bar span{flex:1;}
+    .fb-g{background:var(--g);}.fb-r{background:var(--r);}.fb-b{background:var(--blk);}.fb-o{background:var(--o);}
+
+    @media(max-width:768px){
+      .info-grid{grid-template-columns:1fr 1fr;}
+      .ph-stats{grid-template-columns:repeat(3,1fr);}
+      .profile-hero{flex-direction:column;text-align:center;}
+      .ph-sub{justify-content:center;}
+    }
+    @media(max-width:480px){
+      .info-grid{grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <a href="/officer" class="back-btn">
+        <i class="fa-solid fa-arrow-left"></i> Back to Zone
+      </a>
+      <div class="topbar-title">
+        Farmer Profile — <span>{{ farmer[1] if farmer else 'Unknown' }}</span>
+      </div>
+    </div>
+    <span class="badge-zone"><i class="fa-solid fa-map-location-dot"></i> {{ session.get('zone', 'Zone') }}</span>
+  </div>
+
+  {% if farmer %}
+  <!-- Direct-message modal trigger + modal -->
+  <div id="dmOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;"></div>
+  <div id="dmModal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1001;width:92%;max-width:460px;background:var(--surface,#fff);border-radius:18px;box-shadow:0 24px 72px rgba(0,0,0,.35);overflow:hidden;">
+    <div style="padding:18px 22px;background:linear-gradient(135deg,#198A00,#0f5c00);color:#fff;display:flex;align-items:center;justify-content:space-between;">
+      <h3 style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:700;margin:0;"><i class="fa-solid fa-paper-plane"></i> Message {{ farmer[1].split(' ')[0] }}</h3>
+      <button type="button" onclick="closeDM()" style="background:none;border:none;color:#fff;font-size:1.1rem;cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form method="POST" action="/officer/message_farmer/{{ farmer[0] }}" style="padding:20px 22px;">
+      <label style="font-size:.74rem;font-weight:800;color:#555;text-transform:uppercase;letter-spacing:.5px;">Subject</label>
+      <input type="text" name="subject" value="Advisory for {{ farmer[7] or 'your farm' }}"
+             style="width:100%;padding:10px 13px;border:2px solid rgba(25,138,0,.2);border-radius:10px;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:600;margin:5px 0 14px;outline:none;" required>
+      <label style="font-size:.74rem;font-weight:800;color:#555;text-transform:uppercase;letter-spacing:.5px;">Message</label>
+      <textarea name="message_body" rows="4" placeholder="Type a private message to this farmer…"
+                style="width:100%;padding:10px 13px;border:2px solid rgba(25,138,0,.2);border-radius:10px;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:600;margin:5px 0 14px;outline:none;resize:vertical;" required></textarea>
+      <div style="display:flex;gap:10px;">
+        <button type="button" onclick="closeDM()" style="flex:1;padding:11px;border-radius:10px;border:1px solid rgba(0,0,0,.12);background:#f0f5ec;color:#555;font-weight:800;font-size:.85rem;cursor:pointer;">Cancel</button>
+        <button type="submit" style="flex:2;padding:11px;border-radius:10px;border:none;background:linear-gradient(135deg,#198A00,#0f5c00);color:#fff;font-weight:800;font-size:.85rem;cursor:pointer;"><i class="fa-solid fa-paper-plane"></i> Send Message</button>
+      </div>
+    </form>
+  </div>
+  <script>
+    function openDM(){ document.getElementById('dmOverlay').style.display='block'; document.getElementById('dmModal').style.display='block'; }
+    function closeDM(){ document.getElementById('dmOverlay').style.display='none'; document.getElementById('dmModal').style.display='none'; }
+    document.getElementById('dmOverlay').addEventListener('click', closeDM);
+  </script>
+  {% endif %}
+
+  <div class="main">
+    <div class="flag-bar">
+      <span class="fb-g"></span><span class="fb-r"></span><span class="fb-b"></span><span class="fb-o"></span>
+    </div>
+
+    {% if farmer %}
+    <!-- Profile Hero -->
+    <div class="profile-hero">
+      <img src="{{ url_for('static', filename='uploads/' + (farmer[8] if farmer[8] else 'default.png')) }}"
+           class="ph-avatar" alt="{{ farmer[1] }}">
+      <div class="ph-info">
+        <div class="ph-name">{{ farmer[1] }}</div>
+        <div class="ph-sub">
+          <span><i class="fa-solid fa-map-marker-alt"></i>{{ farmer[7] or '—' }}, {{ farmer[6] or '—' }}</span>
+          <span><i class="fa-solid fa-phone"></i>{{ farmer[3] or '—' }}</span>
+          {% if farmer[2] %}<span><i class="fa-solid fa-envelope"></i>{{ farmer[2] }}</span>{% endif %}
+        </div>
+        <button type="button" onclick="openDM()" style="margin-top:12px;display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border:none;border-radius:10px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);color:#fff;font-family:'Outfit',sans-serif;font-weight:800;font-size:.82rem;cursor:pointer;">
+          <i class="fa-solid fa-paper-plane"></i> Send Direct Message
+        </button>
+
+        {% if gamif %}
+        <div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <span class="level-badge">
+            {% if gamif[1] == 1 %}🌱{% elif gamif[1] == 2 %}🌿{% elif gamif[1] == 3 %}🌳{% elif gamif[1] == 4 %}🏆{% else %}👑{% endif %}
+            Level {{ gamif[1] }}
+            {% if gamif[1] == 1 %}Climate Novice{% elif gamif[1] == 2 %}Climate Learner
+            {% elif gamif[1] == 3 %}Climate Practitioner{% elif gamif[1] == 4 %}Climate Champion
+            {% else %}Climate Master{% endif %}
+          </span>
+        </div>
+        <div class="prog-wrap">
+          {% set pts = gamif[0] %}
+          {% set next_pts = 100 if pts < 100 else 300 if pts < 300 else 600 if pts < 600 else 1000 %}
+          {% set pct = [(pts / next_pts * 100), 100] | min | round | int %}
+          <div class="prog-label"><span>{{ pts }} pts</span><span>Next level: {{ next_pts }} pts</span></div>
+          <div class="prog-bar"><div class="prog-fill" id="progFill" data-width="{{ pct }}"></div></div>
+        </div>
+        {% endif %}
+
+        <div class="ph-stats">
+          <div class="ph-stat">
+            <div class="sv">{{ farmer[5] or 0 }} ha</div>
+            <div class="sl">Farm Size</div>
+          </div>
+          <div class="ph-stat">
+            <div class="sv">{{ gamif[0] if gamif else 0 }}</div>
+            <div class="sl">Total Pts</div>
+          </div>
+          <div class="ph-stat">
+            <div class="sv">{{ predictions | length }}</div>
+            <div class="sl">Predictions</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Farmer Information -->
+    <div class="zm-card">
+      <h2><i class="fa-solid fa-id-card"></i> Farmer Information</h2>
+      <div class="info-grid">
+        <div class="info-row">
+          <div class="info-lbl"><i class="fa-solid fa-user" style="color:var(--g);"></i> Full Name</div>
+          <div class="info-val">{{ farmer[1] }}</div>
+        </div>
+        <div class="info-row">
+          <div class="info-lbl"><i class="fa-solid fa-map-marker-alt" style="color:var(--o);"></i> District</div>
+          <div class="info-val">{{ farmer[7] or '—' }}</div>
+        </div>
+        <div class="info-row">
+          <div class="info-lbl"><i class="fa-solid fa-tree-city" style="color:var(--sky);"></i> Village</div>
+          <div class="info-val">{{ farmer[6] or '—' }}</div>
+        </div>
+        <div class="info-row">
+          <div class="info-lbl"><i class="fa-solid fa-phone" style="color:var(--gold);"></i> Phone</div>
+          <div class="info-val">{{ farmer[3] or '—' }}</div>
+        </div>
+        <div class="info-row">
+          <div class="info-lbl"><i class="fa-solid fa-envelope" style="color:var(--r);"></i> Email</div>
+          <div class="info-val">{{ farmer[2] or '—' }}</div>
+        </div>
+        <div class="info-row">
+          <div class="info-lbl"><i class="fa-solid fa-ruler-combined" style="color:var(--g);"></i> Farm Size</div>
+          <div class="info-val">{{ farmer[5] or 0 }} hectares</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gamification -->
+    {% if gamif %}
+    <div class="zm-card">
+      <h2><i class="fa-solid fa-trophy"></i> Gamification Status</h2>
+      <div class="info-grid">
+        <div class="info-row">
+          <div class="info-lbl">Total Points</div>
+          <div class="info-val" style="color:var(--gold);">{{ gamif[0] }} pts</div>
+        </div>
+        <div class="info-row">
+          <div class="info-lbl">Current Level</div>
+          <div class="info-val">
+            {% if gamif[1] == 1 %}🌱 Novice{% elif gamif[1] == 2 %}🌿 Learner
+            {% elif gamif[1] == 3 %}🌳 Practitioner{% elif gamif[1] == 4 %}🏆 Champion
+            {% else %}👑 Master{% endif %}
+          </div>
+        </div>
+        <div class="info-row">
+          <div class="info-lbl">Badges Earned</div>
+          <div class="info-val">
+            {% if gamif[2] %}
+              {% set badge_list = gamif[2] | tojson %}
+              {{ badge_list }}
+            {% else %}None yet{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Prediction History -->
+    <div class="zm-card">
+      <h2><i class="fa-solid fa-clock-rotate-left"></i> Prediction History ({{ predictions | length }})</h2>
+      {% if predictions %}
+      <div style="overflow-x:auto;">
+        <table class="pred-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Crop</th>
+              <th>Hectares</th>
+              <th>Predicted Yield (T)</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in predictions %}
+            <tr>
+              <td style="color:var(--text3);font-weight:800;">{{ loop.index }}</td>
+              <td>
+                <span class="crop-tag ct-{{ p[0] }}">
+                  {% if p[0]=='Maize' %}🌽{% elif p[0]=='Soyabeans' %}🌱{% elif p[0]=='Groundnuts' %}🥜
+                  {% elif p[0]=='Cassava' %}🍠{% elif p[0]=='Sorghum' %}🌾{% elif p[0]=='Millet' %}🌿
+                  {% elif p[0]=='Sunflower' %}🌻{% elif p[0]=='Potatoes' %}🥔{% else %}🌱{% endif %}
+                  {{ p[0] }}
+                </span>
+              </td>
+              <td>{{ p[1] }} ha</td>
+              <td><span class="yield-val">{{ p[2] }} T</span></td>
+              <td style="font-size:.78rem;color:var(--text3);font-weight:700;">
+                <i class="fa-regular fa-clock" style="color:var(--o);margin-right:4px;"></i>
+                {{ (p[3] | string)[:16] if p[3] else '—' }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="no-data">
+        <i class="fa-solid fa-seedling"></i>
+        This farmer has not made any predictions yet.
+      </div>
+      {% endif %}
+    </div>
+
+    {% else %}
+    <div class="zm-card" style="text-align:center;padding:48px;">
+      <i class="fa-solid fa-user-slash" style="font-size:2.5rem;color:var(--text3);display:block;margin-bottom:14px;"></i>
+      <h2 style="color:var(--text3);justify-content:center;">Farmer not found</h2>
+      <a href="/officer" style="color:var(--g);font-weight:800;">← Back to Zone Dashboard</a>
+    </div>
+    {% endif %}
+
+  </div><!-- /main -->
+
+</body>
+<script>
+  // Apply progress bar width from data attribute (Jinja in style="" causes VS Code CSS errors)
+  (function() {
+    var fill = document.getElementById('progFill');
+    if (fill) {
+      fill.style.width = (fill.getAttribute('data-width') || '0') + '%';
+    }
+  })();
+</script>
+</html>

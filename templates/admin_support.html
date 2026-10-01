@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
+  <meta name="theme-color" content="#8B2FC9">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support Inbox | ZamFarm Admin</title>
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    :root{--g:#198A00;--gd:#0f5c00;--r:#EF0000;--o:#EF7D00;--gold:#F5C518;--purple:#8B2FC9;--bg:#F6F2FA;--surface:#fff;--surface2:#f3eef8;--border:rgba(139,47,201,.15);--text:#141414;--text2:#555;--text3:#999;--tr:.3s ease;}
+    [data-theme="dark"]{--bg:#140a1d;--surface:#1f1228;--surface2:#2a1a36;--border:rgba(139,47,201,.25);--text:#f0e8f7;--text2:#b89ad0;--text3:#7a5a95;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+    .top{background:linear-gradient(135deg,var(--purple),#5c0080);color:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px;}
+    .top a{color:#fff;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-decoration:none;background:rgba(255,255,255,.12);}
+    .top h1{font-family:'Cormorant Garamond',serif;font-size:1.35rem;font-weight:700;flex:1;}
+    .badge-unread{background:var(--r);color:#fff;font-size:.72rem;font-weight:800;padding:4px 11px;border-radius:14px;}
+    .wrap{max-width:860px;margin:0 auto;padding:22px 16px 60px;}
+    .msg-card{background:var(--surface);border-radius:15px;padding:18px 20px;box-shadow:0 4px 16px rgba(0,0,0,.06);margin-bottom:16px;border-left:4px solid var(--o);}
+    .msg-card.answered{border-left-color:var(--g);}
+    .m-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;}
+    .m-subject{font-size:.95rem;font-weight:800;color:var(--text);flex:1;}
+    .m-status{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:3px 10px;border-radius:12px;}
+    .st-pending{background:rgba(239,125,0,.12);color:var(--o);}
+    .st-answered{background:rgba(25,138,0,.12);color:var(--g);}
+    .m-farmer{font-size:.76rem;color:var(--text3);font-weight:700;margin-bottom:9px;display:flex;gap:14px;flex-wrap:wrap;}
+    .m-farmer i{color:var(--purple);margin-right:4px;}
+    .m-body{font-size:.87rem;color:var(--text2);font-weight:500;line-height:1.55;background:var(--surface2);border-radius:10px;padding:12px 14px;}
+    .m-reply{margin-top:11px;background:rgba(25,138,0,.07);border-left:3px solid var(--g);border-radius:0 9px 9px 0;padding:11px 14px;font-size:.85rem;color:var(--text2);font-weight:500;line-height:1.5;}
+    .m-reply b{color:var(--g);font-size:.7rem;text-transform:uppercase;display:block;margin-bottom:3px;}
+    .reply-form{margin-top:12px;display:flex;gap:9px;align-items:flex-end;}
+    .reply-form textarea{flex:1;padding:10px 13px;border:2px solid var(--border);border-radius:10px;font-family:'Outfit',sans-serif;font-size:.86rem;font-weight:600;background:var(--surface2);color:var(--text);resize:vertical;min-height:46px;outline:none;}
+    .reply-form textarea:focus{border-color:var(--purple);}
+    .reply-btn{padding:11px 18px;background:linear-gradient(135deg,var(--purple),#5c0080);color:#fff;border:none;border-radius:10px;font-family:'Outfit',sans-serif;font-weight:800;cursor:pointer;font-size:.83rem;white-space:nowrap;}
+    .empty{background:var(--surface);border-radius:15px;padding:48px;text-align:center;color:var(--text3);font-weight:600;}
+  </style>
+</head>
+<body>
+  <div class="top">
+    <a href="/admin"><i class="fa-solid fa-arrow-left"></i></a>
+    <h1>🛟 Support Inbox</h1>
+    {% if unread > 0 %}<span class="badge-unread">{{ unread }} new</span>{% endif %}
+  </div>
+
+  <div class="wrap">
+    {% if messages %}
+      {% for m in messages %}
+      {# m: 0=id 1=subject 2=message 3=reply 4=replied_at 5=created_at 6=is_read 7=fullname 8=phone 9=district #}
+      <div class="msg-card {{ 'answered' if m[3] }}">
+        <div class="m-head">
+          <div class="m-subject">{{ m[1] }}</div>
+          {% if m[3] %}<span class="m-status st-answered"><i class="fa-solid fa-circle-check"></i> Answered</span>
+          {% else %}<span class="m-status st-pending"><i class="fa-regular fa-hourglass-half"></i> Pending</span>{% endif %}
+        </div>
+        <div class="m-farmer">
+          <span><i class="fa-solid fa-user"></i>{{ m[7] }}</span>
+          <span><i class="fa-solid fa-phone"></i>{{ m[8] or '—' }}</span>
+          <span><i class="fa-solid fa-location-dot"></i>{{ m[9] or '—' }}</span>
+          <span><i class="fa-regular fa-clock"></i>{{ (m[5]|string)[:16] }}</span>
+        </div>
+        <div class="m-body">{{ m[2] }}</div>
+
+        {% if m[3] %}
+        <div class="m-reply">
+          <b><i class="fa-solid fa-reply"></i> Your reply · {{ (m[4]|string)[:16] if m[4] }}</b>
+          {{ m[3] }}
+        </div>
+        {% else %}
+        <form class="reply-form" method="POST" action="/admin/support/reply/{{ m[0] }}">
+          <textarea name="reply" placeholder="Type your reply to {{ m[7].split(' ')[0] }} — they'll be notified in-app…" required></textarea>
+          <button type="submit" class="reply-btn"><i class="fa-solid fa-paper-plane"></i> Reply</button>
+        </form>
+        {% endif %}
+      </div>
+      {% endfor %}
+    {% else %}
+    <div class="empty">
+      <div style="font-size:2.6rem;margin-bottom:10px;">📭</div>
+      No support messages yet. Farmer help requests will appear here.
+    </div>
+    {% endif %}
+  </div>
+</body>
+</html>
